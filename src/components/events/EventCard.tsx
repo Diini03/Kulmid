@@ -40,7 +40,14 @@ export const EventCard = ({ event, onQuickView }: Props) => {
           <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" /> {event.location}</span>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => onQuickView?.(event)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickView?.(event);
+            }}
+          >
             Quick View
           </Button>
           <Button asChild size="sm">

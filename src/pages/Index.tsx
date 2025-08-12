@@ -120,7 +120,7 @@ const Index = () => {
       </section>
 
       <Dialog open={!!quick} onOpenChange={(o) => !o && setQuick(null)}>
-        <DialogContent>
+        <DialogContent className="z-[60]">
           <DialogHeader>
             <DialogTitle>{quick?.title}</DialogTitle>
           </DialogHeader>

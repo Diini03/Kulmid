@@ -93,7 +93,7 @@ const EventDetails = () => {
       </section>
 
       <Dialog open={bookOpen} onOpenChange={setBookOpen}>
-        <DialogContent>
+        <DialogContent className="z-[60]">
           <DialogHeader>
             <DialogTitle>Book Tickets</DialogTitle>
           </DialogHeader>
