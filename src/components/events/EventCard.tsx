@@ -1,16 +1,28 @@
-import { CalendarDays, MapPin, Ticket } from "lucide-react";
+import { CalendarDays, MapPin, Ticket, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { EventItem } from "@/data/events";
 import { Link } from "react-router-dom";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 interface Props {
   event: EventItem;
-  onQuickView?: (event: EventItem) => void;
 }
 
-export const EventCard = ({ event, onQuickView }: Props) => {
+export const EventCard = ({ event }: Props) => {
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const isLiked = isFavorite(event.id);
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isLiked) {
+      removeFromFavorites(event.id);
+    } else {
+      addToFavorites(event);
+    }
+  };
   return (
     <Card className="group overflow-hidden border-muted/60 hover:shadow-lg transition-shadow duration-200">
       <div className="relative">
@@ -24,10 +36,20 @@ export const EventCard = ({ event, onQuickView }: Props) => {
           <Badge variant="secondary" className="backdrop-blur-sm">
             {event.category}
           </Badge>
-          <Badge className="bg-primary text-primary-foreground shadow">${"$"}
-            {event.price}
+          <Badge className="bg-primary text-primary-foreground shadow">
+            ${event.price}
           </Badge>
         </div>
+        <button
+          onClick={toggleFavorite}
+          className="absolute right-3 top-3 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-muted/60 hover:bg-background transition-colors"
+        >
+          <Heart 
+            className={`h-4 w-4 transition-colors ${
+              isLiked ? 'fill-red-500 text-red-500' : 'text-muted-foreground hover:text-red-500'
+            }`} 
+          />
+        </button>
       </div>
       <CardHeader className="space-y-2">
         <Link to={`/events/${event.id}`} className="story-link text-lg font-semibold">
@@ -40,15 +62,8 @@ export const EventCard = ({ event, onQuickView }: Props) => {
           <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" /> {event.location}</span>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickView?.(event);
-            }}
-          >
-            Quick View
+          <Button asChild variant="outline" size="sm">
+            <Link to={`/events/${event.id}`}>View Details</Link>
           </Button>
           <Button asChild size="sm">
             <Link to={`/events/${event.id}`} className="inline-flex items-center"><Ticket className="mr-2 h-4 w-4"/> Book</Link>

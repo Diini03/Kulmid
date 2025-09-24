@@ -3,7 +3,8 @@ import { NavLink, Link } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CalendarSearch, Moon, Sun, Menu } from "lucide-react";
+import { CalendarSearch, Moon, Sun, Menu, Heart } from "lucide-react";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 interface NavbarProps {
   onOpenSearch: () => void;
@@ -11,6 +12,7 @@ interface NavbarProps {
 
 export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
+  const { favorites } = useFavorites();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -43,6 +45,16 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" aria-label="Search" onClick={onOpenSearch}>
             <CalendarSearch />
+          </Button>
+          <Button asChild variant="outline" size="icon" className="relative">
+            <Link to="/favorites" aria-label="Favorites">
+              <Heart className={favorites.length > 0 ? "fill-red-500 text-red-500" : ""} />
+              {favorites.length > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                  {favorites.length}
+                </span>
+              )}
+            </Link>
           </Button>
           <Button variant="outline" size="icon" aria-label="Toggle theme" onClick={toggleTheme}>
             {theme === "dark" ? <Sun /> : <Moon />}

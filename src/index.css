@@ -120,4 +120,9 @@
   .story-link:hover::after { @apply scale-x-100 origin-bottom-left; }
 
   .glass { @apply bg-background/70 backdrop-blur-md border border-white/10; }
+  
+  .bg-grid-pattern {
+    background-image: radial-gradient(circle at 1px 1px, hsl(var(--muted)) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
 }

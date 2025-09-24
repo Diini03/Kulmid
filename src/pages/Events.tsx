@@ -5,8 +5,8 @@ import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
 import { events as allEvents, type EventItem } from "@/data/events";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Calendar, MapPin, Users } from "lucide-react";
 
 const sorters: Record<string, (a: EventItem, b: EventItem) => number> = {
   Latest: (a, b) => +new Date(b.date) - +new Date(a.date),
@@ -17,7 +17,6 @@ const sorters: Record<string, (a: EventItem, b: EventItem) => number> = {
 
 const EventsPage = () => {
   const [sort, setSort] = useState<string>("Latest");
-  const [quick, setQuick] = useState<EventItem | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("All");
 
   const events = useMemo(() => {
@@ -37,16 +36,65 @@ const EventsPage = () => {
     <Layout>
       <Seo title="Events" description="Explore events by category, location, date and more." canonical="/events" />
 
-      {/* Events Hero Section */}
-      <section className="container py-12">
-        <div className="grid gap-6 max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold">Explore Amazing Events</h1>
-          <p className="text-lg text-muted-foreground">
-            From intimate workshops to grand conferences - discover events that inspire, educate, and connect.
-            Join thousands of enthusiasts in experiences that matter.
-          </p>
-          <div className="glass rounded-xl p-4 shadow-[var(--shadow-soft)]">
-            <SearchBar onSearch={() => {}} compact />
+      {/* Events Hero Section - Full Width */}
+      <section className="relative py-20 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="container relative">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    Discover Amazing Events
+                  </h1>
+                  <p className="text-xl text-muted-foreground leading-relaxed">
+                    From intimate workshops to grand conferences - discover events that inspire, educate, and connect.
+                    Join thousands of enthusiasts in experiences that matter to you.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-4 rounded-lg bg-card border">
+                    <Calendar className="h-8 w-8 mx-auto mb-2 text-primary" />
+                    <div className="text-2xl font-bold">{allEvents.length}+</div>
+                    <div className="text-sm text-muted-foreground">Events</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-card border">
+                    <MapPin className="h-8 w-8 mx-auto mb-2 text-primary" />
+                    <div className="text-2xl font-bold">12+</div>
+                    <div className="text-sm text-muted-foreground">Cities</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-card border">
+                    <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
+                    <div className="text-2xl font-bold">5K+</div>
+                    <div className="text-sm text-muted-foreground">Attendees</div>
+                  </div>
+                </div>
+                
+                <div className="glass rounded-xl p-6 shadow-[var(--shadow-soft)]">
+                  <SearchBar onSearch={() => {}} compact />
+                </div>
+              </div>
+              
+              <div className="relative">
+                <div className="grid grid-cols-2 gap-4">
+                  {allEvents.slice(0, 4).map((event, i) => (
+                    <div key={event.id} className={`relative ${i % 2 === 1 ? 'mt-8' : ''}`}>
+                      <img 
+                        src={event.image} 
+                        alt={event.title}
+                        className="rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 w-full h-32 object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-xl" />
+                      <div className="absolute bottom-3 left-3 right-3 text-white">
+                        <div className="text-sm font-semibold truncate">{event.title}</div>
+                        <div className="text-xs opacity-80">${event.price}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -83,22 +131,10 @@ const EventsPage = () => {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {events.map((ev) => (
-            <EventCard key={ev.id} event={ev} onQuickView={setQuick} />
+            <EventCard key={ev.id} event={ev} />
           ))}
         </div>
       </section>
-
-      <Dialog open={!!quick} onOpenChange={(o) => !o && setQuick(null)}>
-        <DialogContent className="z-[60]">
-          <DialogHeader>
-            <DialogTitle>{quick?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">{quick?.location} • {quick && new Date(quick.date).toLocaleDateString()}</p>
-            <p className="text-sm">Price: ${quick?.price}</p>
-          </div>
-        </DialogContent>
-      </Dialog>
     </Layout>
   );
 };

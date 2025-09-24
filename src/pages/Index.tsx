@@ -2,15 +2,13 @@ import heroImg from "@/assets/hero-eventease.jpg";
 import { Seo } from "@/components/Seo";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
-import { events, type EventItem } from "@/data/events";
+import { events } from "@/data/events";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const [quick, setQuick] = useState<EventItem | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("All");
 
   const filtered = events.filter((e) =>
@@ -73,7 +71,7 @@ const Index = () => {
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.slice(0, 6).map((ev) => (
-            <EventCard key={ev.id} event={ev} onQuickView={setQuick} />
+            <EventCard key={ev.id} event={ev} />
           ))}
         </div>
       </section>
@@ -118,27 +116,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
-      <Dialog open={!!quick} onOpenChange={(o) => !o && setQuick(null)}>
-        <DialogContent className="z-[60]">
-          <DialogHeader>
-            <DialogTitle>{quick?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="grid md:grid-cols-2 gap-4">
-            <img src={quick?.image} alt={quick?.title || "Event image"} className="rounded-md object-cover w-full h-48" />
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">{quick?.location} • {quick && new Date(quick.date).toLocaleDateString()}</p>
-              <p className="text-sm">Category: {quick?.category}</p>
-              <div className="flex gap-2">
-                <Button asChild>
-                  <Link to={quick ? `/events/${quick.id}` : "/events"}>Book Now</Link>
-                </Button>
-                <Button variant="outline" onClick={() => setQuick(null)}>Close</Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </Layout>
   );
 };
