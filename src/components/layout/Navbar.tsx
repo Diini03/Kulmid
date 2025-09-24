@@ -38,7 +38,19 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
         <div className="hidden md:flex items-center gap-6 text-sm">
           <NavLink to="/" end className={linkCls}>Home</NavLink>
           <NavLink to="/events" className={linkCls}>Events</NavLink>
-          <NavLink to="/about" className={linkCls}>About</NavLink>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1 text-foreground transition-colors hover:text-primary">
+              About
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="z-50">
+              <DropdownMenuItem asChild><NavLink to="/our-story">Our Story</NavLink></DropdownMenuItem>
+              <DropdownMenuItem asChild><NavLink to="/achievements">Achievements</NavLink></DropdownMenuItem>
+              <DropdownMenuItem asChild><NavLink to="/our-team">Our Team</NavLink></DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <NavLink to="/contact" className={linkCls}>Contact</NavLink>
         </div>
 
@@ -67,7 +79,9 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <DropdownMenuContent align="end" className="z-50">
                 <DropdownMenuItem asChild><NavLink to="/" end>Home</NavLink></DropdownMenuItem>
                 <DropdownMenuItem asChild><NavLink to="/events">Events</NavLink></DropdownMenuItem>
-                <DropdownMenuItem asChild><NavLink to="/about">About</NavLink></DropdownMenuItem>
+                <DropdownMenuItem asChild><NavLink to="/our-story">Our Story</NavLink></DropdownMenuItem>
+                <DropdownMenuItem asChild><NavLink to="/achievements">Achievements</NavLink></DropdownMenuItem>
+                <DropdownMenuItem asChild><NavLink to="/our-team">Our Team</NavLink></DropdownMenuItem>
                 <DropdownMenuItem asChild><NavLink to="/contact">Contact</NavLink></DropdownMenuItem>
                 <DropdownMenuItem asChild><NavLink to="/signin">Sign In</NavLink></DropdownMenuItem>
                 <DropdownMenuItem asChild><NavLink to="/signup">Sign Up</NavLink></DropdownMenuItem>

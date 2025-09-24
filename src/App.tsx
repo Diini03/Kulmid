@@ -13,6 +13,9 @@ import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
 import Favorites from "./pages/Favorites";
 import About from "./pages/About";
+import OurStory from "./pages/OurStory";
+import Achievements from "./pages/Achievements";
+import OurTeam from "./pages/OurTeam";
 import Contact from "./pages/Contact";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
@@ -37,6 +40,9 @@ const App = () => (
                 <Route path="/events/:id" element={<EventDetails />} />
                 <Route path="/favorites" element={<Favorites />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/our-story" element={<OurStory />} />
+                <Route path="/achievements" element={<Achievements />} />
+                <Route path="/our-team" element={<OurTeam />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/signup" element={<SignUp />} />
