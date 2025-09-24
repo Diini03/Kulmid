@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import heroImg from "@/assets/hero-eventease.jpg";
 import { Seo } from "@/components/Seo";
 import { Layout } from "@/components/layout/Layout";
@@ -5,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
 import { events } from "@/data/events";
-import { useState } from "react";
-import { Link } from "react-router-dom";
 
 const Index = () => {
   const [activeFilter, setActiveFilter] = useState<string>("All");
@@ -97,7 +97,7 @@ const Index = () => {
         <div className="flex gap-4 overflow-x-auto pb-2">
           {[1,2,3,4].map((i) => (
             <div key={i} className="min-w-[280px] flex-1 rounded-xl border p-6 shadow-sm hover:shadow-lg transition-shadow">
-              <p className="text-sm mb-3">“EventEase made booking my conference a breeze. Slick UI and great events!”</p>
+              <p className="text-sm mb-3">"EventEase made booking my conference a breeze. Slick UI and great events!"</p>
               <div className="text-sm font-semibold">Alex Johnson</div>
               <div className="text-xs text-muted-foreground">Product Manager</div>
             </div>

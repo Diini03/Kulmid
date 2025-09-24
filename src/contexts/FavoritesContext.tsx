@@ -10,9 +10,9 @@ interface FavoritesContextType {
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
-export const useFavorites = () => {
+export const useFavorites = (): FavoritesContextType => {
   const context = useContext(FavoritesContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useFavorites must be used within a FavoritesProvider');
   }
   return context;
@@ -22,7 +22,10 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [favorites, setFavorites] = useState<EventItem[]>([]);
 
   const addToFavorites = (event: EventItem) => {
-    setFavorites(prev => [...prev.filter(fav => fav.id !== event.id), event]);
+    setFavorites(prev => {
+      const filtered = prev.filter(fav => fav.id !== event.id);
+      return [...filtered, event];
+    });
   };
 
   const removeFromFavorites = (eventId: string) => {
@@ -33,13 +36,15 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     return favorites.some(fav => fav.id === eventId);
   };
 
+  const value: FavoritesContextType = {
+    favorites,
+    addToFavorites,
+    removeFromFavorites,
+    isFavorite
+  };
+
   return (
-    <FavoritesContext.Provider value={{
-      favorites,
-      addToFavorites,
-      removeFromFavorites,
-      isFavorite
-    }}>
+    <FavoritesContext.Provider value={value}>
       {children}
     </FavoritesContext.Provider>
   );

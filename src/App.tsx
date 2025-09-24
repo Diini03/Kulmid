@@ -3,21 +3,22 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { FavoritesProvider } from "@/contexts/FavoritesContext";
+
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
+import Favorites from "./pages/Favorites";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import UserDashboard from "./pages/UserDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
-import Favorites from "./pages/Favorites";
 import CalendarView from "./pages/CalendarView";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { FavoritesProvider } from "@/contexts/FavoritesContext";
-import { HelmetProvider } from "react-helmet-async";
 
 const queryClient = new QueryClient();
 
