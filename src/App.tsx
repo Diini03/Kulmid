@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -28,34 +29,36 @@ const queryClient = new QueryClient();
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
-      <FavoritesProvider>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/events" element={<Events />} />
-                <Route path="/events/:id" element={<EventDetails />} />
-                <Route path="/favorites" element={<Favorites />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/our-story" element={<OurStory />} />
-                <Route path="/achievements" element={<Achievements />} />
-                <Route path="/our-team" element={<OurTeam />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/signin" element={<SignIn />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/dashboard" element={<UserDashboard />} />
-                <Route path="/organizer" element={<OrganizerDashboard />} />
-                <Route path="/calendar" element={<CalendarView />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </ThemeProvider>
-      </FavoritesProvider>
+      <AuthProvider>
+        <FavoritesProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/events" element={<Events />} />
+                  <Route path="/events/:id" element={<EventDetails />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/our-story" element={<OurStory />} />
+                  <Route path="/achievements" element={<Achievements />} />
+                  <Route path="/our-team" element={<OurTeam />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/signin" element={<SignIn />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route path="/dashboard" element={<UserDashboard />} />
+                  <Route path="/organizer" element={<OrganizerDashboard />} />
+                  <Route path="/calendar" element={<CalendarView />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </ThemeProvider>
+        </FavoritesProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>
 );

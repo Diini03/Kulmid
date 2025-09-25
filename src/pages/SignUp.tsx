@@ -2,32 +2,101 @@ import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { signUpSchema, type SignUpFormData } from "@/lib/validations";
 
 const SignUp = () => {
-  const [show, setShow] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { signUp, loading } = useAuth();
+  const navigate = useNavigate();
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema)
+  });
+
+  const onSubmit = async (data: SignUpFormData) => {
+    const { error } = await signUp(data.email, data.password, data.fullName);
+    if (!error) {
+      navigate('/');
+    }
+  };
+
   return (
     <Layout>
       <Seo title="Sign Up" canonical="/signup" />
       <section className="container py-16 grid place-items-center">
         <div className="w-full max-w-md rounded-xl border p-6 shadow-sm">
           <h1 className="text-2xl font-bold mb-6">Create your account</h1>
-          <div className="grid gap-3">
-            <input className="h-10 rounded-md border bg-background px-3" placeholder="Name" />
-            <input className="h-10 rounded-md border bg-background px-3" placeholder="Email" />
-            <div className="relative">
-              <input type={show ? "text" : "password"} className="h-10 w-full rounded-md border bg-background px-3" placeholder="Password" />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground" onClick={() => setShow((s) => !s)}>{show ? "Hide" : "Show"}</button>
+          <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                placeholder="Enter your full name"
+                {...register("fullName")}
+              />
+              {errors.fullName && (
+                <p className="text-sm text-destructive">{errors.fullName.message}</p>
+              )}
             </div>
-            <Button className="w-full">Sign Up</Button>
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline">Continue with Google</Button>
-              <Button variant="outline">Continue with Apple</Button>
+
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@gmail.com"
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
             </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a strong password"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-sm text-destructive">{errors.password.message}</p>
+              )}
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isSubmitting || loading}
+            >
+              {isSubmitting ? "Creating account..." : "Sign Up"}
+            </Button>
+
             <div className="text-sm text-muted-foreground text-center">
-              Already have an account? <Link to="/signin" className="text-primary">Sign in</Link>
+              Already have an account? <Link to="/signin" className="text-primary hover:underline">Sign in</Link>
             </div>
-          </div>
+          </form>
         </div>
       </section>
     </Layout>
