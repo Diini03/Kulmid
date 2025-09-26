@@ -35,6 +35,10 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
   onClose, 
   action = "perform this action" 
 }) => {
+  const handleLinkClick = () => {
+    onClose(); // Close the modal when navigating
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -45,13 +49,13 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 mt-6">
-          <Button asChild className="w-full">
+          <Button asChild className="w-full" onClick={handleLinkClick}>
             <Link to="/signin" className="inline-flex items-center gap-2">
               <LogIn className="h-4 w-4" />
               Sign In
             </Link>
           </Button>
-          <Button asChild variant="outline" className="w-full">
+          <Button asChild variant="outline" className="w-full" onClick={handleLinkClick}>
             <Link to="/signup" className="inline-flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
               Create Account

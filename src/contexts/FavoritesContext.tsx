@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { EventItem } from '@/data/events';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthRequiredModal } from '@/components/auth/AuthGuard';
+import { useLocation } from 'react-router-dom';
 
 interface FavoritesContextType {
   favorites: EventItem[];
@@ -24,6 +25,14 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [favorites, setFavorites] = useState<EventItem[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user } = useAuth();
+  const location = useLocation();
+
+  // Close auth modal when location changes (user navigates to sign in/up pages)
+  useEffect(() => {
+    if (showAuthModal && (location.pathname === '/signin' || location.pathname === '/signup')) {
+      setShowAuthModal(false);
+    }
+  }, [location.pathname, showAuthModal]);
 
   const addToFavorites = (event: EventItem) => {
     if (!user) {

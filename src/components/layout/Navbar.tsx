@@ -3,8 +3,9 @@ import { NavLink, Link } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CalendarSearch, Moon, Sun, Menu, Heart } from "lucide-react";
+import { CalendarSearch, Moon, Sun, Menu, Heart, User, LogOut } from "lucide-react";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
   onOpenSearch: () => void;
@@ -13,6 +14,7 @@ interface NavbarProps {
 export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
   const { favorites } = useFavorites();
+  const { user, profile, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -85,14 +87,48 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 <DropdownMenuItem asChild><NavLink to="/achievements">Achievements</NavLink></DropdownMenuItem>
                 <DropdownMenuItem asChild><NavLink to="/our-team">Our Team</NavLink></DropdownMenuItem>
                 <DropdownMenuItem asChild><NavLink to="/contact">Contact</NavLink></DropdownMenuItem>
-                <DropdownMenuItem asChild><NavLink to="/signin">Sign In</NavLink></DropdownMenuItem>
-                <DropdownMenuItem asChild><NavLink to="/signup">Sign Up</NavLink></DropdownMenuItem>
+                {user ? (
+                  <>
+                    <DropdownMenuItem asChild><NavLink to="/dashboard">Dashboard</NavLink></DropdownMenuItem>
+                    <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild><NavLink to="/signin">Sign In</NavLink></DropdownMenuItem>
+                    <DropdownMenuItem asChild><NavLink to="/signup">Sign Up</NavLink></DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
           <div className="hidden md:flex items-center gap-2">
-            <Button asChild variant="ghost"><Link to="/signin">Sign In</Link></Button>
-            <Button asChild variant="hero"><Link to="/signup">Sign Up</Link></Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>{profile?.full_name || user.email?.split('@')[0] || 'User'}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button asChild variant="ghost"><Link to="/signin">Sign In</Link></Button>
+                <Button asChild variant="hero"><Link to="/signup">Sign Up</Link></Button>
+              </>
+            )}
           </div>
         </div>
       </nav>

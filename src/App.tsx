@@ -20,6 +20,7 @@ import OurTeam from "./pages/OurTeam";
 import Contact from "./pages/Contact";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import ResetPassword from "./pages/ResetPassword";
 import UserDashboard from "./pages/UserDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import CalendarView from "./pages/CalendarView";
@@ -51,6 +52,7 @@ const App = () => (
                   <Route path="/dashboard" element={<UserDashboard />} />
                   <Route path="/organizer" element={<OrganizerDashboard />} />
                   <Route path="/calendar" element={<CalendarView />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
