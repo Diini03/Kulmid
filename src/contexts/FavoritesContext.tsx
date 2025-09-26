@@ -34,6 +34,13 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [location.pathname, showAuthModal]);
 
+  // Clear favorites when user logs out
+  useEffect(() => {
+    if (!user) {
+      setFavorites([]);
+    }
+  }, [user]);
+
   const addToFavorites = (event: EventItem) => {
     if (!user) {
       setShowAuthModal(true);
