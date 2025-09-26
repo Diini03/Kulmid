@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error);
@@ -97,7 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -115,9 +115,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           variant: "destructive"
         });
       } else {
+        // No need for email confirmation message since it's disabled
         toast({
-          title: "Check your email",
-          description: "Please check your email for a confirmation link to complete registration."
+          title: "Account created successfully",
+          description: "Welcome to EventEase! You're now signed in."
         });
       }
       
