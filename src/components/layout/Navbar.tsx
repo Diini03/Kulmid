@@ -3,7 +3,7 @@ import { NavLink, Link } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CalendarSearch, Moon, Sun, Menu, Heart, User, LogOut } from "lucide-react";
+import { CalendarSearch, Moon, Sun, Menu, Heart, User, LogOut, Monitor } from "lucide-react";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -27,7 +27,11 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const linkCls = ({ isActive }: { isActive: boolean }) =>
     `${isActive ? "text-primary font-medium" : "text-foreground"} transition-colors hover:text-primary`;
 
-  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
+  const toggleTheme = () => {
+    if (theme === "system") setTheme("light");
+    else if (theme === "light") setTheme("dark");
+    else setTheme("system");
+  };
 
   return (
     <header className={`sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b ${scrolled ? "py-2" : "py-3"}`}>
@@ -73,7 +77,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             </Link>
           </Button>
           <Button variant="outline" size="icon" aria-label="Toggle theme" onClick={toggleTheme}>
-            {theme === "dark" ? <Sun /> : <Moon />}
+            {theme === "system" ? <Monitor /> : theme === "dark" ? <Sun /> : <Moon />}
           </Button>
           <div className="md:hidden">
             <DropdownMenu>
