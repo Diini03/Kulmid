@@ -1,12 +1,23 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
-import { events as allEvents, type EventItem } from "@/data/events";
+import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Users } from "lucide-react";
+
+type EventItem = {
+  id: string;
+  title: string;
+  date: string;
+  location: string;
+  category: string;
+  price: number;
+  image_url: string | null;
+  description: string | null;
+};
 
 const sorters: Record<string, (a: EventItem, b: EventItem) => number> = {
   Latest: (a, b) => +new Date(b.date) - +new Date(a.date),
@@ -18,6 +29,23 @@ const sorters: Record<string, (a: EventItem, b: EventItem) => number> = {
 const EventsPage = () => {
   const [sort, setSort] = useState<string>("Latest");
   const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [allEvents, setAllEvents] = useState<EventItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*');
+
+      if (data) {
+        setAllEvents(data);
+      }
+      setLoading(false);
+    };
+
+    fetchEvents();
+  }, []);
 
   const events = useMemo(() => {
     let list = [...allEvents];
@@ -30,7 +58,7 @@ const EventsPage = () => {
     // Sort
     const sorter = sorters[sort] || sorters.Latest;
     return list.sort(sorter);
-  }, [sort, activeFilter]);
+  }, [sort, activeFilter, allEvents]);
 
   return (
     <Layout>
@@ -81,7 +109,7 @@ const EventsPage = () => {
                   {allEvents.slice(0, 4).map((event, i) => (
                     <div key={event.id} className={`relative ${i % 2 === 1 ? 'mt-8' : ''}`}>
                       <img 
-                        src={event.image} 
+                        src={event.image_url || '/placeholder.svg'} 
                         alt={event.title}
                         className="rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 w-full h-32 object-cover"
                       />
@@ -129,11 +157,21 @@ const EventsPage = () => {
           ))}
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((ev) => (
-            <EventCard key={ev.id} event={ev} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-12">Loading events...</div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {events.length > 0 ? (
+              events.map((ev) => (
+                <EventCard key={ev.id} event={ev} />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                No events found.
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </Layout>
   );

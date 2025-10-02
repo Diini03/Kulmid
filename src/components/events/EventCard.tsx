@@ -2,9 +2,18 @@ import { CalendarDays, MapPin, Ticket, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { EventItem } from "@/data/events";
 import { Link } from "react-router-dom";
 import { useFavorites } from "@/contexts/FavoritesContext";
+
+type EventItem = {
+  id: string;
+  title: string;
+  date: string;
+  location: string;
+  category: string;
+  price: number;
+  image_url: string | null;
+};
 
 interface Props {
   event: EventItem;
@@ -27,7 +36,7 @@ export const EventCard = ({ event }: Props) => {
     <Card className="group overflow-hidden border-muted/60 hover:shadow-lg transition-shadow duration-200">
       <div className="relative">
         <img
-          src={event.image}
+          src={event.image_url || '/placeholder.svg'}
           alt={`${event.title} event image`}
           loading="lazy"
           className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"

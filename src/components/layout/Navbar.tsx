@@ -14,7 +14,7 @@ interface NavbarProps {
 export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
   const { favorites } = useFavorites();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -94,6 +94,9 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 {user ? (
                   <>
                     <DropdownMenuItem asChild><NavLink to="/dashboard">Dashboard</NavLink></DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild><NavLink to="/organizer">Admin Panel</NavLink></DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
                   </>
                 ) : (
@@ -121,6 +124,14 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/organizer" className="flex items-center gap-2">
+                        <CalendarSearch className="h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Sign Out

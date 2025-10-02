@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import heroImg from "@/assets/hero-eventease.jpg";
 import { Seo } from "@/components/Seo";
@@ -6,10 +6,38 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
-import { events } from "@/data/events";
+import { supabase } from "@/integrations/supabase/client";
+
+type EventItem = {
+  id: string;
+  title: string;
+  date: string;
+  location: string;
+  category: string;
+  price: number;
+  image_url: string | null;
+};
 
 const Index = () => {
   const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (data) {
+        setEvents(data);
+      }
+      setLoading(false);
+    };
+
+    fetchEvents();
+  }, []);
 
   const filtered = events.filter((e) =>
     activeFilter === "All" ? true : e.category === activeFilter
@@ -69,11 +97,19 @@ const Index = () => {
           <h2 className="text-2xl font-bold">Featured Events</h2>
           <Button asChild variant="link"><Link to="/events">View All</Link></Button>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.slice(0, 6).map((ev) => (
-            <EventCard key={ev.id} event={ev} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-12">Loading events...</div>
+        ) : filtered.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.slice(0, 6).map((ev) => (
+              <EventCard key={ev.id} event={ev} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-muted-foreground">
+            No events found for this category.
+          </div>
+        )}
       </section>
 
       {/* Stats */}

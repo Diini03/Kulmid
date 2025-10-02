@@ -1,13 +1,22 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import type { EventItem } from '@/data/events';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthRequiredModal } from '@/components/auth/AuthGuard';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { events } from '@/data/events';
+
+type EventItem = {
+  id: string;
+  title: string;
+  date: string;
+  location: string;
+  category: string;
+  price: number;
+  image_url: string | null;
+};
 
 interface FavoritesContextType {
   favorites: EventItem[];
+  favoriteCount: number;
   addToFavorites: (event: EventItem) => void;
   removeFromFavorites: (eventId: string) => void;
   isFavorite: (eventId: string) => boolean;
@@ -45,7 +54,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     const loadUserFavorites = async () => {
       try {
-        const { data: favoriteIds, error } = await supabase
+        const { data: favoriteRecords, error } = await supabase
           .from('user_favorites')
           .select('event_id')
           .eq('user_id', user.id);
@@ -55,12 +64,23 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
           return;
         }
 
-        // Map favorite event IDs to actual event objects
-        const favoriteEvents = favoriteIds
-          .map(fav => events.find(event => event.id === fav.event_id))
-          .filter(Boolean) as EventItem[];
+        if (!favoriteRecords || favoriteRecords.length === 0) {
+          setFavorites([]);
+          return;
+        }
 
-        setFavorites(favoriteEvents);
+        // Fetch the actual event data from events table
+        const { data: favoriteEvents, error: eventsError } = await supabase
+          .from('events')
+          .select('*')
+          .in('id', favoriteRecords.map(f => f.event_id));
+
+        if (eventsError) {
+          console.error('Error loading favorite events:', eventsError);
+          return;
+        }
+
+        setFavorites(favoriteEvents || []);
       } catch (error) {
         console.error('Error loading favorites:', error);
       }
@@ -131,6 +151,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const value: FavoritesContextType = {
     favorites,
+    favoriteCount: favorites.length,
     addToFavorites,
     removeFromFavorites,
     isFavorite

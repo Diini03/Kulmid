@@ -1,30 +1,59 @@
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
-import { events } from "@/data/events";
+import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarDays, MapPin, Users, Clock, Award, Heart } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFavorites } from "@/contexts/FavoritesContext";
 
 const EventDetails = () => {
   const { id } = useParams();
-  const event = events.find((e) => e.id === id);
+  const [event, setEvent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [bookOpen, setBookOpen] = useState(false);
   const [qty, setQty] = useState(1);
 
-  if (!event) return (
-    <Layout>
-      <Seo title="Event Not Found" />
-      <div className="container py-20 text-center">
-        <h1 className="text-2xl font-bold mb-2">Event not found</h1>
-        <Button asChild variant="link"><Link to="/events">Back to events</Link></Button>
-      </div>
-    </Layout>
-  );
+  useEffect(() => {
+    const fetchEvent = async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (data) {
+        setEvent(data);
+      }
+      setLoading(false);
+    };
+
+    fetchEvent();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <Seo title="Loading..." />
+        <div className="container py-20 text-center">Loading event...</div>
+      </Layout>
+    );
+  }
+
+  if (!event) {
+    return (
+      <Layout>
+        <Seo title="Event Not Found" />
+        <div className="container py-20 text-center">
+          <h1 className="text-2xl font-bold mb-2">Event not found</h1>
+          <Button asChild variant="link"><Link to="/events">Back to events</Link></Button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -33,7 +62,7 @@ const EventDetails = () => {
       <section className="relative">
         <div className="w-full h-[60vh] relative overflow-hidden">
           <img 
-            src={event.image} 
+            src={event.image_url || '/placeholder.svg'} 
             alt={`${event.title} event banner`} 
             className="w-full h-full object-cover"
           />
@@ -92,23 +121,27 @@ const EventDetails = () => {
                 <h3 className="text-2xl font-semibold mb-4">About This Event</h3>
                 <div className="prose dark:prose-invert">
                   <p className="text-lg leading-relaxed">
-                    Join us for an exceptional {event.category.toLowerCase()} that brings together industry leaders, 
+                    {event.description || `Join us for an exceptional ${event.category.toLowerCase()} that brings together industry leaders, 
                     innovators, and passionate professionals for an unforgettable experience. This event is designed 
-                    to inspire, educate, and create meaningful connections that will last long after the day ends.
+                    to inspire, educate, and create meaningful connections that will last long after the day ends.`}
                   </p>
                   
-                  <p>
-                    Our carefully curated program features cutting-edge insights, hands-on workshops, and 
-                    networking opportunities that will enhance your professional journey. Whether you're looking 
-                    to expand your knowledge, meet like-minded individuals, or discover new opportunities, 
-                    this event offers something valuable for everyone.
-                  </p>
-                  
-                  <p>
-                    Don't miss this chance to be part of a community that's shaping the future. 
-                    Secure your spot today and prepare for an experience that will transform your perspective 
-                    and accelerate your growth.
-                  </p>
+                  {!event.description && (
+                    <>
+                      <p>
+                        Our carefully curated program features cutting-edge insights, hands-on workshops, and 
+                        networking opportunities that will enhance your professional journey. Whether you're looking 
+                        to expand your knowledge, meet like-minded individuals, or discover new opportunities, 
+                        this event offers something valuable for everyone.
+                      </p>
+                      
+                      <p>
+                        Don't miss this chance to be part of a community that's shaping the future. 
+                        Secure your spot today and prepare for an experience that will transform your perspective 
+                        and accelerate your growth.
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
               
