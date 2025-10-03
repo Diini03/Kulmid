@@ -7,14 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInSchema, resetPasswordSchema, type SignInFormData, type ResetPasswordFormData } from "@/lib/validations";
+import { ADMIN_CREDENTIALS } from "@/constants/admin";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const { signIn, resetPassword, loading } = useAuth();
+  const { signIn, adminSignIn, resetPassword, loading } = useAuth();
   const navigate = useNavigate();
   
   const signInForm = useForm<SignInFormData>({
@@ -26,6 +27,25 @@ const SignIn = () => {
   });
 
   const onSignIn = async (data: SignInFormData) => {
+    // Check if credentials match admin
+    if (
+      data.email === ADMIN_CREDENTIALS.username ||
+      data.email === ADMIN_CREDENTIALS.email
+    ) {
+      if (data.password === ADMIN_CREDENTIALS.password) {
+        const { error } = await adminSignIn(
+          ADMIN_CREDENTIALS.email,
+          ADMIN_CREDENTIALS.password,
+          "Admin"
+        );
+        if (!error) {
+          navigate('/admin');
+        }
+        return;
+      }
+    }
+
+    // Regular user sign in
     const { error } = await signIn(data.email, data.password);
     if (!error) {
       navigate('/');
@@ -90,13 +110,25 @@ const SignIn = () => {
       <section className="container py-16 grid place-items-center">
         <div className="w-full max-w-md rounded-xl border p-6 shadow-sm">
           <h1 className="text-2xl font-bold mb-6">Welcome back</h1>
+          <div className="mb-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+            <div className="flex items-center gap-2 text-sm">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <div>
+                <p className="font-medium">Admin Access</p>
+                <p className="text-xs text-muted-foreground">
+                  Username: <code className="bg-background px-1 rounded">admin</code> | 
+                  Password: <code className="bg-background px-1 rounded">Admin@123</code>
+                </p>
+              </div>
+            </div>
+          </div>
           <form onSubmit={signInForm.handleSubmit(onSignIn)} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email or Username</Label>
               <Input
                 id="email"
-                type="email"
-                placeholder="Enter your email"
+                type="text"
+                placeholder="Enter your email or username"
                 {...signInForm.register("email")}
               />
               {signInForm.formState.errors.email && (

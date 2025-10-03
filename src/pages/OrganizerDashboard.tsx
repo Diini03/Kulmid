@@ -1,4 +1,4 @@
-import { Layout } from "@/components/layout/Layout";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -52,9 +52,9 @@ const OrganizerDashboard = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="container py-12">Loading...</div>
-      </Layout>
+      <AdminLayout>
+        <div className="py-12">Loading...</div>
+      </AdminLayout>
     );
   }
 
@@ -63,12 +63,12 @@ const OrganizerDashboard = () => {
   }
 
   return (
-    <Layout>
-      <Seo title="Admin Dashboard" canonical="/organizer" />
-      <section className="container py-12 space-y-8">
+    <AdminLayout>
+      <Seo title="Admin Dashboard" canonical="/admin" />
+      <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <Button onClick={() => setCreateOpen(true)} variant="hero">
+          <h1 className="text-3xl font-bold">Event Management</h1>
+          <Button onClick={() => setCreateOpen(true)}>
             Create Event
           </Button>
         </div>
@@ -109,7 +109,7 @@ const OrganizerDashboard = () => {
             </div>
           )}
         </div>
-      </section>
+      </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -126,7 +126,7 @@ const OrganizerDashboard = () => {
           />
         </DialogContent>
       </Dialog>
-    </Layout>
+    </AdminLayout>
   );
 };
 

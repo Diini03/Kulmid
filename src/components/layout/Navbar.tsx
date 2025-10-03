@@ -95,7 +95,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                   <>
                     <DropdownMenuItem asChild><NavLink to="/dashboard">Dashboard</NavLink></DropdownMenuItem>
                     {isAdmin && (
-                      <DropdownMenuItem asChild><NavLink to="/organizer">Admin Panel</NavLink></DropdownMenuItem>
+                      <DropdownMenuItem asChild><NavLink to="/admin">Admin Panel</NavLink></DropdownMenuItem>
                     )}
                     <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
                   </>
@@ -126,7 +126,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                   </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link to="/organizer" className="flex items-center gap-2">
+                      <Link to="/admin" className="flex items-center gap-2">
                         <CalendarSearch className="h-4 w-4" />
                         Admin Panel
                       </Link>

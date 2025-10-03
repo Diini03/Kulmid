@@ -23,6 +23,8 @@ import SignUp from "./pages/SignUp";
 import ResetPassword from "./pages/ResetPassword";
 import UserDashboard from "./pages/UserDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminSettings from "./pages/AdminSettings";
 import CalendarView from "./pages/CalendarView";
 
 const queryClient = new QueryClient();
@@ -50,7 +52,9 @@ const App = () => (
                   <Route path="/signin" element={<SignIn />} />
                   <Route path="/signup" element={<SignUp />} />
                   <Route path="/dashboard" element={<UserDashboard />} />
-                  <Route path="/organizer" element={<OrganizerDashboard />} />
+                  <Route path="/admin" element={<OrganizerDashboard />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
                   <Route path="/calendar" element={<CalendarView />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
