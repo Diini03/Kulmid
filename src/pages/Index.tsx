@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import heroImg from "@/assets/hero-eventease.jpg";
 import { Seo } from "@/components/Seo";
 import { Layout } from "@/components/layout/Layout";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type EventItem = {
   id: string;
@@ -19,9 +20,15 @@ type EventItem = {
 };
 
 const Index = () => {
+  const { isAdmin, loading: authLoading } = useAuth();
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Redirect admins to admin panel
+  if (!authLoading && isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -67,7 +74,7 @@ const Index = () => {
                 <Link to="/events">Browse Events</Link>
               </Button>
               <Button asChild variant="outline" className="hover-scale">
-                <Link to="/organizer">Host an Event</Link>
+                <Link to="/contact">Contact Us</Link>
               </Button>
             </div>
           </div>

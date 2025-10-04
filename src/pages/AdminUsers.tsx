@@ -4,13 +4,29 @@ import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Users as UsersIcon, UserCheck, Clock } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const AdminUsers = () => {
+  const { isAdmin, loading } = useAuth();
   const [stats, setStats] = useState({
     totalUsers: 0,
     admins: 0,
     recentSignups: 0
   });
+
+  // Protect admin route
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="py-12">Loading...</div>
+      </AdminLayout>
+    );
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
   useEffect(() => {
     fetchUserStats();

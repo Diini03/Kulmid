@@ -1,7 +1,15 @@
 import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const UserDashboard = () => {
+  const { isAdmin, loading } = useAuth();
+
+  // Redirect admins to admin panel
+  if (!loading && isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
   return (
     <Layout>
       <Seo title="My Dashboard" canonical="/dashboard" />

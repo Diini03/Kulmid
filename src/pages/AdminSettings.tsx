@@ -7,9 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { Settings as SettingsIcon } from "lucide-react";
+import { Navigate } from "react-router-dom";
 
 const AdminSettings = () => {
-  const { profile } = useAuth();
+  const { profile, isAdmin, loading } = useAuth();
+
+  // Protect admin route
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="py-12">Loading...</div>
+      </AdminLayout>
+    );
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <AdminLayout>
