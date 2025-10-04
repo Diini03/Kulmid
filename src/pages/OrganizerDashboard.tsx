@@ -66,46 +66,96 @@ const OrganizerDashboard = () => {
     <AdminLayout>
       <Seo title="Admin Dashboard" canonical="/admin" />
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Event Management</h1>
-          <Button onClick={() => setCreateOpen(true)}>
-            Create Event
-          </Button>
+        {/* Hero Section */}
+        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-8 text-primary-foreground">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+              <p className="text-primary-foreground/80">
+                Manage events, monitor engagement, and control platform content
+              </p>
+            </div>
+            <Button 
+              onClick={() => setCreateOpen(true)}
+              size="lg"
+              className="bg-white text-primary hover:bg-white/90 shadow-lg"
+            >
+              <Calendar className="mr-2 h-5 w-5" />
+              Create New Event
+            </Button>
+          </div>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-xl border p-6 bg-card">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-muted-foreground">Total Events</div>
-              <Calendar className="h-4 w-4 text-primary" />
+          <div className="rounded-xl border p-6 bg-card shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                Total Events
+              </div>
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-primary" />
+              </div>
             </div>
-            <div className="text-3xl font-semibold">{stats.totalEvents}</div>
+            <div className="text-4xl font-bold">{stats.totalEvents}</div>
+            <p className="text-sm text-muted-foreground mt-2">Active events on platform</p>
           </div>
-          <div className="rounded-xl border p-6 bg-card">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-muted-foreground">Total Favorites</div>
-              <Users className="h-4 w-4 text-primary" />
+          <div className="rounded-xl border p-6 bg-card shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                Total Favorites
+              </div>
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
             </div>
-            <div className="text-3xl font-semibold">{stats.totalFavorites}</div>
+            <div className="text-4xl font-bold">{stats.totalFavorites}</div>
+            <p className="text-sm text-muted-foreground mt-2">User engagement count</p>
           </div>
-          <div className="rounded-xl border p-6 bg-card">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-muted-foreground">Engagement</div>
-              <TrendingUp className="h-4 w-4 text-primary" />
+          <div className="rounded-xl border p-6 bg-card shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                Avg. Engagement
+              </div>
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-primary" />
+              </div>
             </div>
-            <div className="text-3xl font-semibold">
-              {stats.totalEvents > 0 ? Math.round((stats.totalFavorites / stats.totalEvents) * 100) / 100 : 0}
+            <div className="text-4xl font-bold">
+              {stats.totalEvents > 0 ? (stats.totalFavorites / stats.totalEvents).toFixed(1) : 0}
             </div>
+            <p className="text-sm text-muted-foreground mt-2">Favorites per event</p>
           </div>
         </div>
 
+        {/* Events Management Section */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Manage Events</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Event Management</h2>
+              <p className="text-muted-foreground">Create, edit, and manage all platform events</p>
+            </div>
+            <Button onClick={() => setCreateOpen(true)} variant="outline">
+              <Calendar className="mr-2 h-4 w-4" />
+              Add Event
+            </Button>
+          </div>
+          
           {events.length > 0 ? (
-            <EventsTable events={events} onUpdate={() => { fetchEvents(); fetchStats(); }} />
+            <div className="bg-card rounded-xl border shadow-sm">
+              <EventsTable events={events} onUpdate={() => { fetchEvents(); fetchStats(); }} />
+            </div>
           ) : (
-            <div className="text-center py-12 border rounded-lg">
-              <p className="text-muted-foreground">No events yet. Create your first event!</p>
+            <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/30">
+              <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+              <h3 className="text-xl font-semibold mb-2">No Events Yet</h3>
+              <p className="text-muted-foreground mb-6">
+                Create your first event to get started with event management
+              </p>
+              <Button onClick={() => setCreateOpen(true)}>
+                <Calendar className="mr-2 h-4 w-4" />
+                Create Your First Event
+              </Button>
             </div>
           )}
         </div>
