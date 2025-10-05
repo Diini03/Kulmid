@@ -25,22 +25,7 @@ const Index = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Wait for auth to load before rendering
-  if (authLoading) {
-    return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">Loading...</div>
-        </div>
-      </Layout>
-    );
-  }
-
-  // Redirect admins to admin panel
-  if (isAdmin) {
-    return <Navigate to="/admin" replace />;
-  }
-
+  // All hooks must be called before any conditional returns
   useEffect(() => {
     const fetchEvents = async () => {
       const { data, error } = await supabase
@@ -56,6 +41,22 @@ const Index = () => {
 
     fetchEvents();
   }, []);
+
+  // Wait for auth to load before rendering
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">Loading...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Redirect admins to admin panel
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
 
   const filtered = events.filter((e) =>
     activeFilter === "All" ? true : e.category === activeFilter
