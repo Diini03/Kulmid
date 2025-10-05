@@ -25,8 +25,19 @@ const Index = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Wait for auth to load before rendering
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">Loading...</div>
+        </div>
+      </Layout>
+    );
+  }
+
   // Redirect admins to admin panel
-  if (!authLoading && isAdmin) {
+  if (isAdmin) {
     return <Navigate to="/admin" replace />;
   }
 
