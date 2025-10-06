@@ -102,7 +102,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 ) : (
                   <>
                     <DropdownMenuItem asChild><NavLink to="/signin">Sign In</NavLink></DropdownMenuItem>
-                    <DropdownMenuItem asChild><NavLink to="/signup">Sign Up</NavLink></DropdownMenuItem>
+                    <DropdownMenuItem asChild><NavLink to="/signup">Get Started</NavLink></DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
@@ -141,7 +141,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             ) : (
               <>
                 <Button asChild variant="ghost"><Link to="/signin">Sign In</Link></Button>
-                <Button asChild variant="hero"><Link to="/signup">Sign Up</Link></Button>
+                <Button asChild variant="hero"><Link to="/signup">Get Started</Link></Button>
               </>
             )}
           </div>
