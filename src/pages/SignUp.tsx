@@ -90,7 +90,7 @@ const SignUp = () => {
               className="w-full" 
               disabled={isSubmitting || loading}
             >
-              {isSubmitting ? "Creating account..." : "Sign Up"}
+              {isSubmitting ? "Creating account..." : "Get Started"}
             </Button>
 
             <div className="text-sm text-muted-foreground text-center">
