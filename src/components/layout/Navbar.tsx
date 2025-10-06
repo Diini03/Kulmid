@@ -3,7 +3,7 @@ import { NavLink, Link } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CalendarSearch, Moon, Sun, Menu, Heart, User, LogOut, Monitor } from "lucide-react";
+import { CalendarSearch, Moon, Sun, Menu, Heart, User, LogOut, Monitor, Check } from "lucide-react";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -27,10 +27,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const linkCls = ({ isActive }: { isActive: boolean }) =>
     `${isActive ? "text-primary font-medium" : "text-foreground"} transition-colors hover:text-primary`;
 
-  const toggleTheme = () => {
-    if (theme === "system") setTheme("light");
-    else if (theme === "light") setTheme("dark");
-    else setTheme("system");
+  const getThemeIcon = () => {
+    if (theme === "system") return <Monitor className="h-4 w-4" />;
+    if (theme === "light") return <Sun className="h-4 w-4" />;
+    return <Moon className="h-4 w-4" />;
   };
 
   return (
@@ -76,9 +76,36 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               )}
             </Link>
           </Button>
-          <Button variant="outline" size="icon" aria-label="Toggle theme" onClick={toggleTheme}>
-            {theme === "system" ? <Monitor /> : theme === "dark" ? <Sun /> : <Moon />}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" aria-label="Toggle theme">
+                {getThemeIcon()}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="z-50">
+              <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Monitor className="h-4 w-4" />
+                  System
+                </div>
+                {theme === "system" && <Check className="h-4 w-4" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("light")} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sun className="h-4 w-4" />
+                  Light
+                </div>
+                {theme === "light" && <Check className="h-4 w-4" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Moon className="h-4 w-4" />
+                  Dark
+                </div>
+                {theme === "dark" && <Check className="h-4 w-4" />}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="md:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
