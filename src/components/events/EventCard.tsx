@@ -2,8 +2,11 @@ import { CalendarDays, MapPin, Ticket, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { AuthRequiredModal } from "@/components/auth/AuthGuard";
 
 type EventItem = {
   id: string;
@@ -21,7 +24,11 @@ interface Props {
 
 export const EventCard = ({ event }: Props) => {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const isLiked = isFavorite(event.id);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authAction, setAuthAction] = useState("");
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -32,7 +39,24 @@ export const EventCard = ({ event }: Props) => {
       addToFavorites(event);
     }
   };
+
+  const handleBookClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) {
+      setAuthAction("book this event");
+      setShowAuthModal(true);
+    } else {
+      navigate(`/events/${event.id}`);
+    }
+  };
+
   return (
+    <>
+      <AuthRequiredModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        action={authAction}
+      />
     <Card className="group overflow-hidden border-muted/60 hover:shadow-lg transition-shadow duration-200">
       <div className="relative">
         <img
@@ -74,11 +98,12 @@ export const EventCard = ({ event }: Props) => {
           <Button asChild variant="outline" size="sm">
             <Link to={`/events/${event.id}`}>View Details</Link>
           </Button>
-          <Button asChild size="sm">
-            <Link to={`/events/${event.id}`} className="inline-flex items-center"><Ticket className="mr-2 h-4 w-4"/> Book</Link>
+          <Button size="sm" onClick={handleBookClick}>
+            <Ticket className="mr-2 h-4 w-4"/> Book
           </Button>
         </div>
       </CardContent>
     </Card>
+    </>
   );
 };

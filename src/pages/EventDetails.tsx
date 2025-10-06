@@ -6,16 +6,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarDays, MapPin, Users, Clock, Award, Heart } from "lucide-react";
+import { CalendarDays, MapPin, Users, Clock, Award, Heart, Share2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthRequiredModal } from "@/components/auth/AuthGuard";
+import { toast } from "@/hooks/use-toast";
 
 const EventDetails = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [bookOpen, setBookOpen] = useState(false);
   const [qty, setQty] = useState(1);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authAction, setAuthAction] = useState("");
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -33,6 +39,30 @@ const EventDetails = () => {
 
     fetchEvent();
   }, [id]);
+
+  const handleBookClick = () => {
+    if (!user) {
+      setAuthAction("book this event");
+      setShowAuthModal(true);
+    } else {
+      setBookOpen(true);
+    }
+  };
+
+  const handleShareClick = () => {
+    if (!user) {
+      setAuthAction("share this event");
+      setShowAuthModal(true);
+    } else {
+      // Copy event URL to clipboard
+      const url = window.location.href;
+      navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied!",
+        description: "Event link has been copied to clipboard",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -90,14 +120,16 @@ const EventDetails = () => {
                   </span>
                 </div>
                 <div className="flex gap-4 pt-4">
-                  <Button onClick={() => setBookOpen(true)} size="lg" className="bg-white text-black hover:bg-white/90">
+                  <Button onClick={handleBookClick} size="lg" className="bg-white text-black hover:bg-white/90">
                     Book Now
                   </Button>
                   <Button 
+                    onClick={handleShareClick}
                     variant="outline" 
                     size="lg" 
                     className="border-white/30 text-white hover:bg-white/10"
                   >
+                    <Share2 className="mr-2 h-5 w-5" />
                     Share Event
                   </Button>
                 </div>
@@ -256,6 +288,12 @@ const EventDetails = () => {
           </TabsContent>
         </Tabs>
       </section>
+
+      <AuthRequiredModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        action={authAction}
+      />
 
       <Dialog open={bookOpen} onOpenChange={setBookOpen}>
         <DialogContent className="z-[60]">
