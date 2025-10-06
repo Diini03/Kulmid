@@ -175,7 +175,11 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
               <FormItem>
                 <FormLabel>Date & Time</FormLabel>
                 <FormControl>
-                  <Input type="datetime-local" {...field} />
+                  <Input 
+                    type="datetime-local" 
+                    min={new Date().toISOString().slice(0, 16)}
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
