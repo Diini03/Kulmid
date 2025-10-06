@@ -2,6 +2,8 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -14,10 +16,13 @@ const OrganizerDashboard = () => {
   const { isAdmin, loading } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>("All");
   const [stats, setStats] = useState({
     totalEvents: 0,
     totalFavorites: 0,
   });
+
+  const categories = ["All", "Conference", "Workshop", "Sports", "Festival", "Seminar"];
 
   const fetchEvents = async () => {
     const { data, error } = await supabase
@@ -61,6 +66,17 @@ const OrganizerDashboard = () => {
   if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
+
+  // Filter events based on active category
+  const filteredEvents = activeCategory === "All" 
+    ? events 
+    : events.filter(event => event.category === activeCategory);
+
+  // Get category counts
+  const getCategoryCount = (category: string) => {
+    if (category === "All") return events.length;
+    return events.filter(event => event.category === category).length;
+  };
 
   return (
     <AdminLayout>
@@ -143,7 +159,39 @@ const OrganizerDashboard = () => {
           
           {events.length > 0 ? (
             <div className="bg-card rounded-xl border shadow-sm">
-              <EventsTable events={events} onUpdate={() => { fetchEvents(); fetchStats(); }} />
+              <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
+                <div className="border-b px-6 pt-6">
+                  <TabsList className="w-full justify-start h-auto flex-wrap gap-2">
+                    {categories.map((category) => (
+                      <TabsTrigger
+                        key={category}
+                        value={category}
+                        className="relative data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                      >
+                        {category}
+                        <Badge 
+                          variant="secondary" 
+                          className="ml-2 h-5 min-w-[20px] px-1.5 data-[state=active]:bg-primary-foreground/20"
+                        >
+                          {getCategoryCount(category)}
+                        </Badge>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
+                
+                {categories.map((category) => (
+                  <TabsContent key={category} value={category} className="mt-0">
+                    {filteredEvents.length > 0 ? (
+                      <EventsTable events={filteredEvents} onUpdate={() => { fetchEvents(); fetchStats(); }} />
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">No {category !== "All" ? category.toLowerCase() : ""} events found</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                ))}
+              </Tabs>
             </div>
           ) : (
             <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/30">
