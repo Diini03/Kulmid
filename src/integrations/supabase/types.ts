@@ -25,6 +25,7 @@ export type Database = {
           image_url: string | null
           location: string
           price: number
+          status: string
           title: string
           updated_at: string | null
         }
@@ -38,6 +39,7 @@ export type Database = {
           image_url?: string | null
           location: string
           price?: number
+          status?: string
           title: string
           updated_at?: string | null
         }
@@ -51,6 +53,7 @@ export type Database = {
           image_url?: string | null
           location?: string
           price?: number
+          status?: string
           title?: string
           updated_at?: string | null
         }
@@ -133,6 +136,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      update_event_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

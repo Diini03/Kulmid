@@ -17,6 +17,7 @@ type EventItem = {
   price: number;
   image_url: string | null;
   description: string | null;
+  status: string;
 };
 
 const sorters: Record<string, (a: EventItem, b: EventItem) => number> = {
@@ -34,9 +35,14 @@ const EventsPage = () => {
 
   useEffect(() => {
     const fetchEvents = async () => {
+      // Update event statuses first
+      await supabase.rpc('update_event_status');
+      
+      // Fetch only upcoming and ongoing events for users
       const { data, error } = await supabase
         .from('events')
-        .select('*');
+        .select('*')
+        .in('status', ['upcoming', 'ongoing']);
 
       if (data) {
         setAllEvents(data);

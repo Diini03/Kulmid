@@ -22,9 +22,12 @@ const OrganizerDashboard = () => {
     totalFavorites: 0,
   });
 
-  const categories = ["All", "Conference", "Workshop", "Sports", "Festival", "Seminar"];
+  const categories = ["All", "Conference", "Workshop", "Sports", "Festival", "Seminar", "Past Events"];
 
   const fetchEvents = async () => {
+    // Update event statuses first
+    await supabase.rpc('update_event_status');
+    
     const { data, error } = await supabase
       .from('events')
       .select('*')
@@ -69,13 +72,16 @@ const OrganizerDashboard = () => {
 
   // Filter events based on active category
   const filteredEvents = activeCategory === "All" 
-    ? events 
-    : events.filter(event => event.category === activeCategory);
+    ? events.filter(event => event.status !== 'past')
+    : activeCategory === "Past Events"
+    ? events.filter(event => event.status === 'past')
+    : events.filter(event => event.category === activeCategory && event.status !== 'past');
 
   // Get category counts
   const getCategoryCount = (category: string) => {
-    if (category === "All") return events.length;
-    return events.filter(event => event.category === category).length;
+    if (category === "All") return events.filter(event => event.status !== 'past').length;
+    if (category === "Past Events") return events.filter(event => event.status === 'past').length;
+    return events.filter(event => event.category === category && event.status !== 'past').length;
   };
 
   return (

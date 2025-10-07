@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Pencil, Trash2 } from "lucide-react";
@@ -54,6 +55,7 @@ export const EventsTable = ({ events, onUpdate }: EventsTableProps) => {
             <TableHead className="font-semibold">Date</TableHead>
             <TableHead className="font-semibold">Location</TableHead>
             <TableHead className="font-semibold">Category</TableHead>
+            <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="font-semibold">Price</TableHead>
             <TableHead className="text-right font-semibold">Actions</TableHead>
           </TableRow>
@@ -74,6 +76,18 @@ export const EventsTable = ({ events, onUpdate }: EventsTableProps) => {
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                   {event.category}
                 </span>
+              </TableCell>
+              <TableCell>
+                <Badge 
+                  variant={
+                    event.status === 'past' ? 'destructive' : 
+                    event.status === 'ongoing' ? 'default' : 
+                    'outline'
+                  }
+                  className="capitalize"
+                >
+                  {event.status}
+                </Badge>
               </TableCell>
               <TableCell className="font-semibold">
                 {event.price === 0 ? 'Free' : `$${event.price}`}
