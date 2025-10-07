@@ -17,6 +17,7 @@ type EventItem = {
   category: string;
   price: number;
   image_url: string | null;
+  status: string;
 };
 
 const Index = () => {
@@ -28,9 +29,14 @@ const Index = () => {
   // All hooks must be called before any conditional returns
   useEffect(() => {
     const fetchEvents = async () => {
+      // Update event statuses first
+      await supabase.rpc('update_event_status');
+      
+      // Fetch only upcoming and ongoing events for public view
       const { data, error } = await supabase
         .from('events')
         .select('*')
+        .in('status', ['upcoming', 'ongoing'])
         .order('date', { ascending: true });
 
       if (data) {
