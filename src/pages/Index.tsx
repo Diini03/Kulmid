@@ -8,6 +8,8 @@ import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Search, Calendar, Ticket, CheckCircle, Users, Shield, Zap, Star } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 type EventItem = {
   id: string;
@@ -76,38 +78,54 @@ const Index = () => {
         canonical="/"
       />
 
-      {/* Hero */}
-      <section className="relative">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
-        <div className="container py-20 md:py-28 grid gap-8">
-          <div className="grid gap-6 max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              Discover, Book & Experience Events Like Never Before
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Browse curated conferences, workshops, festivals and more. Plan your next great experience with confidence.
-            </p>
-            <div className="flex gap-3">
-              <Button asChild variant="hero" className="hover-scale">
-                <Link to="/events">Browse Events</Link>
+        <div className="container py-24 md:py-32">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <div className="space-y-4 animate-fade-in">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
+                Discover Amazing Events
+                <span className="block text-primary mt-2">Near You</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+                Join thousands of attendees experiencing conferences, workshops, festivals, and more. Your next great memory starts here.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button asChild size="lg" className="text-lg px-8 hover-scale shadow-lg">
+                <Link to="/events">
+                  <Search className="mr-2 h-5 w-5" />
+                  Browse All Events
+                </Link>
               </Button>
-              <Button asChild variant="outline" className="hover-scale">
-                <Link to="/contact">Contact Us</Link>
+              <Button asChild variant="outline" size="lg" className="text-lg px-8 hover-scale">
+                <Link to="/calendar">
+                  <Calendar className="mr-2 h-5 w-5" />
+                  View Calendar
+                </Link>
               </Button>
             </div>
-          </div>
 
-          <div className="glass rounded-xl p-4 shadow-[var(--shadow-soft)]">
-            <SearchBar onSearch={() => {}} />
+            <div className="glass rounded-2xl p-6 shadow-[var(--shadow-soft)] max-w-3xl mx-auto mt-8">
+              <SearchBar onSearch={() => {}} />
+            </div>
           </div>
+        </div>
+      </section>
 
-          <div className="flex flex-wrap items-center gap-2">
+      {/* Category Filter */}
+      <section className="border-y bg-muted/30">
+        <div className="container py-6">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             {(["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const).map((label) => (
               <Button
                 key={label}
-                variant={activeFilter === label ? "default" : "pill"}
-                size="sm"
+                variant={activeFilter === label ? "default" : "outline"}
+                size="lg"
                 onClick={() => setActiveFilter(label)}
+                className="hover-scale"
               >
                 {label}
               </Button>
@@ -117,65 +135,220 @@ const Index = () => {
       </section>
 
       {/* Featured Events */}
-      <section className="container py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Featured Events</h2>
-          <Button asChild variant="link"><Link to="/events">View All</Link></Button>
+      <section className="container py-20">
+        <div className="text-center space-y-4 mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold">Upcoming Featured Events</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Hand-picked events that are trending right now. Don't miss out on these amazing experiences.
+          </p>
         </div>
         {loading ? (
-          <div className="text-center py-12">Loading events...</div>
+          <div className="text-center py-20">
+            <div className="animate-pulse text-lg">Loading amazing events...</div>
+          </div>
         ) : filtered.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.slice(0, 6).map((ev) => (
-              <EventCard key={ev.id} event={ev} />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.slice(0, 6).map((ev) => (
+                <EventCard key={ev.id} event={ev} />
+              ))}
+            </div>
+            <div className="text-center mt-12">
+              <Button asChild size="lg" variant="outline" className="hover-scale">
+                <Link to="/events">
+                  View All {events.length}+ Events
+                  <span className="ml-2">→</span>
+                </Link>
+              </Button>
+            </div>
+          </>
         ) : (
-          <div className="text-center py-12 text-muted-foreground">
-            No events found for this category.
-          </div>
+          <Card className="max-w-md mx-auto">
+            <CardContent className="text-center py-12">
+              <p className="text-muted-foreground">No events found for this category. Try selecting a different filter.</p>
+            </CardContent>
+          </Card>
         )}
       </section>
 
-      {/* Stats */}
-      <section className="container py-12 grid grid-cols-2 md:grid-cols-4 gap-6">
-        {[
-          { k: "10K+", t: "Events Hosted" },
-          { k: "500K+", t: "Tickets Sold" },
-          { k: "95%", t: "Satisfaction Rate" },
-          { k: "120+", t: "Cities Covered" },
-        ].map((s) => (
-          <div key={s.t} className="rounded-xl border p-6 text-center hover-scale">
-            <div className="text-3xl font-bold">{s.k}</div>
-            <div className="text-sm text-muted-foreground">{s.t}</div>
+      {/* How It Works */}
+      <section className="bg-muted/30 py-20">
+        <div className="container">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold">How It Works</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Getting started is simple. Follow these easy steps to discover and attend your favorite events.
+            </p>
           </div>
-        ))}
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { 
+                icon: Search, 
+                step: "1", 
+                title: "Browse Events", 
+                desc: "Explore our curated collection of events by category, date, or location." 
+              },
+              { 
+                icon: Ticket, 
+                step: "2", 
+                title: "Book Your Spot", 
+                desc: "Register easily with secure checkout. Get instant confirmation via email." 
+              },
+              { 
+                icon: Calendar, 
+                step: "3", 
+                title: "Get Reminders", 
+                desc: "Receive timely notifications so you never miss your scheduled events." 
+              },
+              { 
+                icon: CheckCircle, 
+                step: "4", 
+                title: "Attend & Enjoy", 
+                desc: "Show up and have an amazing experience. Share your memories with us!" 
+              },
+            ].map((item) => (
+              <Card key={item.step} className="relative overflow-hidden border-2 hover:border-primary transition-all hover-scale">
+                <CardContent className="pt-12 pb-8 text-center">
+                  <div className="absolute top-4 right-4 text-6xl font-bold text-primary/10">
+                    {item.step}
+                  </div>
+                  <div className="relative mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
+                    <item.icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                  <p className="text-muted-foreground">{item.desc}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="container py-12">
-        <h2 className="text-2xl font-bold mb-6">What People Say</h2>
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          {[1,2,3,4].map((i) => (
-            <div key={i} className="min-w-[280px] flex-1 rounded-xl border p-6 shadow-sm hover:shadow-lg transition-shadow">
-              <p className="text-sm mb-3">"EventEase made booking my conference a breeze. Slick UI and great events!"</p>
-              <div className="text-sm font-semibold">Alex Johnson</div>
-              <div className="text-xs text-muted-foreground">Product Manager</div>
+      {/* Stats Section */}
+      <section className="container py-20">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {[
+            { k: "10,000+", t: "Events Hosted", icon: Calendar },
+            { k: "500K+", t: "Happy Attendees", icon: Users },
+            { k: "95%", t: "Satisfaction Rate", icon: Star },
+            { k: "120+", t: "Cities Worldwide", icon: Zap },
+          ].map((s) => (
+            <div key={s.t} className="text-center space-y-3 hover-scale">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-2">
+                <s.icon className="h-6 w-6 text-primary" />
+              </div>
+              <div className="text-4xl md:text-5xl font-bold text-primary">{s.k}</div>
+              <div className="text-sm md:text-base text-muted-foreground font-medium">{s.t}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* About Preview */}
-      <section className="container py-16">
-        <div className="grid md:grid-cols-2 gap-8 items-center">
-          <img src={heroImg} alt="Collage of events" loading="lazy" className="rounded-xl object-cover w-full h-64 md:h-80" />
-          <div className="space-y-4">
-            <h3 className="text-2xl font-bold">Built for seamless event experiences</h3>
-            <p className="text-muted-foreground">We believe events should be delightful—from discovery to booking to the day-of experience. Our mission is to simplify planning and empower organizers.</p>
-            <Button asChild variant="link"><Link to="/about">Read More →</Link></Button>
+      {/* Why Choose Us */}
+      <section className="bg-muted/30 py-20">
+        <div className="container">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold">Why Choose EventEase</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              We're committed to making event discovery and booking seamless, secure, and delightful.
+            </p>
+          </div>
+          <div className="grid gap-8 md:grid-cols-3">
+            {[
+              {
+                icon: Zap,
+                title: "Lightning Fast",
+                desc: "Browse and book events in seconds with our optimized platform. No hassle, just results."
+              },
+              {
+                icon: Shield,
+                title: "Secure & Trusted",
+                desc: "Your data is protected with enterprise-grade security. Book with confidence every time."
+              },
+              {
+                icon: Users,
+                title: "Community Driven",
+                desc: "Join thousands of happy attendees and discover events curated by real people."
+              },
+            ].map((feature) => (
+              <Card key={feature.title} className="border-2 hover:border-primary transition-all hover-scale">
+                <CardContent className="pt-8 pb-8 text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
+                    <feature.icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.desc}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="container py-20">
+        <div className="text-center space-y-4 mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold">What Our Users Say</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Don't just take our word for it. Hear from people who've experienced events through EventEase.
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {[
+            { quote: "EventEase made booking my conference tickets so easy. The interface is clean and intuitive!", name: "Sarah Mitchell", role: "Marketing Director" },
+            { quote: "Found the perfect workshop through EventEase. The recommendations are spot on!", name: "Alex Johnson", role: "Product Manager" },
+            { quote: "Love how I can track all my events in one place. Game changer for event enthusiasts!", name: "Jordan Lee", role: "Content Creator" },
+            { quote: "The best platform for discovering local events. I use it every week!", name: "Taylor Rodriguez", role: "Designer" },
+          ].map((testimonial, i) => (
+            <Card key={i} className="hover:shadow-xl transition-all hover-scale">
+              <CardContent className="pt-8 pb-6">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                  ))}
+                </div>
+                <p className="text-sm mb-6 italic">"{testimonial.quote}"</p>
+                <div>
+                  <div className="font-semibold text-sm">{testimonial.name}</div>
+                  <div className="text-xs text-muted-foreground">{testimonial.role}</div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* About Preview / CTA */}
+      <section className="container py-20">
+        <Card className="overflow-hidden border-2">
+          <div className="grid md:grid-cols-2 gap-0">
+            <div className="relative h-64 md:h-auto">
+              <img 
+                src={heroImg} 
+                alt="People enjoying events and conferences" 
+                loading="lazy" 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+            <CardContent className="p-8 md:p-12 flex flex-col justify-center space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-3xl md:text-4xl font-bold">Built for Seamless Event Experiences</h3>
+                <p className="text-lg text-muted-foreground">
+                  We believe events should be delightful—from discovery to booking to the day-of experience. 
+                  Our mission is to simplify planning for attendees and empower organizers to create unforgettable moments.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button asChild size="lg" className="hover-scale">
+                  <Link to="/about">Learn Our Story</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="hover-scale">
+                  <Link to="/contact">Get in Touch</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </div>
+        </Card>
       </section>
     </Layout>
   );
