@@ -102,14 +102,20 @@ const Index = () => {
           <div className="glass rounded-xl p-4 shadow-[var(--shadow-soft)]">
             <SearchBar onSearch={() => {}} />
           </div>
+        </div>
+      </section>
 
-          <div className="flex flex-wrap items-center gap-2">
+      {/* Category Filter */}
+      <section className="border-y bg-muted/30">
+        <div className="container py-6">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             {(["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const).map((label) => (
               <Button
                 key={label}
-                variant={activeFilter === label ? "default" : "pill"}
-                size="sm"
+                variant={activeFilter === label ? "default" : "outline"}
+                size="lg"
                 onClick={() => setActiveFilter(label)}
+                className="hover-scale"
               >
                 {label}
               </Button>
