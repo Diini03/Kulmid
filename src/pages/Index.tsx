@@ -8,7 +8,7 @@ import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Calendar, Ticket, CheckCircle, Users, Shield, Zap, Star } from "lucide-react";
+import { Search, Ticket, CheckCircle, Users, Shield, Zap, Star, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 type EventItem = {
@@ -78,54 +78,38 @@ const Index = () => {
         canonical="/"
       />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      {/* Hero */}
+      <section className="relative">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
-        <div className="container py-24 md:py-32">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="space-y-4 animate-fade-in">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
-                Discover Amazing Events
-                <span className="block text-primary mt-2">Near You</span>
-              </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of attendees experiencing conferences, workshops, festivals, and more. Your next great memory starts here.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button asChild size="lg" className="text-lg px-8 hover-scale shadow-lg">
-                <Link to="/events">
-                  <Search className="mr-2 h-5 w-5" />
-                  Browse All Events
-                </Link>
+        <div className="container py-20 md:py-28 grid gap-8">
+          <div className="grid gap-6 max-w-3xl">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              Discover, Book & Experience Events Like Never Before
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl">
+              Browse curated conferences, workshops, festivals and more. Plan your next great experience with confidence.
+            </p>
+            <div className="flex gap-3">
+              <Button asChild variant="hero" className="hover-scale">
+                <Link to="/events">Browse Events</Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 hover-scale">
-                <Link to="/calendar">
-                  <Calendar className="mr-2 h-5 w-5" />
-                  View Calendar
-                </Link>
+              <Button asChild variant="outline" className="hover-scale">
+                <Link to="/contact">Contact Us</Link>
               </Button>
-            </div>
-
-            <div className="glass rounded-2xl p-6 shadow-[var(--shadow-soft)] max-w-3xl mx-auto mt-8">
-              <SearchBar onSearch={() => {}} />
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Category Filter */}
-      <section className="border-y bg-muted/30">
-        <div className="container py-6">
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="glass rounded-xl p-4 shadow-[var(--shadow-soft)]">
+            <SearchBar onSearch={() => {}} />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
             {(["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const).map((label) => (
               <Button
                 key={label}
-                variant={activeFilter === label ? "default" : "outline"}
-                size="lg"
+                variant={activeFilter === label ? "default" : "pill"}
+                size="sm"
                 onClick={() => setActiveFilter(label)}
-                className="hover-scale"
               >
                 {label}
               </Button>
