@@ -8,9 +8,8 @@ import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Ticket, CheckCircle, Users, Shield, Zap, Star, Calendar, ChevronDown } from "lucide-react";
+import { Search, Ticket, CheckCircle, Users, Shield, Zap, Star, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type EventItem = {
   id: string;
@@ -107,24 +106,20 @@ const Index = () => {
       </section>
 
       {/* Category Filter */}
-      <section className="border-y bg-background">
+      <section className="border-y bg-muted/30">
         <div className="container py-6">
-          <div className="flex items-center justify-center gap-3">
-            <label className="text-sm font-medium">Filter by Category:</label>
-            <Select value={activeFilter} onValueChange={(value) => setActiveFilter(value as any)}>
-              <SelectTrigger className="w-[200px] bg-background">
-                <SelectValue placeholder="Select category" />
-                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-              </SelectTrigger>
-              <SelectContent className="bg-background">
-                <SelectItem value="All">All Events</SelectItem>
-                <SelectItem value="Seminar">Seminar</SelectItem>
-                <SelectItem value="Workshop">Workshop</SelectItem>
-                <SelectItem value="Conference">Conference</SelectItem>
-                <SelectItem value="Festival">Festival</SelectItem>
-                <SelectItem value="Sports">Sports</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {(["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const).map((label) => (
+              <Button
+                key={label}
+                variant={activeFilter === label ? "default" : "outline"}
+                size="lg"
+                onClick={() => setActiveFilter(label)}
+                className="hover-scale"
+              >
+                {label}
+              </Button>
+            ))}
           </div>
         </div>
       </section>
