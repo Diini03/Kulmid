@@ -42,7 +42,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm">
-          <NavLink to="/" end className={linkCls}>Home</NavLink>
+          <NavLink to="/home" className={linkCls}>Home</NavLink>
           <NavLink to="/events" className={linkCls}>Events</NavLink>
         </div>
 
@@ -96,7 +96,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 <Button variant="outline" size="icon" aria-label="Menu"><Menu /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="z-50">
-                <DropdownMenuItem asChild><NavLink to="/" end>Home</NavLink></DropdownMenuItem>
+                <DropdownMenuItem asChild><NavLink to="/home">Home</NavLink></DropdownMenuItem>
                 <DropdownMenuItem asChild><NavLink to="/events">Events</NavLink></DropdownMenuItem>
                 {user ? (
                   <>

@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
+import Welcome from "./pages/Welcome";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Events from "./pages/Events";
@@ -40,7 +41,8 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<Welcome />} />
+                  <Route path="/home" element={<Index />} />
                   <Route path="/events" element={<Events />} />
                   <Route path="/events/:id" element={<EventDetails />} />
                   <Route path="/favorites" element={<Favorites />} />
