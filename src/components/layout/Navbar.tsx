@@ -44,22 +44,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
         <div className="hidden md:flex items-center gap-6 text-sm">
           <NavLink to="/" end className={linkCls}>Home</NavLink>
           <NavLink to="/events" className={linkCls}>Events</NavLink>
-          <div className="relative group">
-            <button className="flex items-center gap-1 text-foreground transition-colors hover:text-primary group-hover:text-primary">
-              About
-              <svg className="h-4 w-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-              <div className="bg-popover border rounded-md shadow-lg py-1">
-                <NavLink to="/our-story" className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Our Story</NavLink>
-                <NavLink to="/achievements" className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Achievements</NavLink>
-                <NavLink to="/our-team" className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Our Team</NavLink>
-              </div>
-            </div>
-          </div>
-          <NavLink to="/contact" className={linkCls}>Contact</NavLink>
         </div>
 
         <div className="flex items-center gap-2">
@@ -114,10 +98,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <DropdownMenuContent align="end" className="z-50">
                 <DropdownMenuItem asChild><NavLink to="/" end>Home</NavLink></DropdownMenuItem>
                 <DropdownMenuItem asChild><NavLink to="/events">Events</NavLink></DropdownMenuItem>
-                <DropdownMenuItem asChild><NavLink to="/our-story">Our Story</NavLink></DropdownMenuItem>
-                <DropdownMenuItem asChild><NavLink to="/achievements">Achievements</NavLink></DropdownMenuItem>
-                <DropdownMenuItem asChild><NavLink to="/our-team">Our Team</NavLink></DropdownMenuItem>
-                <DropdownMenuItem asChild><NavLink to="/contact">Contact</NavLink></DropdownMenuItem>
                 {user ? (
                   <>
                     <DropdownMenuItem asChild><NavLink to="/dashboard">Dashboard</NavLink></DropdownMenuItem>

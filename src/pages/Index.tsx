@@ -79,57 +79,54 @@ const Index = () => {
       />
 
       {/* Hero */}
-      <section className="relative">
+      <section className="relative min-h-[80vh] flex items-center">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
-        <div className="container py-20 md:py-28 grid gap-8">
-          <div className="grid gap-6 max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              Discover, Book & Experience Events Like Never Before
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center space-y-8">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+              Delightful events <br />
+              <span className="text-primary">start here.</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Browse curated conferences, workshops, festivals and more. Plan your next great experience with confidence.
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+              Discover and book amazing events. Browse conferences, workshops, festivals and more.
             </p>
-            <div className="flex gap-3">
-              <Button asChild variant="hero" className="hover-scale">
+            <div className="flex gap-4 justify-center items-center pt-4">
+              <Button asChild size="lg" className="text-lg px-8 py-6 hover-scale">
                 <Link to="/events">Browse Events</Link>
               </Button>
-              <Button asChild variant="outline" className="hover-scale">
-                <Link to="/contact">Contact Us</Link>
-              </Button>
             </div>
-          </div>
-
-          <div className="glass rounded-xl p-4 shadow-[var(--shadow-soft)]">
-            <SearchBar onSearch={() => {}} />
           </div>
         </div>
       </section>
 
       {/* Category Filter */}
-      <section className="border-y bg-muted/30">
-        <div className="container py-6">
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {(["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const).map((label) => (
-              <Button
-                key={label}
-                variant={activeFilter === label ? "default" : "outline"}
-                size="lg"
-                onClick={() => setActiveFilter(label)}
-                className="hover-scale"
-              >
-                {label}
-              </Button>
-            ))}
+      <section className="border-y bg-card">
+        <div className="container mx-auto max-w-5xl py-8">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Browse by Category</h2>
+            <div className="flex flex-wrap gap-3">
+              {(["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const).map((label) => (
+                <Button
+                  key={label}
+                  variant={activeFilter === label ? "default" : "outline"}
+                  size="lg"
+                  onClick={() => setActiveFilter(label)}
+                  className="hover-scale"
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Featured Events */}
-      <section className="container py-20">
-        <div className="text-center space-y-4 mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold">Upcoming Featured Events</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Hand-picked events that are trending right now. Don't miss out on these amazing experiences.
+      <section className="container mx-auto max-w-5xl py-20">
+        <div className="space-y-4 mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold">Featured Events</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Discover the best events happening right now.
           </p>
         </div>
         {loading ? (
@@ -162,11 +159,11 @@ const Index = () => {
       </section>
 
       {/* How It Works */}
-      <section className="bg-muted/30 py-20">
-        <div className="container">
-          <div className="text-center space-y-4 mb-16">
+      <section className="bg-card py-20">
+        <div className="container mx-auto max-w-5xl">
+          <div className="space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold">How It Works</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl">
               Getting started is simple. Follow these easy steps to discover and attend your favorite events.
             </p>
           </div>
@@ -215,7 +212,7 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="container py-20">
+      <section className="container mx-auto max-w-5xl py-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { k: "10,000+", t: "Events Hosted", icon: Calendar },
@@ -235,11 +232,11 @@ const Index = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section className="bg-muted/30 py-20">
-        <div className="container">
-          <div className="text-center space-y-4 mb-16">
+      <section className="bg-card py-20">
+        <div className="container mx-auto max-w-5xl">
+          <div className="space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold">Why Choose EventEase</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl">
               We're committed to making event discovery and booking seamless, secure, and delightful.
             </p>
           </div>
@@ -276,10 +273,10 @@ const Index = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="container py-20">
-        <div className="text-center space-y-4 mb-12">
+      <section className="container mx-auto max-w-5xl py-20">
+        <div className="space-y-4 mb-12">
           <h2 className="text-3xl md:text-4xl font-bold">What Our Users Say</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl">
             Don't just take our word for it. Hear from people who've experienced events through EventEase.
           </p>
         </div>
@@ -308,38 +305,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* About Preview / CTA */}
-      <section className="container py-20">
-        <Card className="overflow-hidden border-2">
-          <div className="grid md:grid-cols-2 gap-0">
-            <div className="relative h-64 md:h-auto">
-              <img 
-                src={heroImg} 
-                alt="People enjoying events and conferences" 
-                loading="lazy" 
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            </div>
-            <CardContent className="p-8 md:p-12 flex flex-col justify-center space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-3xl md:text-4xl font-bold">Built for Seamless Event Experiences</h3>
-                <p className="text-lg text-muted-foreground">
-                  We believe events should be delightful—from discovery to booking to the day-of experience. 
-                  Our mission is to simplify planning for attendees and empower organizers to create unforgettable moments.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <Button asChild size="lg" className="hover-scale">
-                  <Link to="/about">Learn Our Story</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="hover-scale">
-                  <Link to="/contact">Get in Touch</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </div>
-        </Card>
-      </section>
     </Layout>
   );
 };

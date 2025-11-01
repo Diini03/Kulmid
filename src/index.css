@@ -61,46 +61,46 @@
   }
 
   .dark {
-    --background: 222 50% 5%;
+    --background: 222 47% 4%;
     --foreground: 210 40% 98%;
 
-    --card: 222 50% 7%;
+    --card: 222 47% 6%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 50% 7%;
+    --popover: 222 47% 6%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 172 100% 41%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 172 100% 45%;
+    --primary-foreground: 222 47% 4%;
 
-    --secondary: 217 33% 17%;
+    --secondary: 217 33% 12%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 33% 17%;
+    --muted: 217 33% 12%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 172 100% 41%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 172 100% 45%;
+    --accent-foreground: 222 47% 4%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 172 100% 41%;
+    --border: 217 33% 12%;
+    --input: 217 33% 12%;
+    --ring: 172 100% 45%;
 
-    --sidebar-background: 222 50% 7%;
+    --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 172 100% 41%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 50% 9%;
+    --sidebar-primary: 172 100% 45%;
+    --sidebar-primary-foreground: 222 47% 4%;
+    --sidebar-accent: 222 47% 8%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 50% 9%;
-    --sidebar-ring: 172 100% 41%;
+    --sidebar-border: 222 47% 8%;
+    --sidebar-ring: 172 100% 45%;
 
-    --gradient-hero: radial-gradient(1400px 700px at 10% -10%, hsl(var(--primary) / 0.2), transparent),
-      radial-gradient(1000px 600px at 90% 10%, hsl(var(--primary) / 0.18), transparent),
-      linear-gradient(180deg, hsl(222 50% 8%), hsl(222 50% 6%));
+    --gradient-hero: radial-gradient(1400px 700px at 10% -10%, hsl(172 100% 45% / 0.15), transparent),
+      radial-gradient(1000px 600px at 90% 10%, hsl(172 100% 45% / 0.12), transparent),
+      linear-gradient(180deg, hsl(222 47% 5%), hsl(222 47% 3%));
   }
 }
 

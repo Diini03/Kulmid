@@ -1,65 +1,46 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 
 export const Footer = () => {
   return (
-    <>
-      {/* Call to Action Section */}
-      <section className="container py-16 text-center">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <h2 className="text-3xl font-bold">Ready to Experience More?</h2>
-          <p className="text-lg text-muted-foreground">
-            Don't miss out on amazing events happening around you. Discover workshops, conferences, 
-            festivals and more that match your interests.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild size="lg">
-              <Link to="/events">See More Events</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/organizer">Host Your Event</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+    <footer className="bg-card border-t">
+      <div className="container mx-auto max-w-5xl py-12">
+        <div className="flex flex-col items-center gap-8">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
+            <span>EventEase</span>
+            <span className="inline-block h-2 w-2 rounded-full bg-primary" aria-hidden />
+          </Link>
 
-      <footer className="border-t">
-        <div className="container py-10 grid gap-8 md:grid-cols-4">
-          <div>
-            <div className="flex items-center gap-2 font-semibold mb-3">
-              <span>EventEase</span>
-              <span className="inline-block h-2 w-2 rounded-full bg-primary" />
-            </div>
-            <p className="text-sm text-muted-foreground">Discover, book & host events with a clean, modern experience.</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold mb-3">Quick Links</h4>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/events" className="hover:text-primary transition-colors">Browse Events</Link></li>
-              <li><Link to="/about" className="hover:text-primary transition-colors">About</Link></li>
-              <li><Link to="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
-              <li><Link to="/calendar" className="hover:text-primary transition-colors">Calendar</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold mb-3">Follow</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-primary transition-colors">Twitter</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">LinkedIn</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Instagram</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold mb-3">Newsletter</h4>
-            <p className="text-sm text-muted-foreground mb-3">Join our list for latest events and offers.</p>
-            <div className="flex gap-2">
-              <input type="email" placeholder="you@example.com" className="flex-1 h-10 rounded-md border bg-background px-3" aria-label="Email" />
-              <Button variant="hero">Subscribe</Button>
-            </div>
+          {/* Navigation Links */}
+          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm">
+            <Link to="/events" className="text-muted-foreground hover:text-foreground transition-colors">
+              Events
+            </Link>
+            <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
+              About
+            </Link>
+            <Link to="/our-story" className="text-muted-foreground hover:text-foreground transition-colors">
+              Our Story
+            </Link>
+            <Link to="/our-team" className="text-muted-foreground hover:text-foreground transition-colors">
+              Our Team
+            </Link>
+            <Link to="/achievements" className="text-muted-foreground hover:text-foreground transition-colors">
+              Achievements
+            </Link>
+            <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+              Contact
+            </Link>
+          </nav>
+
+          {/* Copyright */}
+          <div className="text-center pt-4 border-t border-border w-full">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} EventEase. All rights reserved.
+            </p>
           </div>
         </div>
-        <div className="border-t py-6 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} EventEase. All rights reserved.</div>
-      </footer>
-    </>
+      </div>
+    </footer>
   );
 };
