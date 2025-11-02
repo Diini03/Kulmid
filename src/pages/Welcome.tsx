@@ -32,7 +32,7 @@ const Welcome = () => {
               
               <div className="flex gap-4 pt-4">
                 <Button asChild size="lg" className="text-lg px-8 py-6 hover-scale">
-                  <Link to="/home">Browse Events</Link>
+                  <Link to="/discover">Browse Events</Link>
                 </Button>
               </div>
             </div>

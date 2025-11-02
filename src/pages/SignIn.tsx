@@ -1,4 +1,4 @@
-import { Layout } from "@/components/layout/Layout";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Seo } from "@/components/Seo";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ const SignIn = () => {
     // Regular user sign in
     const { error } = await signIn(data.email, data.password);
     if (!error) {
-      navigate('/');
+      navigate('/home');
     }
   };
 
@@ -62,53 +62,50 @@ const SignIn = () => {
 
   if (showForgotPassword) {
     return (
-      <Layout>
+      <AuthLayout>
         <Seo title="Reset Password" canonical="/signin" />
-        <section className="container py-16 grid place-items-center">
-          <div className="w-full max-w-md rounded-xl border p-6 shadow-sm">
-            <h1 className="text-2xl font-bold mb-6">Reset your password</h1>
-            <form onSubmit={resetForm.handleSubmit(onResetPassword)} className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="resetEmail">Email</Label>
-                <Input
-                  id="resetEmail"
-                  type="email"
-                  placeholder="Enter your email"
-                  {...resetForm.register("email")}
-                />
-                {resetForm.formState.errors.email && (
-                  <p className="text-sm text-destructive">{resetForm.formState.errors.email.message}</p>
-                )}
-              </div>
+        <div className="w-full rounded-xl border bg-card p-8 shadow-lg">
+          <h1 className="text-2xl font-bold mb-6">Reset your password</h1>
+          <form onSubmit={resetForm.handleSubmit(onResetPassword)} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="resetEmail">Email</Label>
+              <Input
+                id="resetEmail"
+                type="email"
+                placeholder="Enter your email"
+                {...resetForm.register("email")}
+              />
+              {resetForm.formState.errors.email && (
+                <p className="text-sm text-destructive">{resetForm.formState.errors.email.message}</p>
+              )}
+            </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={resetForm.formState.isSubmitting || loading}
-              >
-                {resetForm.formState.isSubmitting ? "Sending..." : "Send Reset Email"}
-              </Button>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={resetForm.formState.isSubmitting || loading}
+            >
+              {resetForm.formState.isSubmitting ? "Sending..." : "Send Reset Email"}
+            </Button>
 
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => setShowForgotPassword(false)}
-              >
-                Back to Sign In
-              </Button>
-            </form>
-          </div>
-        </section>
-      </Layout>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => setShowForgotPassword(false)}
+            >
+              Back to Sign In
+            </Button>
+          </form>
+        </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <Layout>
+    <AuthLayout>
       <Seo title="Sign In" canonical="/signin" />
-      <section className="container py-16 grid place-items-center">
-        <div className="w-full max-w-md rounded-xl border p-6 shadow-sm">
+      <div className="w-full rounded-xl border bg-card p-8 shadow-lg">
           <h1 className="text-2xl font-bold mb-6">Welcome back</h1>
           <div className="mb-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
             <div className="flex items-center gap-2 text-sm">
@@ -180,8 +177,7 @@ const SignIn = () => {
             </div>
           </form>
         </div>
-      </section>
-    </Layout>
+    </AuthLayout>
   );
 };
 

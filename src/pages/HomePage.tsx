@@ -22,7 +22,7 @@ type EventItem = {
   status: string;
 };
 
-const Index = () => {
+const HomePage = () => {
   const { isAdmin, loading: authLoading } = useAuth();
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -75,7 +75,7 @@ const Index = () => {
       <Seo
         title="Home"
         description="Discover, book & experience events like never before. Conferences, workshops, festivals & more on EventEase."
-        canonical="/"
+        canonical="/home"
       />
 
       {/* Hero */}
@@ -309,4 +309,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default HomePage;

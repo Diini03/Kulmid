@@ -9,8 +9,11 @@ import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 import Welcome from "./pages/Welcome";
-import Index from "./pages/Index";
+import HomePage from "./pages/HomePage";
+import Discover from "./pages/Discover";
 import NotFound from "./pages/NotFound";
+import { PublicRoute } from "./components/auth/PublicRoute";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
 import Favorites from "./pages/Favorites";
@@ -41,24 +44,31 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <Routes>
-                  <Route path="/" element={<Welcome />} />
-                  <Route path="/home" element={<Index />} />
-                  <Route path="/events" element={<Events />} />
-                  <Route path="/events/:id" element={<EventDetails />} />
-                  <Route path="/favorites" element={<Favorites />} />
+                  {/* Public Routes - Redirect to /home if logged in */}
+                  <Route path="/" element={<PublicRoute><Welcome /></PublicRoute>} />
+                  <Route path="/discover" element={<Discover />} />
+                  <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
+                  <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  
+                  {/* Footer Pages - Always accessible */}
                   <Route path="/about" element={<About />} />
                   <Route path="/our-story" element={<OurStory />} />
                   <Route path="/achievements" element={<Achievements />} />
                   <Route path="/our-team" element={<OurTeam />} />
                   <Route path="/contact" element={<Contact />} />
-                  <Route path="/signin" element={<SignIn />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  <Route path="/dashboard" element={<UserDashboard />} />
-                  <Route path="/admin" element={<OrganizerDashboard />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/settings" element={<AdminSettings />} />
-                  <Route path="/calendar" element={<CalendarView />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
+                  
+                  {/* Protected Routes - Require authentication */}
+                  <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+                  <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+                  <Route path="/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
+                  <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+                  <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
+                  <Route path="/admin" element={<ProtectedRoute><OrganizerDashboard /></ProtectedRoute>} />
+                  <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+                  <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+                  
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

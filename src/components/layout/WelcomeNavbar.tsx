@@ -33,7 +33,7 @@ export const WelcomeNavbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm">
-          <Link to="/home" className="text-foreground transition-colors hover:text-primary flex items-center gap-2">
+          <Link to="/discover" className="text-foreground transition-colors hover:text-primary flex items-center gap-2">
             Explore Events
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -74,7 +74,7 @@ export const WelcomeNavbar = () => {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <Button asChild variant="hero">
-                <Link to="/dashboard">Dashboard</Link>
+                <Link to="/home">Dashboard</Link>
               </Button>
             ) : (
               <>

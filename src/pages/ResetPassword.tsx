@@ -1,4 +1,4 @@
-import { Layout } from "@/components/layout/Layout";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Seo } from "@/components/Seo";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,7 @@ const ResetPassword = () => {
       });
 
       // Redirect to home page
-      navigate('/');
+      navigate('/home');
     } catch (error: any) {
       toast({
         title: "Password update failed",
@@ -91,10 +91,9 @@ const ResetPassword = () => {
   };
 
   return (
-    <Layout>
+    <AuthLayout>
       <Seo title="Reset Password" canonical="/reset-password" />
-      <section className="container py-16 grid place-items-center">
-        <div className="w-full max-w-md rounded-xl border p-6 shadow-sm">
+      <div className="w-full rounded-xl border bg-card p-8 shadow-lg">
           <h1 className="text-2xl font-bold mb-6">Set new password</h1>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
             <div className="grid gap-2">
@@ -150,8 +149,7 @@ const ResetPassword = () => {
             </Button>
           </form>
         </div>
-      </section>
-    </Layout>
+    </AuthLayout>
   );
 };
 
