@@ -79,19 +79,19 @@ const HomePage = () => {
       />
 
       {/* Hero */}
-      <section className="relative min-h-[80vh] flex items-center">
+      <section className="relative min-h-[70vh] flex items-center">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
-        <div className="container mx-auto max-w-5xl">
-          <div className="text-center space-y-8">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center space-y-6">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
               Delightful events <br />
               <span className="text-primary">start here.</span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto">
               Discover and book amazing events. Browse conferences, workshops, festivals and more.
             </p>
-            <div className="flex gap-4 justify-center items-center pt-4">
-              <Button asChild size="lg" className="text-lg px-8 py-6 hover-scale">
+            <div className="flex gap-3 justify-center items-center pt-2">
+              <Button asChild size="lg" className="px-6 hover-scale">
                 <Link to="/events">Browse Events</Link>
               </Button>
             </div>
@@ -101,15 +101,15 @@ const HomePage = () => {
 
       {/* Category Filter */}
       <section className="border-y bg-card">
-        <div className="container mx-auto max-w-5xl py-8">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Browse by Category</h2>
-            <div className="flex flex-wrap gap-3">
+        <div className="container mx-auto max-w-4xl py-6">
+          <div className="space-y-3">
+            <h2 className="text-xl font-bold">Browse by Category</h2>
+            <div className="flex flex-wrap gap-2">
               {(["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const).map((label) => (
                 <Button
                   key={label}
                   variant={activeFilter === label ? "default" : "outline"}
-                  size="lg"
+                  size="default"
                   onClick={() => setActiveFilter(label)}
                   className="hover-scale"
                 >
@@ -122,10 +122,10 @@ const HomePage = () => {
       </section>
 
       {/* Featured Events */}
-      <section className="container mx-auto max-w-5xl py-20">
-        <div className="space-y-4 mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold">Featured Events</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl">
+      <section className="container mx-auto max-w-4xl py-16">
+        <div className="space-y-3 mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold">Featured Events</h2>
+          <p className="text-base text-muted-foreground max-w-xl">
             Discover the best events happening right now.
           </p>
         </div>
@@ -140,8 +140,8 @@ const HomePage = () => {
                 <EventCard key={ev.id} event={ev} />
               ))}
             </div>
-            <div className="text-center mt-12">
-              <Button asChild size="lg" variant="outline" className="hover-scale">
+            <div className="text-center mt-10">
+              <Button asChild variant="outline" className="hover-scale">
                 <Link to="/events">
                   View All {events.length}+ Events
                   <span className="ml-2">→</span>
@@ -159,11 +159,11 @@ const HomePage = () => {
       </section>
 
       {/* How It Works */}
-      <section className="bg-card py-20">
-        <div className="container mx-auto max-w-5xl">
-          <div className="space-y-4 mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold">How It Works</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl">
+      <section className="bg-card py-16">
+        <div className="container mx-auto max-w-4xl">
+          <div className="space-y-3 mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold">How It Works</h2>
+            <p className="text-base text-muted-foreground max-w-xl">
               Getting started is simple. Follow these easy steps to discover and attend your favorite events.
             </p>
           </div>
@@ -212,7 +212,7 @@ const HomePage = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="container mx-auto max-w-5xl py-20">
+      <section className="container mx-auto max-w-4xl py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { k: "10,000+", t: "Events Hosted", icon: Calendar },
@@ -232,11 +232,11 @@ const HomePage = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section className="bg-card py-20">
-        <div className="container mx-auto max-w-5xl">
-          <div className="space-y-4 mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold">Why Choose EventEase</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl">
+      <section className="bg-card py-16">
+        <div className="container mx-auto max-w-4xl">
+          <div className="space-y-3 mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold">Why Choose EventEase</h2>
+            <p className="text-base text-muted-foreground max-w-xl">
               We're committed to making event discovery and booking seamless, secure, and delightful.
             </p>
           </div>
@@ -273,10 +273,10 @@ const HomePage = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="container mx-auto max-w-5xl py-20">
-        <div className="space-y-4 mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold">What Our Users Say</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl">
+      <section className="container mx-auto max-w-4xl py-16">
+        <div className="space-y-3 mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold">What Our Users Say</h2>
+          <p className="text-base text-muted-foreground max-w-xl">
             Don't just take our word for it. Hear from people who've experienced events through EventEase.
           </p>
         </div>

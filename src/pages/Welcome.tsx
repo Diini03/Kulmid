@@ -15,33 +15,33 @@ const Welcome = () => {
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
         
-        <div className="container mx-auto max-w-7xl px-6 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="container mx-auto max-w-6xl relative z-10">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
-            <div className="space-y-8">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
+            <div className="space-y-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
                 Delightful events<br />
                 <span className="bg-gradient-to-r from-primary via-primary to-cyan-500 bg-clip-text text-transparent">
                   start here.
                 </span>
               </h1>
               
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-xl">
+              <p className="text-lg md:text-xl text-muted-foreground max-w-lg">
                 Set up an event page, invite friends and sell tickets. Host a memorable event today.
               </p>
               
-              <div className="flex gap-4 pt-4">
-                <Button asChild size="lg" className="text-lg px-8 py-6 hover-scale">
+              <div className="flex gap-3 pt-2">
+                <Button asChild size="lg" className="px-6 hover-scale">
                   <Link to="/discover">Browse Events</Link>
                 </Button>
               </div>
             </div>
 
             {/* Right Visual */}
-            <div className="relative lg:h-[600px] h-[400px]">
+            <div className="relative lg:h-[500px] h-[350px]">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse" />
               <div className="relative h-full flex items-center justify-center">
-                <div className="relative w-full max-w-md aspect-square">
+                <div className="relative w-full max-w-sm aspect-square">
                   {/* Animated circles */}
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/30 to-purple-500/30 animate-spin-slow" />
                   <div className="absolute inset-8 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 animate-spin-slower" />

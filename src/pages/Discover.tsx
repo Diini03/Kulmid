@@ -100,22 +100,22 @@ const Discover = () => {
       />
 
       {/* Hero Section */}
-      <section className="container py-16 space-y-6">
-        <div className="max-w-3xl">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+      <section className="container py-12 space-y-4">
+        <div className="max-w-2xl">
+          <h1 className="text-3xl md:text-4xl font-bold mb-3">
             Discover Events
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Explore popular events near you, browse by category, or check out some of the great community calendars
           </p>
         </div>
       </section>
 
       {/* Browse by Category */}
-      <section className="container pb-16 space-y-6">
-        <h2 className="text-2xl font-bold">Browse by category</h2>
+      <section className="container pb-12 space-y-5">
+        <h2 className="text-xl font-bold">Browse by category</h2>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {categories.map((category) => {
             const Icon = category.icon;
             const count = eventCounts[category.name] || Math.floor(Math.random() * 2000) + 100;
@@ -124,13 +124,13 @@ const Discover = () => {
               <button
                 key={category.name}
                 onClick={handleViewAll}
-                className="group p-6 rounded-xl border bg-card hover:shadow-lg transition-all duration-300 text-left"
+                className="group p-4 rounded-lg border bg-card hover:shadow-lg transition-all duration-300 text-left"
               >
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${category.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <Icon className="h-6 w-6 text-white" />
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${category.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                  <Icon className="h-5 w-5 text-white" />
                 </div>
-                <h3 className="font-semibold mb-1">{category.name}</h3>
-                <p className="text-sm text-muted-foreground">{count.toLocaleString()} Events</p>
+                <h3 className="font-semibold text-sm mb-1">{category.name}</h3>
+                <p className="text-xs text-muted-foreground">{count.toLocaleString()} Events</p>
               </button>
             );
           })}
@@ -138,9 +138,9 @@ const Discover = () => {
       </section>
 
       {/* Featured Events */}
-      <section className="container pb-16 space-y-6">
+      <section className="container pb-12 space-y-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Featured Events</h2>
+          <h2 className="text-xl font-bold">Featured Events</h2>
         </div>
 
         {loading ? (
