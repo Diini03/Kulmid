@@ -34,35 +34,33 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   };
 
   return (
-    <header className={`sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b ${scrolled ? "py-2" : "py-3"}`}>
-      <nav className="container flex items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span>EventEase</span>
-          <span className="inline-block h-2 w-2 rounded-full bg-primary" aria-hidden />
+    <header className={`sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b transition-all ${scrolled ? "shadow-sm" : ""}`}>
+      <nav className="container flex items-center justify-between gap-6 h-16">
+        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
+          EventEase
         </Link>
 
-        <div className="hidden md:flex items-center gap-6 text-sm">
-          <NavLink to="/home" className={linkCls}>Dashboard</NavLink>
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+          <NavLink to="/home" className={linkCls}>Home</NavLink>
           <NavLink to="/events" className={linkCls}>Events</NavLink>
+          <NavLink to="/discover" className={linkCls}>Discover</NavLink>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" aria-label="Search" onClick={onOpenSearch}>
-            <CalendarSearch />
-          </Button>
-          <Button asChild variant="outline" size="icon" className="relative">
+          <Button asChild variant="ghost" size="icon" className="relative">
             <Link to="/favorites" aria-label="Favorites">
               <Heart className={favorites.length > 0 ? "fill-red-500 text-red-500" : ""} />
               {favorites.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-medium">
                   {favorites.length}
                 </span>
               )}
             </Link>
           </Button>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Toggle theme">
+              <Button variant="ghost" size="icon" aria-label="Toggle theme">
                 {getThemeIcon()}
               </Button>
             </DropdownMenuTrigger>
@@ -90,41 +88,44 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
           <div className="md:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Menu"><Menu /></Button>
+                <Button variant="ghost" size="icon" aria-label="Menu"><Menu /></Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-50">
-                <DropdownMenuItem asChild><NavLink to="/home">Dashboard</NavLink></DropdownMenuItem>
+              <DropdownMenuContent align="end" className="z-50 w-48">
+                <DropdownMenuItem asChild><NavLink to="/home">Home</NavLink></DropdownMenuItem>
                 <DropdownMenuItem asChild><NavLink to="/events">Events</NavLink></DropdownMenuItem>
+                <DropdownMenuItem asChild><NavLink to="/discover">Discover</NavLink></DropdownMenuItem>
                 {user ? (
                   <>
                     <DropdownMenuItem asChild><NavLink to="/dashboard">Dashboard</NavLink></DropdownMenuItem>
                     {isAdmin && (
-                      <DropdownMenuItem asChild><NavLink to="/admin">Admin Panel</NavLink></DropdownMenuItem>
+                      <DropdownMenuItem asChild><NavLink to="/admin">Admin</NavLink></DropdownMenuItem>
                     )}
                     <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
                   </>
                 ) : (
                   <>
                     <DropdownMenuItem asChild><NavLink to="/signin">Sign In</NavLink></DropdownMenuItem>
-                    <DropdownMenuItem asChild><NavLink to="/signup">Get Started</NavLink></DropdownMenuItem>
+                    <DropdownMenuItem asChild><NavLink to="/signup">Sign Up</NavLink></DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2">
+                  <Button variant="ghost" className="flex items-center gap-2 font-medium">
                     <User className="h-4 w-4" />
-                    <span>{profile?.full_name || user.email?.split('@')[0] || 'User'}</span>
+                    {profile?.full_name || user.email?.split('@')[0] || 'User'}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard" className="flex items-center gap-2">
                       <User className="h-4 w-4" />
@@ -135,7 +136,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                     <DropdownMenuItem asChild>
                       <Link to="/admin" className="flex items-center gap-2">
                         <CalendarSearch className="h-4 w-4" />
-                        Admin Panel
+                        Admin
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -147,8 +148,8 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               </DropdownMenu>
             ) : (
               <>
-                <Button asChild variant="ghost"><Link to="/signin">Sign In</Link></Button>
-                <Button asChild variant="hero"><Link to="/signup">Get Started</Link></Button>
+                <Button asChild variant="ghost" size="sm"><Link to="/signin">Sign In</Link></Button>
+                <Button asChild size="sm"><Link to="/signup">Sign Up</Link></Button>
               </>
             )}
           </div>

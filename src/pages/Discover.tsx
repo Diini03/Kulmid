@@ -99,53 +99,59 @@ const Discover = () => {
       <Seo title="Discover Events" description="Explore popular events near you, browse by category, or check out some of the great community calendars" canonical="/discover" />
 
       {/* Hero Section */}
-      <section className="container max-w-4xl py-12 space-y-4">
-        <div className="max-w-2xl mx-px my-[17px]">
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            Discover Events
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Explore popular events near you, browse by category, or check out some of the great community calendars
-          </p>
+      <section className="border-b bg-gradient-to-b from-muted/30 to-background">
+        <div className="container max-w-4xl py-16 md:py-20">
+          <div className="max-w-2xl mx-auto text-center space-y-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
+              Discover events
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground text-balance">
+              Explore experiences that inspire you
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Browse by Category */}
-      <section className="container max-w-4xl pb-12 space-y-5">
-        <h2 className="text-xl font-bold">Browse by category</h2>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {categories.map(category => {
-          const Icon = category.icon;
-          const count = eventCounts[category.name] || Math.floor(Math.random() * 2000) + 100;
-          return <button key={category.name} onClick={handleViewAll} className="group p-4 rounded-lg border bg-card hover:shadow-lg transition-all duration-300 text-left">
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${category.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                  <Icon className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="font-semibold text-sm mb-1">{category.name}</h3>
-                <p className="text-xs text-muted-foreground">{count.toLocaleString()} Events</p>
-              </button>;
-        })}
+      <section className="border-b">
+        <div className="container max-w-4xl py-12">
+          <h2 className="text-xl font-semibold mb-6">Browse by category</h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {categories.map(category => {
+            const Icon = category.icon;
+            const count = eventCounts[category.name] || Math.floor(Math.random() * 50) + 10;
+            return <button key={category.name} onClick={handleViewAll} className="group p-5 rounded-xl border bg-card hover-lift text-left">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center mb-4 group-hover:scale-105 transition-transform`}>
+                    <Icon className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold mb-1">{category.name}</h3>
+                  <p className="text-sm text-muted-foreground">{count} events</p>
+                </button>;
+          })}
+          </div>
         </div>
       </section>
 
       {/* Featured Events */}
-      <section className="container max-w-4xl pb-12 space-y-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Featured Events</h2>
-        </div>
+      <section className="container max-w-4xl py-12 md:py-16">
+        <h2 className="text-xl font-semibold mb-8">Featured events</h2>
 
-        {loading ? <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        {loading ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="space-y-3">
+                <div className="h-56 w-full rounded-xl bg-muted animate-pulse" />
+                <div className="h-6 w-3/4 rounded bg-muted animate-pulse" />
+                <div className="h-4 w-full rounded bg-muted animate-pulse" />
+              </div>
+            ))}
           </div> : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map(event => <div key={event.id} onClick={() => handleEventClick(event.id)} className="cursor-pointer">
-                <EventCard event={event} />
-              </div>)}
+            {events.map(event => <EventCard key={event.id} event={event} />)}
           </div>}
 
-        <div className="text-center pt-6">
-          <Button onClick={handleViewAll} size="lg" className="px-8">
-            View All Events
+        <div className="text-center mt-12">
+          <Button onClick={handleViewAll} size="lg" variant="outline" className="px-8">
+            View all events
           </Button>
         </div>
       </section>

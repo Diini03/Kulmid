@@ -40,8 +40,13 @@ export const EventCard = ({ event }: Props) => {
     }
   };
 
+  const handleCardClick = () => {
+    navigate(`/events/${event.id}`);
+  };
+
   const handleBookClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!user) {
       setAuthAction("book this event");
       setShowAuthModal(true);
@@ -57,53 +62,62 @@ export const EventCard = ({ event }: Props) => {
         onClose={() => setShowAuthModal(false)}
         action={authAction}
       />
-    <Card className="group overflow-hidden border-muted/60 hover:shadow-lg transition-shadow duration-200">
-      <div className="relative">
-        <img
-          src={event.image_url || '/placeholder.svg'}
-          alt={`${event.title} event image`}
-          loading="lazy"
-          className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-        <div className="absolute left-3 top-3 flex items-center gap-2">
-          <Badge variant="secondary" className="backdrop-blur-sm">
-            {event.category}
-          </Badge>
-          <Badge className="bg-primary text-primary-foreground shadow">
-            ${event.price}
-          </Badge>
-        </div>
-        <button
-          onClick={toggleFavorite}
-          className="absolute right-3 top-3 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-muted/60 hover:bg-background transition-colors"
-        >
-          <Heart 
-            className={`h-4 w-4 transition-colors ${
-              isLiked ? 'fill-red-500 text-red-500' : 'text-muted-foreground hover:text-red-500'
-            }`} 
+      <Card 
+        className="group overflow-hidden border hover-lift card-interactive"
+        onClick={handleCardClick}
+      >
+        <div className="relative">
+          <img
+            src={event.image_url || '/placeholder.svg'}
+            alt={`${event.title} event image`}
+            loading="lazy"
+            className="h-56 w-full object-cover"
           />
-        </button>
-      </div>
-      <CardHeader className="space-y-2">
-        <Link to={`/events/${event.id}`} className="story-link text-lg font-semibold">
-          {event.title}
-        </Link>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center text-sm text-muted-foreground gap-3">
-          <span className="inline-flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(event.date).toLocaleDateString()}</span>
-          <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" /> {event.location}</span>
+          <div className="absolute left-4 top-4 flex items-center gap-2">
+            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm border">
+              {event.category}
+            </Badge>
+          </div>
+          <button
+            onClick={toggleFavorite}
+            className="absolute right-4 top-4 p-2 rounded-full bg-background/90 backdrop-blur-sm border hover:bg-background transition-colors"
+            aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Heart 
+              className={`h-4 w-4 transition-all ${
+                isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-muted-foreground'
+              }`} 
+            />
+          </button>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link to={`/events/${event.id}`}>View Details</Link>
-          </Button>
-          <Button size="sm" onClick={handleBookClick}>
-            <Ticket className="mr-2 h-4 w-4"/> Book
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        <CardContent className="p-5 space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+              {event.title}
+            </h3>
+            <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <CalendarDays className="h-4 w-4 flex-shrink-0" />
+                <span>{new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{event.location}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t">
+            <div className="text-lg font-bold">${event.price}</div>
+            <Button 
+              size="sm" 
+              onClick={handleBookClick}
+              className="shadow-sm"
+            >
+              Register
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 };

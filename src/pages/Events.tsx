@@ -1,12 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
-import { SearchBar } from "@/components/events/SearchBar";
 import { EventCard } from "@/components/events/EventCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Users } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type EventItem = {
   id: string;
@@ -21,25 +20,25 @@ type EventItem = {
 };
 
 const sorters: Record<string, (a: EventItem, b: EventItem) => number> = {
+  Soonest: (a, b) => +new Date(a.date) - +new Date(b.date),
   Latest: (a, b) => +new Date(b.date) - +new Date(a.date),
-  Popular: () => 0,
-  "Price Low→High": (a, b) => a.price - b.price,
-  "Price High→Low": (a, b) => b.price - a.price,
+  "Price: Low to High": (a, b) => a.price - b.price,
+  "Price: High to Low": (a, b) => b.price - a.price,
 };
 
+const categories = ["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const;
+
 const EventsPage = () => {
-  const [sort, setSort] = useState<string>("Latest");
+  const [sort, setSort] = useState<string>("Soonest");
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      // Update event statuses first
       await supabase.rpc('update_event_status');
       
-      // Fetch only upcoming and ongoing events for users
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('events')
         .select('*')
         .in('status', ['upcoming', 'ongoing']);
@@ -56,13 +55,11 @@ const EventsPage = () => {
   const events = useMemo(() => {
     let list = [...allEvents];
     
-    // Filter by category
     if (activeFilter !== "All") {
       list = list.filter(e => e.category === activeFilter);
     }
     
-    // Sort
-    const sorter = sorters[sort] || sorters.Latest;
+    const sorter = sorters[sort] || sorters.Soonest;
     return list.sort(sorter);
   }, [sort, activeFilter, allEvents]);
 
@@ -70,114 +67,87 @@ const EventsPage = () => {
     <Layout>
       <Seo title="Events" description="Explore events by category, location, date and more." canonical="/events" />
 
-      {/* Events Hero Section - Full Width */}
-      <section className="relative py-20 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-        <div className="container relative">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    Discover Amazing Events
-                  </h1>
-                  <p className="text-xl text-muted-foreground leading-relaxed">
-                    From intimate workshops to grand conferences - discover events that inspire, educate, and connect.
-                    Join thousands of enthusiasts in experiences that matter to you.
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="p-4 rounded-lg bg-card border">
-                    <Calendar className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <div className="text-2xl font-bold">{allEvents.length}+</div>
-                    <div className="text-sm text-muted-foreground">Events</div>
-                  </div>
-                  <div className="p-4 rounded-lg bg-card border">
-                    <MapPin className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <div className="text-2xl font-bold">12+</div>
-                    <div className="text-sm text-muted-foreground">Cities</div>
-                  </div>
-                  <div className="p-4 rounded-lg bg-card border">
-                    <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <div className="text-2xl font-bold">5K+</div>
-                    <div className="text-sm text-muted-foreground">Attendees</div>
-                  </div>
-                </div>
-                
-                <div className="glass rounded-xl p-6 shadow-[var(--shadow-soft)]">
-                  <SearchBar onSearch={() => {}} compact />
-                </div>
+      {/* Simple Header */}
+      <section className="border-b bg-card">
+        <div className="container py-8 md:py-12">
+          <div className="max-w-5xl mx-auto space-y-6">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">Discover events</h1>
+              <p className="text-muted-foreground">Find experiences that inspire you</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Filters */}
+      <section className="border-b">
+        <div className="container py-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex flex-col md:flex-row gap-4 justify-between">
+              <div className="flex flex-wrap gap-2">
+                {categories.map((label) => (
+                  <Button
+                    key={label}
+                    variant={activeFilter === label ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActiveFilter(label)}
+                  >
+                    {label}
+                  </Button>
+                ))}
               </div>
-              
-              <div className="relative">
-                <div className="grid grid-cols-2 gap-4">
-                  {allEvents.slice(0, 4).map((event, i) => (
-                    <div key={event.id} className={`relative ${i % 2 === 1 ? 'mt-8' : ''}`}>
-                      <img 
-                        src={event.image_url || '/placeholder.svg'} 
-                        alt={event.title}
-                        className="rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 w-full h-32 object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-xl" />
-                      <div className="absolute bottom-3 left-3 right-3 text-white">
-                        <div className="text-sm font-semibold truncate">{event.title}</div>
-                        <div className="text-xs opacity-80">${event.price}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Sort:</span>
+                <Select value={sort} onValueChange={setSort}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(sorters).map((k) => (
+                      <SelectItem key={k} value={k}>{k}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="container py-10 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold">All Events</h2>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Sort</span>
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Latest" /></SelectTrigger>
-              <SelectContent>
-                {Object.keys(sorters).map((k) => (
-                  <SelectItem key={k} value={k}>{k}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Category Filters */}
-        <div className="flex flex-wrap gap-2">
-          {(["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const).map((label) => (
-            <Button
-              key={label}
-              variant={activeFilter === label ? "default" : "pill"}
-              size="sm"
-              onClick={() => setActiveFilter(label)}
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12">Loading events...</div>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.length > 0 ? (
-              events.map((ev) => (
-                <EventCard key={ev.id} event={ev} />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                No events found.
+      {/* Results */}
+      <section className="container py-12">
+        <div className="max-w-5xl mx-auto">
+          {loading ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="h-56 w-full rounded-xl" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+              ))}
+            </div>
+          ) : events.length > 0 ? (
+            <>
+              <div className="text-sm text-muted-foreground mb-6">
+                {events.length} {events.length === 1 ? 'event' : 'events'} found
               </div>
-            )}
-          </div>
-        )}
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {events.map((ev) => (
+                  <EventCard key={ev.id} event={ev} />
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-20">
+              <div className="text-lg text-muted-foreground mb-4">No events found</div>
+              <Button variant="outline" onClick={() => setActiveFilter("All")}>
+                Clear filters
+              </Button>
+            </div>
+          )}
+        </div>
       </section>
     </Layout>
   );
