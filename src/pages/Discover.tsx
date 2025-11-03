@@ -100,7 +100,7 @@ const Discover = () => {
       />
 
       {/* Hero Section */}
-      <section className="container py-12 space-y-4">
+      <section className="container max-w-4xl py-12 space-y-4">
         <div className="max-w-2xl">
           <h1 className="text-3xl md:text-4xl font-bold mb-3">
             Discover Events
@@ -112,7 +112,7 @@ const Discover = () => {
       </section>
 
       {/* Browse by Category */}
-      <section className="container pb-12 space-y-5">
+      <section className="container max-w-4xl pb-12 space-y-5">
         <h2 className="text-xl font-bold">Browse by category</h2>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -138,7 +138,7 @@ const Discover = () => {
       </section>
 
       {/* Featured Events */}
-      <section className="container pb-12 space-y-5">
+      <section className="container max-w-4xl pb-12 space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Featured Events</h2>
         </div>

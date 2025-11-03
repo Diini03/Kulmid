@@ -15,7 +15,7 @@ const Welcome = () => {
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
         
-        <div className="container mx-auto max-w-6xl relative z-10">
+        <div className="container mx-auto max-w-4xl relative z-10">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
             <div className="space-y-6">
