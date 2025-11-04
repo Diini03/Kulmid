@@ -17,10 +17,10 @@ export const BackToTop = () => {
       aria-label="Back to top"
       variant="hero"
       size="icon"
-      className="fixed bottom-6 right-6 shadow-lg animate-enter"
+      className="fixed bottom-6 right-6 shadow-[var(--shadow-hover)] hover-lift animate-scale-in rounded-full"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
     >
-      <ArrowUp />
+      <ArrowUp className="h-5 w-5" />
     </Button>
   );
 };

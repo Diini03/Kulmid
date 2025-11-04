@@ -26,9 +26,12 @@ export const SearchBar = ({ onSearch, compact }: Props) => {
   const submit = () => onSearch?.({ location, date, category });
 
   return (
-    <div className={cn("w-full grid gap-2", compact ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 md:grid-cols-4")}> 
+    <div className={cn("w-full grid gap-3", compact ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 md:grid-cols-4")}> 
       <Select value={location} onValueChange={setLocation}>
-        <SelectTrigger aria-label="Location">
+        <SelectTrigger 
+          aria-label="Location"
+          className="hover-lift transition-all"
+        >
           <MapPin className="mr-2 h-4 w-4" />
           <SelectValue placeholder="Location" />
         </SelectTrigger>
@@ -42,7 +45,10 @@ export const SearchBar = ({ onSearch, compact }: Props) => {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="justify-start">
+          <Button 
+            variant="outline" 
+            className="justify-start hover-lift transition-all"
+          >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {date ? format(date, "PPP") : <span>Date</span>}
           </Button>
@@ -59,7 +65,10 @@ export const SearchBar = ({ onSearch, compact }: Props) => {
       </Popover>
 
       <Select value={category} onValueChange={setCategory}>
-        <SelectTrigger aria-label="Category">
+        <SelectTrigger 
+          aria-label="Category"
+          className="hover-lift transition-all"
+        >
           <Tag className="mr-2 h-4 w-4" />
           <SelectValue placeholder="Category" />
         </SelectTrigger>
@@ -72,7 +81,15 @@ export const SearchBar = ({ onSearch, compact }: Props) => {
         </SelectContent>
       </Select>
 
-      <Button onClick={submit} className={cn(compact ? "w-full" : "")}>Search</Button>
+      <Button 
+        onClick={submit} 
+        className={cn(
+          "hover-lift transition-all",
+          compact ? "w-full" : ""
+        )}
+      >
+        Search Events
+      </Button>
     </div>
   );
 };
