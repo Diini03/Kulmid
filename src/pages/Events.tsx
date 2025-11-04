@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { EventCard } from "@/components/events/EventCard";
@@ -29,8 +30,15 @@ const sorters: Record<string, (a: EventItem, b: EventItem) => number> = {
 const categories = ["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const;
 
 const EventsPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get('category');
+  
   const [sort, setSort] = useState<string>("Soonest");
-  const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [activeFilter, setActiveFilter] = useState<string>(
+    categoryFromUrl && categories.includes(categoryFromUrl as any) 
+      ? categoryFromUrl 
+      : "All"
+  );
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,6 +71,18 @@ const EventsPage = () => {
     return list.sort(sorter);
   }, [sort, activeFilter, allEvents]);
 
+  const handleFilterChange = (category: string) => {
+    setActiveFilter(category);
+    
+    // Update URL params
+    if (category === "All") {
+      searchParams.delete('category');
+    } else {
+      searchParams.set('category', category);
+    }
+    setSearchParams(searchParams);
+  };
+
   return (
     <Layout>
       <Seo title="Events" description="Explore events by category, location, date and more." canonical="/events" />
@@ -72,7 +92,9 @@ const EventsPage = () => {
         <div className="container py-8 md:py-12">
           <div className="max-w-5xl mx-auto space-y-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">Discover events</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                {activeFilter === "All" ? "Discover events" : `${activeFilter} events`}
+              </h1>
               <p className="text-muted-foreground">Find experiences that inspire you</p>
             </div>
           </div>
@@ -90,7 +112,7 @@ const EventsPage = () => {
                     key={label}
                     variant={activeFilter === label ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setActiveFilter(label)}
+                    onClick={() => handleFilterChange(label)}
                   >
                     {label}
                   </Button>
@@ -142,7 +164,7 @@ const EventsPage = () => {
           ) : (
             <div className="text-center py-20">
               <div className="text-lg text-muted-foreground mb-4">No events found</div>
-              <Button variant="outline" onClick={() => setActiveFilter("All")}>
+              <Button variant="outline" onClick={() => handleFilterChange("All")}>
                 Clear filters
               </Button>
             </div>

@@ -7,7 +7,7 @@ import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Laptop, Utensils, Sparkles, Palette, Sprout, Dumbbell, Heart, Bitcoin } from "lucide-react";
+import { categories } from "@/constants/categories";
 type EventItem = {
   id: string;
   title: string;
@@ -19,39 +19,6 @@ type EventItem = {
   description: string | null;
   status: string;
 };
-const categories = [{
-  name: "Tech",
-  icon: Laptop,
-  color: "from-blue-500 to-cyan-500"
-}, {
-  name: "Food & Drink",
-  icon: Utensils,
-  color: "from-orange-500 to-red-500"
-}, {
-  name: "AI",
-  icon: Sparkles,
-  color: "from-purple-500 to-pink-500"
-}, {
-  name: "Arts & Culture",
-  icon: Palette,
-  color: "from-pink-500 to-rose-500"
-}, {
-  name: "Climate",
-  icon: Sprout,
-  color: "from-green-500 to-emerald-500"
-}, {
-  name: "Fitness",
-  icon: Dumbbell,
-  color: "from-red-500 to-orange-500"
-}, {
-  name: "Wellness",
-  icon: Heart,
-  color: "from-pink-400 to-purple-400"
-}, {
-  name: "Crypto",
-  icon: Bitcoin,
-  color: "from-yellow-500 to-orange-500"
-}];
 const Discover = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
@@ -62,24 +29,37 @@ const Discover = () => {
   } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchData = async () => {
       await supabase.rpc('update_event_status');
-      const {
-        data
-      } = await supabase.from('events').select('*').in('status', ['upcoming', 'ongoing']).limit(6);
-      if (data) {
-        setEvents(data);
+      
+      // Fetch featured events for display
+      const { data: featuredEvents } = await supabase
+        .from('events')
+        .select('*')
+        .in('status', ['upcoming', 'ongoing'])
+        .limit(6);
+      
+      if (featuredEvents) {
+        setEvents(featuredEvents);
+      }
 
-        // Count events by category
+      // Fetch all events to count by category
+      const { data: allEvents } = await supabase
+        .from('events')
+        .select('category')
+        .in('status', ['upcoming', 'ongoing']);
+      
+      if (allEvents) {
         const counts: Record<string, number> = {};
-        data.forEach(event => {
+        allEvents.forEach(event => {
           counts[event.category] = (counts[event.category] || 0) + 1;
         });
         setEventCounts(counts);
       }
+      
       setLoading(false);
     };
-    fetchEvents();
+    fetchData();
   }, []);
   const handleViewAll = () => {
     if (user) {
@@ -88,9 +68,9 @@ const Discover = () => {
       setAuthModalOpen(true);
     }
   };
-  const handleEventClick = (eventId: string) => {
+  const handleCategoryClick = (categoryName: string) => {
     if (user) {
-      navigate(`/events/${eventId}`);
+      navigate(`/events?category=${categoryName}`);
     } else {
       setAuthModalOpen(true);
     }
@@ -119,16 +99,22 @@ const Discover = () => {
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map(category => {
-            const Icon = category.icon;
-            const count = eventCounts[category.name] || Math.floor(Math.random() * 50) + 10;
-            return <button key={category.name} onClick={handleViewAll} className="group p-5 rounded-xl border bg-card hover-lift text-left">
+              const Icon = category.icon;
+              const count = eventCounts[category.name] || 0;
+              return (
+                <button 
+                  key={category.name} 
+                  onClick={() => handleCategoryClick(category.name)} 
+                  className="group p-5 rounded-xl border bg-card hover-lift text-left"
+                >
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center mb-4 group-hover:scale-105 transition-transform`}>
                     <Icon className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="font-semibold mb-1">{category.name}</h3>
                   <p className="text-sm text-muted-foreground">{count} events</p>
-                </button>;
-          })}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
