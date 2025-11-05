@@ -7,8 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { onboardingQuestions, type UserPreferences } from "@/constants/onboarding";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Footer } from "@/components/layout/Footer";
 
 const Onboarding = () => {
   const { user } = useAuth();
@@ -66,6 +67,31 @@ const Onboarding = () => {
     }
   };
 
+  const handleSkip = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      // Insert minimal preferences to mark onboarding as complete
+      const { error } = await supabase.from("user_preferences").insert({
+        user_id: user.id,
+        event_categories: [],
+        topics: [],
+        allow_recommendations: false,
+      });
+
+      if (error) throw error;
+
+      toast.success("Welcome to EventEase");
+      navigate("/home");
+    } catch (error) {
+      console.error("Error skipping onboarding:", error);
+      toast.error("Failed to complete onboarding. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!user) return;
     
@@ -103,128 +129,150 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-muted/30 to-background p-4">
+    <div className="min-h-screen flex flex-col">
       <Seo title="Welcome Survey" canonical="/onboarding" />
       
-      <div className="w-full max-w-2xl">
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">
-              Step {currentStep + 1} of {onboardingQuestions.length}
-            </span>
-            <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
+      <div className="flex-1 flex items-center justify-center p-4 py-12">
+        <div className="w-full max-w-lg">
+          {/* Skip Button */}
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSkip}
+              disabled={loading}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Skip <X className="ml-1 h-4 w-4" />
+            </Button>
           </div>
-          <Progress value={progress} className="h-2" />
-        </div>
 
-        {/* Question Card */}
-        <div className="bg-card border rounded-2xl p-8 md:p-12 shadow-lg">
-          <h1 className="text-2xl md:text-3xl font-bold mb-8 text-balance">
-            {currentQuestion.question}
-          </h1>
-
-          {/* Multi-Select Options */}
-          {currentQuestion.type === "multi-select" && (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {currentQuestion.options?.map((option) => {
-                const Icon = option.icon;
-                const isSelected = (
-                  preferences[currentQuestion.field as "event_categories" | "topics"] || []
-                ).includes(option.value);
-                
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => handleMultiSelect(option.value)}
-                    className={`relative p-4 rounded-xl border-2 text-left transition-all hover:border-primary/50 ${
-                      isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-border bg-background"
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                        <Check className="h-4 w-4" />
-                      </div>
-                    )}
-                    {Icon && <Icon className="h-6 w-6 mb-2 text-primary" />}
-                    <p className="font-medium">{option.label}</p>
-                  </button>
-                );
-              })}
+          {/* Progress Bar */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                {currentStep + 1} of {onboardingQuestions.length}
+              </span>
+              <span className="text-xs text-muted-foreground">{Math.round(progress)}%</span>
             </div>
-          )}
+            <Progress value={progress} className="h-1.5" />
+          </div>
 
-          {/* Single-Select Options */}
-          {currentQuestion.type === "single-select" && (
-            <div className="grid gap-3">
-              {currentQuestion.options?.map((option) => {
-                const Icon = option.icon;
-                const isSelected = preferences[currentQuestion.field] === option.value;
-                
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSingleSelect(option.value)}
-                    className={`relative p-4 rounded-xl border-2 text-left transition-all hover:border-primary/50 ${
-                      isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-border bg-background"
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                        <Check className="h-4 w-4" />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3">
-                      {Icon && <Icon className="h-6 w-6 text-primary" />}
-                      <p className="font-medium">{option.label}</p>
-                    </div>
-                  </button>
-                );
-              })}
+          {/* Question Card with 3D gradient effect */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent rounded-2xl blur-2xl" />
+            <div className="relative bg-card/95 backdrop-blur-sm border rounded-2xl p-6 shadow-xl">
+              <h2 className="text-lg font-semibold mb-6 text-balance">
+                {currentQuestion.question}
+              </h2>
+
+              {/* Multi-Select Options */}
+              {currentQuestion.type === "multi-select" && (
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  {currentQuestion.options?.map((option) => {
+                    const Icon = option.icon;
+                    const isSelected = (
+                      preferences[currentQuestion.field as "event_categories" | "topics"] || []
+                    ).includes(option.value);
+                    
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => handleMultiSelect(option.value)}
+                        className={`relative p-3 rounded-lg border text-left transition-all hover:shadow-md group ${
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border bg-background hover:border-primary/30"
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                            <Check className="h-3 w-3" />
+                          </div>
+                        )}
+                        {Icon && <Icon className="h-5 w-5 mb-1.5 text-primary" />}
+                        <p className="text-sm font-medium">{option.label}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Single-Select Options */}
+              {currentQuestion.type === "single-select" && (
+                <div className="grid gap-2">
+                  {currentQuestion.options?.map((option) => {
+                    const Icon = option.icon;
+                    const isSelected = preferences[currentQuestion.field] === option.value;
+                    
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => handleSingleSelect(option.value)}
+                        className={`relative p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border bg-background hover:border-primary/30"
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                            <Check className="h-3 w-3" />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2.5">
+                          {Icon && <Icon className="h-5 w-5 text-primary" />}
+                          <p className="text-sm font-medium">{option.label}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Toggle */}
+              {currentQuestion.type === "toggle" && (
+                <div className="flex items-center justify-center gap-4 py-6">
+                  <span className="text-sm font-medium">No</span>
+                  <Switch
+                    checked={getValue() as boolean}
+                    onCheckedChange={handleToggle}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                  <span className="text-sm font-medium">Yes</span>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex gap-2 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                  disabled={currentStep === 0}
+                  size="sm"
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleNext}
+                  disabled={!canProceed() || loading}
+                  size="sm"
+                  className="flex-1"
+                >
+                  {loading
+                    ? "Saving..."
+                    : currentStep === onboardingQuestions.length - 1
+                    ? "Finish"
+                    : "Next"}
+                </Button>
+              </div>
             </div>
-          )}
-
-          {/* Toggle */}
-          {currentQuestion.type === "toggle" && (
-            <div className="flex items-center justify-center gap-4 py-8">
-              <span className="text-lg font-medium">No</span>
-              <Switch
-                checked={getValue() as boolean}
-                onCheckedChange={handleToggle}
-                className="data-[state=checked]:bg-primary"
-              />
-              <span className="text-lg font-medium">Yes</span>
-            </div>
-          )}
-
-          {/* Navigation Buttons */}
-          <div className="flex gap-3 mt-8">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 0}
-              className="flex-1"
-            >
-              Back
-            </Button>
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed() || loading}
-              className="flex-1"
-            >
-              {loading
-                ? "Saving..."
-                : currentStep === onboardingQuestions.length - 1
-                ? "Finish"
-                : "Next"}
-            </Button>
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
