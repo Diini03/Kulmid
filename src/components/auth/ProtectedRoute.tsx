@@ -14,23 +14,36 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/signin", { replace: true });
-    }
-  }, [user, loading, navigate]);
+    const checkAuth = async () => {
+      // Wait for auth to finish loading
+      if (loading) return;
 
-  useEffect(() => {
-    const checkOnboarding = async () => {
-      if (!loading && user && location.pathname !== "/onboarding") {
+      // Redirect to signin if not authenticated
+      if (!user) {
+        navigate("/signin", { replace: true });
+        return;
+      }
+
+      // Skip onboarding check if already on onboarding page
+      if (location.pathname === "/onboarding") {
+        setCheckingOnboarding(false);
+        return;
+      }
+
+      // Check if user has completed onboarding
+      try {
         const completed = await hasCompletedOnboarding(user.id);
         if (!completed) {
           navigate("/onboarding", { replace: true });
         }
+      } catch (error) {
+        console.error("Error checking onboarding status:", error);
+      } finally {
+        setCheckingOnboarding(false);
       }
-      setCheckingOnboarding(false);
     };
 
-    checkOnboarding();
+    checkAuth();
   }, [user, loading, navigate, location.pathname]);
 
   if (loading || checkingOnboarding) {
