@@ -7,6 +7,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { lazy, Suspense } from "react";
 
 import Welcome from "./pages/Welcome";
 import HomePage from "./pages/HomePage";
@@ -25,7 +26,7 @@ import Contact from "./pages/Contact";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ResetPassword from "./pages/ResetPassword";
-import Onboarding from "./pages/Onboarding";
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 import UserDashboard from "./pages/UserDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import AdminUsers from "./pages/AdminUsers";
