@@ -104,6 +104,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          age_range: string | null
+          allow_recommendations: boolean | null
+          attendance_frequency: string | null
+          created_at: string | null
+          event_categories: string[] | null
+          event_mode: string | null
+          id: string
+          preferred_format: string | null
+          source: string | null
+          topics: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          age_range?: string | null
+          allow_recommendations?: boolean | null
+          attendance_frequency?: string | null
+          created_at?: string | null
+          event_categories?: string[] | null
+          event_mode?: string | null
+          id?: string
+          preferred_format?: string | null
+          source?: string | null
+          topics?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          age_range?: string | null
+          allow_recommendations?: boolean | null
+          attendance_frequency?: string | null
+          created_at?: string | null
+          event_categories?: string[] | null
+          event_mode?: string | null
+          id?: string
+          preferred_format?: string | null
+          source?: string | null
+          topics?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -137,10 +182,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      update_event_status: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      update_event_status: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"

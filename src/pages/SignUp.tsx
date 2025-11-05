@@ -27,7 +27,7 @@ const SignUp = () => {
   const onSubmit = async (data: SignUpFormData) => {
     const { error } = await signUp(data.email, data.password, data.fullName);
     if (!error) {
-      navigate('/home');
+      navigate('/onboarding');
     }
   };
 

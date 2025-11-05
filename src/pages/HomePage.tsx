@@ -7,6 +7,7 @@ import { EventCard } from "@/components/events/EventCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getPersonalizedEvents } from "@/utils/recommendations";
 
 type EventItem = {
   id: string;
@@ -22,29 +23,24 @@ type EventItem = {
 const categories = ["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const;
 
 const HomePage = () => {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasPreferences, setHasPreferences] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      await supabase.rpc('update_event_status');
+      if (!user) return;
       
-      const { data } = await supabase
-        .from('events')
-        .select('*')
-        .in('status', ['upcoming', 'ongoing'])
-        .order('date', { ascending: true });
-
-      if (data) {
-        setEvents(data);
-      }
+      const { events: personalizedEvents, hasPreferences: prefs } = await getPersonalizedEvents(user.id);
+      setEvents(personalizedEvents);
+      setHasPreferences(prefs);
       setLoading(false);
     };
 
     fetchEvents();
-  }, []);
+  }, [user]);
 
   if (authLoading) {
     return (
@@ -77,10 +73,12 @@ const HomePage = () => {
         <div className="container mx-auto max-w-5xl py-20 md:py-28">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance">
-              Find your next experience
+              {hasPreferences ? "Your personalized events" : "Find your next experience"}
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Discover events that inspire, educate, and connect.
+              {hasPreferences 
+                ? "Events curated based on your interests and preferences"
+                : "Discover events that inspire, educate, and connect."}
             </p>
           </div>
         </div>

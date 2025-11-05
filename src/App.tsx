@@ -25,6 +25,7 @@ import Contact from "./pages/Contact";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ResetPassword from "./pages/ResetPassword";
+import Onboarding from "./pages/Onboarding";
 import UserDashboard from "./pages/UserDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import AdminUsers from "./pages/AdminUsers";
@@ -50,6 +51,9 @@ const App = () => (
                   <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                   <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  
+                  {/* Onboarding - Protected but bypasses onboarding check */}
+                  <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
                   
                   {/* Footer Pages - Always accessible */}
                   <Route path="/about" element={<About />} />
