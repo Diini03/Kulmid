@@ -85,15 +85,20 @@ const CreateEvent = () => {
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
+    if (!user) {
+      throw new Error("User must be authenticated to upload images");
+    }
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const filePath = `${user.id}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('event-images')
       .upload(filePath, file);
 
     if (uploadError) {
+      console.error('Upload error:', uploadError);
       throw uploadError;
     }
 

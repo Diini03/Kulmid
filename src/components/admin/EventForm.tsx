@@ -85,15 +85,23 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
+    // Get current user
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    
+    if (!currentUser) {
+      throw new Error("User must be authenticated to upload images");
+    }
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const filePath = `${currentUser.id}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('event-images')
       .upload(filePath, file);
 
     if (uploadError) {
+      console.error('Upload error:', uploadError);
       throw uploadError;
     }
 
@@ -107,6 +115,13 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   const onSubmit = async (data: EventFormData) => {
     setUploading(true);
     try {
+      // Get current user for created_by
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (!currentUser) {
+        throw new Error("User must be authenticated");
+      }
+
       let imageUrl = event?.image_url;
 
       if (imageFile) {
@@ -124,6 +139,7 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
         description: data.description,
         image_url: imageUrl,
         status: event ? undefined : 'approved', // Admin events are auto-approved
+        created_by: currentUser.id,
       };
 
       if (event) {
