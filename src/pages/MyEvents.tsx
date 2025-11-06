@@ -145,7 +145,7 @@ const MyEvents = () => {
               Manage and track your event submissions
             </p>
           </div>
-          <Button onClick={() => navigate("/create-event")} size="lg">
+          <Button onClick={() => navigate("/create")} size="lg">
             <Plus className="mr-2 h-4 w-4" />
             Create Event
           </Button>
@@ -174,7 +174,7 @@ const MyEvents = () => {
                       : `No ${activeTab} events found`
                     }
                   </p>
-                  <Button onClick={() => navigate("/create-event")}>
+                  <Button onClick={() => navigate("/create")}>
                     <Plus className="mr-2 h-4 w-4" />
                     Create Event
                   </Button>
@@ -271,7 +271,7 @@ const MyEvents = () => {
                       {event.status === "rejected" && (
                         <Button 
                           className="w-full"
-                          onClick={() => navigate("/create-event")}
+                          onClick={() => navigate("/create")}
                         >
                           Create New Event
                         </Button>

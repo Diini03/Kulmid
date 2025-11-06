@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -188,12 +189,13 @@ const Create = () => {
   };
 
   if (authLoading) {
+    const LoadingLayout = isAdmin ? AdminLayout : Layout;
     return (
-      <Layout>
+      <LoadingLayout>
         <div className="container py-12 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </Layout>
+      </LoadingLayout>
     );
   }
 
@@ -202,8 +204,10 @@ const Create = () => {
     return null;
   }
 
+  const PageLayout = isAdmin ? AdminLayout : Layout;
+
   return (
-    <Layout>
+    <PageLayout>
       <Seo title="Create Event" description="Create and publish your event" canonical="/create" />
       
       <div className="container max-w-6xl py-8 md:py-12">
@@ -519,7 +523,7 @@ const Create = () => {
           </form>
         </Form>
       </div>
-    </Layout>
+    </PageLayout>
   );
 };
 
