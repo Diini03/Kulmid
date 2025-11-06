@@ -47,7 +47,7 @@ const Contact = () => {
       
       {/* Hero Section */}
       <section className="container py-12 md:py-20">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
+        <div className="max-w-6xl mx-auto text-center space-y-6">
           <h1 className="text-4xl md:text-5xl font-bold">Get In Touch</h1>
           <p className="text-xl text-muted-foreground">
             Have questions? We're here to help. Reach out and we'll respond as soon as possible.
@@ -209,7 +209,7 @@ const Contact = () => {
 
       {/* FAQ Section */}
       <section className="container py-12">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
           <Accordion type="single" collapsible className="space-y-4">
             <AccordionItem value="booking" className="border rounded-lg px-6">
@@ -270,7 +270,7 @@ const Contact = () => {
 
       {/* Map Section */}
       <section className="container py-12">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-8">Visit Our Office</h2>
           <div className="rounded-xl border overflow-hidden">
             <div className="aspect-video bg-secondary flex items-center justify-center">
