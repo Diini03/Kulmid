@@ -82,7 +82,7 @@ const Achievements = () => {
       
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-r from-primary/10 to-primary/5">
-        <div className="container text-center">
+        <div className="container max-w-6xl text-center">
           <Trophy className="h-16 w-16 text-primary mx-auto mb-6" />
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Our Achievements</h1>
           <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
@@ -94,7 +94,7 @@ const Achievements = () => {
 
       {/* Key Milestones */}
       <section className="py-20">
-        <div className="container">
+        <div className="container max-w-6xl">
           <h2 className="text-3xl font-bold text-center mb-12">Key Milestones</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {milestones.map((milestone, index) => {
@@ -118,7 +118,7 @@ const Achievements = () => {
 
       {/* Awards & Recognition */}
       <section className="py-20 bg-muted/50">
-        <div className="container">
+        <div className="container max-w-6xl">
           <h2 className="text-3xl font-bold text-center mb-12">Awards & Recognition</h2>
           <div className="max-w-4xl mx-auto space-y-6">
             {awards.map((award, index) => (
@@ -146,7 +146,7 @@ const Achievements = () => {
 
       {/* Impact Numbers */}
       <section className="py-20">
-        <div className="container">
+        <div className="container max-w-6xl">
           <h2 className="text-3xl font-bold text-center mb-12">Our Impact</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="text-center">
@@ -176,7 +176,7 @@ const Achievements = () => {
 
       {/* Certifications */}
       <section className="py-20 bg-muted/50">
-        <div className="container">
+        <div className="container max-w-6xl">
           <h2 className="text-3xl font-bold text-center mb-12">Certifications & Compliance</h2>
           <div className="max-w-2xl mx-auto">
             <p className="text-center text-lg mb-8 text-muted-foreground">
@@ -196,7 +196,7 @@ const Achievements = () => {
 
       {/* Press & Media */}
       <section className="py-20">
-        <div className="container">
+        <div className="container max-w-6xl">
           <h2 className="text-3xl font-bold text-center mb-12">In the Media</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <Card className="hover:shadow-lg transition-shadow">

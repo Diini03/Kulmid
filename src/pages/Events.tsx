@@ -90,7 +90,7 @@ const EventsPage = () => {
       {/* Simple Header */}
       <section className="border-b bg-card">
         <div className="container py-8 md:py-12">
-          <div className="max-w-5xl mx-auto space-y-6">
+          <div className="max-w-6xl mx-auto space-y-6">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
                 {activeFilter === "All" ? "Discover events" : `${activeFilter} events`}
@@ -104,7 +104,7 @@ const EventsPage = () => {
       {/* Filters */}
       <section className="border-b">
         <div className="container py-6">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row gap-4 justify-between">
               <div className="flex flex-wrap gap-2">
                 {categories.map((label) => (
@@ -138,7 +138,7 @@ const EventsPage = () => {
 
       {/* Results */}
       <section className="container py-12">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {loading ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { WelcomeLayout } from "@/components/layout/WelcomeLayout";
+import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/events/EventCard";
@@ -75,12 +75,12 @@ const Discover = () => {
       setAuthModalOpen(true);
     }
   };
-  return <WelcomeLayout>
+  return <Layout>
       <Seo title="Discover Events" description="Explore popular events near you, browse by category, or check out some of the great community calendars" canonical="/discover" />
 
       {/* Hero Section */}
       <section className="border-b bg-gradient-to-b from-muted/30 to-background">
-        <div className="container max-w-4xl py-16 md:py-20">
+        <div className="container max-w-6xl py-16 md:py-20">
           <div className="max-w-2xl mx-auto text-center space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
               Discover events
@@ -94,7 +94,7 @@ const Discover = () => {
 
       {/* Browse by Category */}
       <section className="border-b">
-        <div className="container max-w-4xl py-12">
+        <div className="container max-w-6xl py-12">
           <h2 className="text-xl font-semibold mb-6">Browse by category</h2>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -120,7 +120,7 @@ const Discover = () => {
       </section>
 
       {/* Featured Events */}
-      <section className="container max-w-4xl py-12 md:py-16">
+      <section className="container max-w-6xl py-12 md:py-16">
         <h2 className="text-xl font-semibold mb-8">Featured events</h2>
 
         {loading ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -143,6 +143,6 @@ const Discover = () => {
       </section>
 
       <AuthRequiredModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} message="Sign in to view all events and save your favorites" />
-    </WelcomeLayout>;
+    </Layout>;
 };
 export default Discover;

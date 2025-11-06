@@ -70,7 +70,7 @@ const HomePage = () => {
 
       {/* Minimal Hero */}
       <section className="border-b bg-gradient-to-b from-muted/30 to-background">
-        <div className="container mx-auto max-w-5xl py-20 md:py-28">
+        <div className="container mx-auto max-w-6xl py-20 md:py-28">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance">
               {hasPreferences ? "Your personalized events" : "Find your next experience"}
@@ -86,7 +86,7 @@ const HomePage = () => {
 
       {/* Browse by Category */}
       <section className="border-b bg-card">
-        <div className="container mx-auto max-w-5xl py-8">
+        <div className="container mx-auto max-w-6xl py-8">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <h2 className="text-lg font-semibold">Browse by category</h2>
             <div className="flex flex-wrap gap-2">
@@ -107,7 +107,7 @@ const HomePage = () => {
       </section>
 
       {/* Events Grid */}
-      <section className="container mx-auto max-w-5xl py-12 md:py-16">
+      <section className="container mx-auto max-w-6xl py-12 md:py-16">
         {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (

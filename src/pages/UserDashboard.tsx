@@ -13,7 +13,7 @@ const UserDashboard = () => {
   return (
     <Layout>
       <Seo title="My Dashboard" canonical="/dashboard" />
-      <section className="container py-12">
+      <section className="container max-w-6xl py-12">
         <h1 className="text-2xl font-bold mb-6">My Dashboard</h1>
         <div className="grid gap-6 md:grid-cols-3">
           <div className="rounded-xl border p-6">

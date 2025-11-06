@@ -157,7 +157,7 @@ const OurTeam = () => {
 
   const renderTeamSection = (title: string, members: TeamMember[]) => (
     <section className="py-16">
-      <div className="container">
+      <div className="container max-w-6xl">
         <h2 className="text-3xl font-bold text-center mb-12">{title}</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {members.map((member, index) => (
@@ -228,7 +228,7 @@ const OurTeam = () => {
       
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-r from-primary/10 to-primary/5">
-        <div className="container text-center">
+        <div className="container max-w-6xl text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Meet Our Team</h1>
           <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
             The passionate individuals working together to revolutionize how people discover, 
@@ -239,7 +239,7 @@ const OurTeam = () => {
 
       {/* Team Stats */}
       <section className="py-16 bg-muted/50">
-        <div className="container">
+        <div className="container max-w-6xl">
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-3xl font-bold text-primary mb-2">50+</div>
@@ -283,7 +283,7 @@ const OurTeam = () => {
 
       {/* Culture & Values */}
       <section className="py-20">
-        <div className="container">
+        <div className="container max-w-6xl">
           <h2 className="text-3xl font-bold text-center mb-12">Our Culture</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="text-center p-6">
@@ -322,7 +322,7 @@ const OurTeam = () => {
 
       {/* Join Us */}
       <section className="py-20 bg-primary/5">
-        <div className="container text-center">
+        <div className="container max-w-6xl text-center">
           <h2 className="text-3xl font-bold mb-6">Join Our Team</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             We're always looking for talented, passionate individuals who want to help shape 
