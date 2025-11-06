@@ -10,8 +10,8 @@ const About = () => {
       <Seo title="About" description="Learn about EventEase's mission, story, and team building the future of event experiences." canonical="/about" />
       
       {/* Hero Section */}
-      <section className="container max-w-6xl py-12 md:py-20">
-        <div className="text-center space-y-6">
+      <section className="container py-12 md:py-20">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
           <h1 className="text-4xl md:text-5xl font-bold">About EventEase</h1>
           <p className="text-xl text-muted-foreground">
             We're on a mission to revolutionize how people discover, book, and experience events worldwide.
@@ -20,7 +20,7 @@ const About = () => {
       </section>
 
       {/* Mission & Vision */}
-      <section className="container max-w-6xl py-12">
+      <section className="container py-12">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
             <img src={heroImg} alt="EventEase team collaboration" className="rounded-xl object-cover w-full h-64 md:h-80" />
@@ -48,8 +48,8 @@ const About = () => {
       </section>
 
       {/* Company Story */}
-      <section className="container max-w-6xl py-12">
-        <div className="max-w-4xl mx-auto">
+      <section className="container py-12">
+        <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Our Story</h2>
           <div className="space-y-8">
             <div className="prose max-w-none">
@@ -73,7 +73,7 @@ const About = () => {
       </section>
 
       {/* Timeline */}
-      <section className="container max-w-6xl py-12">
+      <section className="container py-12">
         <h2 className="text-3xl font-bold text-center mb-12">Key Milestones</h2>
         <div className="max-w-4xl mx-auto">
           <div className="grid gap-6 md:gap-8">
@@ -103,8 +103,8 @@ const About = () => {
       </section>
 
       {/* Team Section */}
-      <section className="container max-w-6xl py-12">
-        <div>
+      <section className="container py-12">
+        <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Meet Our Team</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
@@ -131,8 +131,8 @@ const About = () => {
       </section>
 
       {/* Values */}
-      <section className="container max-w-6xl py-12">
-        <div>
+      <section className="container py-12">
+        <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Our Values</h2>
           <div className="grid md:grid-cols-2 gap-8">
             {[
@@ -151,8 +151,8 @@ const About = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="container max-w-6xl py-16 text-center">
-        <div className="space-y-6">
+      <section className="container py-16 text-center">
+        <div className="max-w-2xl mx-auto space-y-6">
           <h2 className="text-3xl font-bold">Join Our Journey</h2>
           <p className="text-lg text-muted-foreground">
             Ready to be part of the future of events? Whether you're looking to discover amazing experiences 

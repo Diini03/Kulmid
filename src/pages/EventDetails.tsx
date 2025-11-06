@@ -100,7 +100,7 @@ const EventDetails = () => {
 
       {/* Content */}
       <section className="container py-8 md:py-12">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
