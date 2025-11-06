@@ -1,21 +1,18 @@
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { EventForm } from "@/components/admin/EventForm";
 import { EventsTable } from "@/components/admin/EventsTable";
 import { PendingEventsTable } from "@/components/admin/PendingEventsTable";
 import { Calendar, Users, TrendingUp } from "lucide-react";
 
 const OrganizerDashboard = () => {
   const { isAdmin, loading } = useAuth();
-  const [createOpen, setCreateOpen] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [stats, setStats] = useState({
@@ -102,12 +99,14 @@ const OrganizerDashboard = () => {
               </p>
             </div>
             <Button 
-              onClick={() => setCreateOpen(true)}
+              asChild
               size="lg"
               className="bg-white text-primary hover:bg-white/90 shadow-lg"
             >
-              <Calendar className="mr-2 h-5 w-5" />
-              Create New Event
+              <Link to="/create">
+                <Calendar className="mr-2 h-5 w-5" />
+                Create New Event
+              </Link>
             </Button>
           </div>
         </div>
@@ -161,9 +160,11 @@ const OrganizerDashboard = () => {
               <h2 className="text-2xl font-bold">Event Management</h2>
               <p className="text-muted-foreground">Create, edit, and manage all platform events</p>
             </div>
-            <Button onClick={() => setCreateOpen(true)} variant="outline">
-              <Calendar className="mr-2 h-4 w-4" />
-              Add Event
+            <Button asChild variant="outline">
+              <Link to="/create">
+                <Calendar className="mr-2 h-4 w-4" />
+                Add Event
+              </Link>
             </Button>
           </div>
           
@@ -214,30 +215,16 @@ const OrganizerDashboard = () => {
               <p className="text-muted-foreground mb-6">
                 Create your first event to get started with event management
               </p>
-              <Button onClick={() => setCreateOpen(true)}>
-                <Calendar className="mr-2 h-4 w-4" />
-                Create Your First Event
+              <Button asChild>
+                <Link to="/create">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Create Your First Event
+                </Link>
               </Button>
             </div>
           )}
         </div>
       </div>
-
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Event</DialogTitle>
-          </DialogHeader>
-          <EventForm
-            onSuccess={() => {
-              setCreateOpen(false);
-              fetchEvents();
-              fetchStats();
-            }}
-            onCancel={() => setCreateOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 };

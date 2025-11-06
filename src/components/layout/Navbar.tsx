@@ -74,7 +74,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           {/* Create Event Button - Authenticated Users */}
           {user && (
             <Button asChild size="sm" className="hidden md:flex">
-              <Link to="/create-event">Create Event</Link>
+              <Link to="/create">Create Event</Link>
             </Button>
           )}
 
@@ -202,7 +202,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 {user ? (
                   <>
                     <DropdownMenuItem asChild>
-                      <NavLink to="/create-event" className="flex items-center gap-2">
+                      <NavLink to="/create" className="flex items-center gap-2">
                         <Plus className="h-4 w-4" />
                         Create Event
                       </NavLink>
