@@ -67,8 +67,10 @@ const App = () => (
                   
                   {/* Protected Routes - Require authentication */}
                   <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-                  <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-                  <Route path="/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
+                  
+                  {/* Public Routes - Anyone can browse events */}
+                  <Route path="/events" element={<Events />} />
+                  <Route path="/events/:id" element={<EventDetails />} />
                   <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />

@@ -38,7 +38,7 @@ export async function getPersonalizedEvents(
       const { data: allEvents } = await supabase
         .from("events")
         .select("*")
-        .in("status", ["upcoming", "ongoing"])
+        .in("status", ["approved", "upcoming", "ongoing"])
         .order("date", { ascending: true });
 
       return { events: allEvents || [], hasPreferences: false };
@@ -51,7 +51,7 @@ export async function getPersonalizedEvents(
     let query = supabase
       .from("events")
       .select("*")
-      .in("status", ["upcoming", "ongoing"]);
+      .in("status", ["approved", "upcoming", "ongoing"]);
 
     // Filter by preferred categories if available
     if (prefs.event_categories && prefs.event_categories.length > 0) {

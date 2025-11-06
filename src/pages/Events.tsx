@@ -49,7 +49,7 @@ const EventsPage = () => {
       const { data } = await supabase
         .from('events')
         .select('*')
-        .in('status', ['upcoming', 'ongoing']);
+        .in('status', ['approved', 'upcoming', 'ongoing']);
 
       if (data) {
         setAllEvents(data);
