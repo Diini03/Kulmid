@@ -3,9 +3,9 @@ import { NavLink, Link } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CalendarSearch, Moon, Sun, Menu, Heart, User, LogOut, Monitor, Check } from "lucide-react";
-import { useFavorites } from "@/contexts/FavoritesContext";
+import { Calendar, Moon, Sun, Menu, User, LogOut, Monitor, Check, CalendarDays, Compass, Search, Bell, Plus, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface NavbarProps {
   onOpenSearch: () => void;
@@ -13,9 +13,15 @@ interface NavbarProps {
 
 export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
-  const { favorites } = useFavorites();
   const { user, profile, signOut, isAdmin } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  
+  const currentTime = new Date().toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: false,
+    timeZoneName: 'short'
+  });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -25,7 +31,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   }, []);
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
-    `${isActive ? "text-primary font-medium" : "text-foreground"} transition-colors hover:text-primary`;
+    `flex items-center gap-2 ${isActive ? "text-foreground font-medium" : "text-muted-foreground"} transition-colors hover:text-foreground`;
 
   const getThemeIcon = () => {
     if (theme === "system") return <Monitor className="h-4 w-4" />;
@@ -34,37 +40,64 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   };
 
   return (
-    <header className={`sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b transition-all ${scrolled ? "shadow-sm" : ""}`}>
-      <nav className="container flex items-center justify-between gap-6 h-16">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-          EventEase
-        </Link>
+    <header className={`sticky top-0 z-50 backdrop-blur-md bg-background/95 border-b transition-all ${scrolled ? "shadow-sm" : ""}`}>
+      <nav className="container flex items-center justify-between gap-4 h-14">
+        {/* Left Side - Logo + Navigation */}
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity">
+            <Sparkles className="h-5 w-5" />
+          </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-          <NavLink to="/home" className={linkCls}>Home</NavLink>
-          <NavLink to="/events" className={linkCls}>Events</NavLink>
-          <NavLink to="/discover" className={linkCls}>Discover</NavLink>
+          <div className="hidden md:flex items-center gap-6 text-sm">
+            <NavLink to="/events" className={linkCls}>
+              <Calendar className="h-4 w-4" />
+              Events
+            </NavLink>
+            <NavLink to="/calendar" className={linkCls}>
+              <CalendarDays className="h-4 w-4" />
+              Calendars
+            </NavLink>
+            <NavLink to="/discover" className={linkCls}>
+              <Compass className="h-4 w-4" />
+              Discover
+            </NavLink>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="icon" className="relative">
-            <Link to="/favorites" aria-label="Favorites">
-              <Heart className={favorites.length > 0 ? "fill-red-500 text-red-500" : ""} />
-              {favorites.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-medium">
-                  {favorites.length}
-                </span>
-              )}
-            </Link>
+        {/* Right Side - Actions */}
+        <div className="flex items-center gap-3">
+          {/* Time Display - Desktop Only */}
+          <div className="hidden lg:block text-sm text-muted-foreground">
+            {currentTime}
+          </div>
+
+          {/* Create Event Button - Authenticated Users */}
+          {user && (
+            <Button asChild size="sm" className="hidden md:flex">
+              <Link to="/create-event">Create Event</Link>
+            </Button>
+          )}
+
+          {/* Search Button */}
+          <Button variant="ghost" size="icon" onClick={onOpenSearch} aria-label="Search">
+            <Search className="h-4 w-4" />
           </Button>
-          
+
+          {/* Notifications - Authenticated Users */}
+          {user && (
+            <Button variant="ghost" size="icon" aria-label="Notifications">
+              <Bell className="h-4 w-4" />
+            </Button>
+          )}
+
+          {/* Theme Toggle - Desktop */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Toggle theme">
+              <Button variant="ghost" size="icon" className="hidden md:flex" aria-label="Toggle theme">
                 {getThemeIcon()}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="z-50">
+            <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Monitor className="h-4 w-4" />
@@ -88,72 +121,129 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
+          {/* User Menu */}
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                      {profile?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/my-events" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    My Events
+                  </Link>
+                </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      Admin
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm" className="hidden md:flex">
+                <Link to="/signin">Sign In</Link>
+              </Button>
+              <Button asChild size="sm" className="hidden md:flex">
+                <Link to="/signup">Sign Up</Link>
+              </Button>
+            </>
+          )}
+
+          {/* Mobile Menu */}
           <div className="md:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Menu"><Menu /></Button>
+                <Button variant="ghost" size="icon" aria-label="Menu">
+                  <Menu className="h-5 w-5" />
+                </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-50 w-48">
-                <DropdownMenuItem asChild><NavLink to="/home">Home</NavLink></DropdownMenuItem>
-                <DropdownMenuItem asChild><NavLink to="/events">Events</NavLink></DropdownMenuItem>
-                <DropdownMenuItem asChild><NavLink to="/discover">Discover</NavLink></DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <NavLink to="/events" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Events
+                  </NavLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <NavLink to="/calendar" className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    Calendars
+                  </NavLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <NavLink to="/discover" className="flex items-center gap-2">
+                    <Compass className="h-4 w-4" />
+                    Discover
+                  </NavLink>
+                </DropdownMenuItem>
                 {user ? (
                   <>
-                    <DropdownMenuItem asChild><NavLink to="/create-event">Create Event</NavLink></DropdownMenuItem>
-                    <DropdownMenuItem asChild><NavLink to="/my-events">My Events</NavLink></DropdownMenuItem>
-                    <DropdownMenuItem asChild><NavLink to="/dashboard">Dashboard</NavLink></DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <NavLink to="/create-event" className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Create Event
+                      </NavLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <NavLink to="/my-events" className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        My Events
+                      </NavLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <NavLink to="/dashboard" className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Dashboard
+                      </NavLink>
+                    </DropdownMenuItem>
                     {isAdmin && (
-                      <DropdownMenuItem asChild><NavLink to="/admin">Admin</NavLink></DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <NavLink to="/admin" className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" />
+                          Admin
+                        </NavLink>
+                      </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
+                    <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
                   </>
                 ) : (
                   <>
-                    <DropdownMenuItem asChild><NavLink to="/signin">Sign In</NavLink></DropdownMenuItem>
-                    <DropdownMenuItem asChild><NavLink to="/signup">Sign Up</NavLink></DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <NavLink to="/signin">Sign In</NavLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <NavLink to="/signup">Sign Up</NavLink>
+                    </DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-          
-          <div className="hidden md:flex items-center gap-2">
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 font-medium">
-                    <User className="h-4 w-4" />
-                    {profile?.full_name || user.email?.split('@')[0] || 'User'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin" className="flex items-center gap-2">
-                        <CalendarSearch className="h-4 w-4" />
-                        Admin
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <>
-                <Button asChild variant="ghost" size="sm"><Link to="/signin">Sign In</Link></Button>
-                <Button asChild size="sm"><Link to="/signup">Sign Up</Link></Button>
-              </>
-            )}
           </div>
         </div>
       </nav>
