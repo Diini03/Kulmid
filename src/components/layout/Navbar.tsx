@@ -59,10 +59,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <Calendar className="h-4 w-4" />
               Events
             </NavLink>
-            <NavLink to="/calendar" className={linkCls}>
-              <CalendarDays className="h-4 w-4" />
-              Calendars
-            </NavLink>
             <NavLink to="/discover" className={linkCls}>
               <Compass className="h-4 w-4" />
               Discover
@@ -191,12 +187,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                   <NavLink to="/events" className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     Events
-                  </NavLink>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <NavLink to="/calendar" className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4" />
-                    Calendars
                   </NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
