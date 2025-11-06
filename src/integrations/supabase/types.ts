@@ -18,7 +18,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string | null
-          created_by: string | null
+          created_by: string
           date: string
           description: string | null
           event_type: string | null
@@ -35,7 +35,7 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string | null
-          created_by?: string | null
+          created_by: string
           date: string
           description?: string | null
           event_type?: string | null
@@ -52,7 +52,7 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string | null
-          created_by?: string | null
+          created_by?: string
           date?: string
           description?: string | null
           event_type?: string | null
