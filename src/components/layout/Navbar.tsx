@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -15,6 +15,12 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
   const { user, profile, signOut, isAdmin } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+  
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
   
   const currentTime = new Date().toLocaleTimeString('en-US', { 
     hour: '2-digit', 
@@ -155,7 +161,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                     </Link>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
+                <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
                   <LogOut className="h-4 w-4" />
                   Sign Out
                 </DropdownMenuItem>
@@ -227,7 +233,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                         </NavLink>
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">
+                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
                       <LogOut className="h-4 w-4" />
                       Sign Out
                     </DropdownMenuItem>

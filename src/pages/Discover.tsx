@@ -36,7 +36,7 @@ const Discover = () => {
       const { data: featuredEvents } = await supabase
         .from('events')
         .select('*')
-        .in('status', ['upcoming', 'ongoing'])
+        .in('status', ['approved', 'upcoming', 'ongoing'])
         .limit(6);
       
       if (featuredEvents) {
@@ -47,7 +47,7 @@ const Discover = () => {
       const { data: allEvents } = await supabase
         .from('events')
         .select('category')
-        .in('status', ['upcoming', 'ongoing']);
+        .in('status', ['approved', 'upcoming', 'ongoing']);
       
       if (allEvents) {
         const counts: Record<string, number> = {};
