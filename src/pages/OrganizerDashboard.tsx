@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EventForm } from "@/components/admin/EventForm";
 import { EventsTable } from "@/components/admin/EventsTable";
+import { PendingEventsTable } from "@/components/admin/PendingEventsTable";
 import { Calendar, Users, TrendingUp } from "lucide-react";
 
 const OrganizerDashboard = () => {
@@ -22,7 +23,7 @@ const OrganizerDashboard = () => {
     totalFavorites: 0,
   });
 
-  const categories = ["All", "Conference", "Workshop", "Sports", "Festival", "Seminar", "Past Events"];
+  const categories = ["All", "Pending", "Conference", "Workshop", "Sports", "Festival", "Seminar", "Past Events"];
 
   const fetchEvents = async () => {
     // Update event statuses first
@@ -72,16 +73,19 @@ const OrganizerDashboard = () => {
 
   // Filter events based on active category
   const filteredEvents = activeCategory === "All" 
-    ? events.filter(event => event.status !== 'past')
+    ? events.filter(event => event.status !== 'past' && event.status !== 'pending')
+    : activeCategory === "Pending"
+    ? events.filter(event => event.status === 'pending')
     : activeCategory === "Past Events"
     ? events.filter(event => event.status === 'past')
-    : events.filter(event => event.category === activeCategory && event.status !== 'past');
+    : events.filter(event => event.category === activeCategory && event.status !== 'past' && event.status !== 'pending');
 
   // Get category counts
   const getCategoryCount = (category: string) => {
-    if (category === "All") return events.filter(event => event.status !== 'past').length;
+    if (category === "All") return events.filter(event => event.status !== 'past' && event.status !== 'pending').length;
+    if (category === "Pending") return events.filter(event => event.status === 'pending').length;
     if (category === "Past Events") return events.filter(event => event.status === 'past').length;
-    return events.filter(event => event.category === category && event.status !== 'past').length;
+    return events.filter(event => event.category === category && event.status !== 'past' && event.status !== 'pending').length;
   };
 
   return (
@@ -189,7 +193,11 @@ const OrganizerDashboard = () => {
                 {categories.map((category) => (
                   <TabsContent key={category} value={category} className="mt-0">
                     {filteredEvents.length > 0 ? (
-                      <EventsTable events={filteredEvents} onUpdate={() => { fetchEvents(); fetchStats(); }} />
+                      category === "Pending" ? (
+                        <PendingEventsTable events={filteredEvents} onUpdate={() => { fetchEvents(); fetchStats(); }} />
+                      ) : (
+                        <EventsTable events={filteredEvents} onUpdate={() => { fetchEvents(); fetchStats(); }} />
+                      )
                     ) : (
                       <div className="text-center py-12">
                         <p className="text-muted-foreground">No {category !== "All" ? category.toLowerCase() : ""} events found</p>

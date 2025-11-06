@@ -21,10 +21,13 @@ export type Database = {
           created_by: string | null
           date: string
           description: string | null
+          event_type: string | null
           id: string
           image_url: string | null
           location: string
+          meeting_link: string | null
           price: number
+          rejection_reason: string | null
           status: string
           title: string
           updated_at: string | null
@@ -35,10 +38,13 @@ export type Database = {
           created_by?: string | null
           date: string
           description?: string | null
+          event_type?: string | null
           id: string
           image_url?: string | null
           location: string
+          meeting_link?: string | null
           price?: number
+          rejection_reason?: string | null
           status?: string
           title: string
           updated_at?: string | null
@@ -49,10 +55,13 @@ export type Database = {
           created_by?: string | null
           date?: string
           description?: string | null
+          event_type?: string | null
           id?: string
           image_url?: string | null
           location?: string
+          meeting_link?: string | null
           price?: number
+          rejection_reason?: string | null
           status?: string
           title?: string
           updated_at?: string | null
@@ -185,7 +194,7 @@ export type Database = {
       update_event_status: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "organizer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -313,7 +322,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "organizer"],
     },
   },
 } as const

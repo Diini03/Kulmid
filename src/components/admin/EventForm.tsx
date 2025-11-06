@@ -8,16 +8,36 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, MapPin, Globe, Users } from "lucide-react";
 
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   date: z.string().min(1, "Date is required"),
-  location: z.string().min(3, "Location is required"),
+  event_type: z.enum(["in-person", "online", "hybrid"]),
+  location: z.string().optional(),
+  meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   category: z.enum(["Seminar", "Workshop", "Conference", "Festival", "Sports"]),
   price: z.number().min(0, "Price must be positive"),
   description: z.string().min(10, "Description must be at least 10 characters"),
+}).refine((data) => {
+  if (data.event_type === "in-person" || data.event_type === "hybrid") {
+    return !!data.location && data.location.length >= 3;
+  }
+  return true;
+}, {
+  message: "Location is required for in-person and hybrid events",
+  path: ["location"],
+}).refine((data) => {
+  if (data.event_type === "online" || data.event_type === "hybrid") {
+    return !!data.meeting_link;
+  }
+  return true;
+}, {
+  message: "Meeting link is required for online and hybrid events",
+  path: ["meeting_link"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -38,19 +58,25 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
     defaultValues: event ? {
       title: event.title,
       date: new Date(event.date).toISOString().slice(0, 16),
-      location: event.location,
+      event_type: event.event_type || "in-person",
+      location: event.location || "",
+      meeting_link: event.meeting_link || "",
       category: event.category,
       price: event.price,
       description: event.description || "",
     } : {
       title: "",
       date: "",
+      event_type: "in-person",
       location: "",
+      meeting_link: "",
       category: "Seminar",
       price: 0,
       description: "",
     }
   });
+
+  const eventType = form.watch("event_type");
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -90,11 +116,14 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
       const eventData = {
         title: data.title,
         date: new Date(data.date).toISOString(),
-        location: data.location,
+        event_type: data.event_type,
+        location: data.location || null,
+        meeting_link: data.meeting_link || null,
         category: data.category,
         price: data.price,
         description: data.description,
         image_url: imageUrl,
+        status: event ? undefined : 'approved', // Admin events are auto-approved
       };
 
       if (event) {
@@ -167,25 +196,108 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date & Time</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="datetime-local" 
-                    min={new Date().toISOString().slice(0, 16)}
-                    {...field} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date & Time</FormLabel>
+              <FormControl>
+                <Input 
+                  type="datetime-local" 
+                  min={new Date().toISOString().slice(0, 16)}
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
+        <FormField
+          control={form.control}
+          name="event_type"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Event Type</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="grid grid-cols-3 gap-4"
+                >
+                  <div>
+                    <RadioGroupItem value="in-person" id="form-in-person" className="peer sr-only" />
+                    <Label
+                      htmlFor="form-in-person"
+                      className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-card p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                    >
+                      <MapPin className="mb-1 h-5 w-5" />
+                      <span className="text-xs font-medium">In-Person</span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="online" id="form-online" className="peer sr-only" />
+                    <Label
+                      htmlFor="form-online"
+                      className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-card p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                    >
+                      <Globe className="mb-1 h-5 w-5" />
+                      <span className="text-xs font-medium">Online</span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="hybrid" id="form-hybrid" className="peer sr-only" />
+                    <Label
+                      htmlFor="form-hybrid"
+                      className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-card p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                    >
+                      <Users className="mb-1 h-5 w-5" />
+                      <span className="text-xs font-medium">Hybrid</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          {(eventType === "in-person" || eventType === "hybrid") && (
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem className={eventType === "in-person" ? "col-span-2" : ""}>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. New York, NY" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {(eventType === "online" || eventType === "hybrid") && (
+            <FormField
+              control={form.control}
+              name="meeting_link"
+              render={({ field }) => (
+                <FormItem className={eventType === "online" ? "col-span-2" : ""}>
+                  <FormLabel>Meeting Link</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://zoom.us/j/..." type="url" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="category"
@@ -206,22 +318,6 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
                     <SelectItem value="Sports">Sports</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Location</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. New York, NY" {...field} />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

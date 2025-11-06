@@ -100,6 +100,8 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 <DropdownMenuItem asChild><NavLink to="/discover">Discover</NavLink></DropdownMenuItem>
                 {user ? (
                   <>
+                    <DropdownMenuItem asChild><NavLink to="/create-event">Create Event</NavLink></DropdownMenuItem>
+                    <DropdownMenuItem asChild><NavLink to="/my-events">My Events</NavLink></DropdownMenuItem>
                     <DropdownMenuItem asChild><NavLink to="/dashboard">Dashboard</NavLink></DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem asChild><NavLink to="/admin">Admin</NavLink></DropdownMenuItem>
