@@ -52,7 +52,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
         {/* Left Side - Logo + Navigation */}
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity">
-            <img src={kulmidLogo} alt="Kulmid" className="h-8 w-8" />
+            <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
           </Link>
 
           <div className="hidden md:flex items-center gap-6 text-sm">
