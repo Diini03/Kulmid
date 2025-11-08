@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import kulmidLogoText from "@/assets/kulmid-logo-text.png";
 
 export const Footer = () => {
@@ -53,6 +54,46 @@ export const Footer = () => {
               Contact
             </Link>
           </nav>
+
+          {/* Social Media Links */}
+          <div className="flex items-center justify-center gap-4">
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
+              aria-label="Facebook"
+            >
+              <Facebook className="h-5 w-5" />
+            </a>
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
+              aria-label="Twitter"
+            >
+              <Twitter className="h-5 w-5" />
+            </a>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
+              aria-label="Instagram"
+            >
+              <Instagram className="h-5 w-5" />
+            </a>
+            <a
+              href="https://linkedin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
+              aria-label="LinkedIn"
+            >
+              <Linkedin className="h-5 w-5" />
+            </a>
+          </div>
 
           {/* Copyright */}
           <div className="text-center pt-6 border-t border-border w-full">

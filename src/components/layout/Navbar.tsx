@@ -3,7 +3,8 @@ import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Calendar, Moon, Sun, Menu, User, LogOut, Monitor, Check, CalendarDays, Compass, Search, Bell, Plus, Sparkles } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Calendar, Moon, Sun, Menu, User, LogOut, Monitor, Check, Compass, Search, Bell, Plus, Sparkles, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import kulmidLogo from "@/assets/kulmid-logo.png";
@@ -16,6 +17,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
   const { user, profile, signOut, isAdmin } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   
   const handleSignOut = async () => {
@@ -177,70 +179,191 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
 
           {/* Mobile Menu */}
           <div className="md:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Menu">
                   <Menu className="h-5 w-5" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
-                  <NavLink to="/events" className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Events
-                  </NavLink>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <NavLink to="/discover" className="flex items-center gap-2">
-                    <Compass className="h-4 w-4" />
-                    Discover
-                  </NavLink>
-                </DropdownMenuItem>
-                {user ? (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <NavLink to="/create" className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        Create Event
-                      </NavLink>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <NavLink to="/my-events" className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        My Events
-                      </NavLink>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <NavLink to="/dashboard" className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        Dashboard
-                      </NavLink>
-                    </DropdownMenuItem>
-                    {isAdmin && (
-                      <DropdownMenuItem asChild>
-                        <NavLink to="/admin" className="flex items-center gap-2">
-                          <Sparkles className="h-4 w-4" />
-                          Admin
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <img src={kulmidLogo} alt="Kulmid" className="h-8 w-8" />
+                    Menu
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-8">
+                  {/* Main Navigation */}
+                  <div className="space-y-2">
+                    <NavLink 
+                      to="/events" 
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={({ isActive }) => 
+                        `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                          isActive 
+                            ? "bg-primary text-primary-foreground" 
+                            : "hover:bg-accent"
+                        }`
+                      }
+                    >
+                      <Calendar className="h-5 w-5" />
+                      <span className="font-medium">Events</span>
+                    </NavLink>
+                    <NavLink 
+                      to="/discover" 
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={({ isActive }) => 
+                        `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                          isActive 
+                            ? "bg-primary text-primary-foreground" 
+                            : "hover:bg-accent"
+                        }`
+                      }
+                    >
+                      <Compass className="h-5 w-5" />
+                      <span className="font-medium">Discover</span>
+                    </NavLink>
+                  </div>
+
+                  {/* User Actions */}
+                  {user ? (
+                    <>
+                      <div className="border-t pt-4 space-y-2">
+                        <NavLink 
+                          to="/create" 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={({ isActive }) => 
+                            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                              isActive 
+                                ? "bg-primary text-primary-foreground" 
+                                : "hover:bg-accent"
+                            }`
+                          }
+                        >
+                          <Plus className="h-5 w-5" />
+                          <span className="font-medium">Create Event</span>
                         </NavLink>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
-                      <LogOut className="h-4 w-4" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <NavLink to="/signin">Sign In</NavLink>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <NavLink to="/signup">Sign Up</NavLink>
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                        <NavLink 
+                          to="/my-events" 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={({ isActive }) => 
+                            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                              isActive 
+                                ? "bg-primary text-primary-foreground" 
+                                : "hover:bg-accent"
+                            }`
+                          }
+                        >
+                          <Calendar className="h-5 w-5" />
+                          <span className="font-medium">My Events</span>
+                        </NavLink>
+                        <NavLink 
+                          to="/dashboard" 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={({ isActive }) => 
+                            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                              isActive 
+                                ? "bg-primary text-primary-foreground" 
+                                : "hover:bg-accent"
+                            }`
+                          }
+                        >
+                          <User className="h-5 w-5" />
+                          <span className="font-medium">Dashboard</span>
+                        </NavLink>
+                        {isAdmin && (
+                          <NavLink 
+                            to="/admin" 
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={({ isActive }) => 
+                              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                                isActive 
+                                  ? "bg-primary text-primary-foreground" 
+                                  : "hover:bg-accent"
+                              }`
+                            }
+                          >
+                            <Sparkles className="h-5 w-5" />
+                            <span className="font-medium">Admin</span>
+                          </NavLink>
+                        )}
+                      </div>
+                      <div className="border-t pt-4">
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => {
+                            handleSignOut();
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full justify-start gap-3 px-4 py-3 h-auto"
+                        >
+                          <LogOut className="h-5 w-5" />
+                          <span className="font-medium">Sign Out</span>
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="border-t pt-4 space-y-2">
+                      <Button 
+                        asChild 
+                        variant="outline" 
+                        className="w-full justify-start gap-3 px-4 py-3 h-auto"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Link to="/signin">
+                          <User className="h-5 w-5" />
+                          <span className="font-medium">Sign In</span>
+                        </Link>
+                      </Button>
+                      <Button 
+                        asChild 
+                        className="w-full justify-start gap-3 px-4 py-3 h-auto"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Link to="/signup">
+                          <Plus className="h-5 w-5" />
+                          <span className="font-medium">Sign Up</span>
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Theme Toggle */}
+                  <div className="border-t pt-4">
+                    <div className="px-4 mb-2 text-sm text-muted-foreground">Theme</div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={theme === "light" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTheme("light")}
+                        className="flex-1"
+                      >
+                        <Sun className="h-4 w-4 mr-2" />
+                        Light
+                      </Button>
+                      <Button
+                        variant={theme === "dark" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTheme("dark")}
+                        className="flex-1"
+                      >
+                        <Moon className="h-4 w-4 mr-2" />
+                        Dark
+                      </Button>
+                      <Button
+                        variant={theme === "system" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTheme("system")}
+                        className="flex-1"
+                      >
+                        <Monitor className="h-4 w-4 mr-2" />
+                        Auto
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </nav>
