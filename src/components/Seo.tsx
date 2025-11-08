@@ -7,7 +7,7 @@ interface SeoProps {
 }
 
 export const Seo = ({ title, description, canonical = "/" }: SeoProps) => {
-  const fullTitle = `${title} | EventEase`;
+  const fullTitle = `${title} | Kulmid`;
   return (
     <Helmet>
       <title>{fullTitle}</title>

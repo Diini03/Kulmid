@@ -6,8 +6,8 @@ const OurStory = () => {
   return (
     <Layout>
       <Seo 
-        title="Our Story - EventEase" 
-        description="Discover the inspiring journey of EventEase, from a simple idea to revolutionizing event discovery and management worldwide."
+        title="Our Story - Kulmid" 
+        description="Discover the inspiring journey of Kulmid, from a simple idea built on trust to connecting communities through meaningful events."
       />
       
       {/* Hero Section */}
@@ -15,13 +15,13 @@ const OurStory = () => {
         <div className="absolute inset-0 bg-black/20"></div>
         <img 
           src={heroImg} 
-          alt="EventEase story" 
+          alt="Kulmid story" 
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="relative z-10 container text-center text-white">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Our Story</h1>
           <p className="text-xl max-w-2xl mx-auto">
-            The journey from a simple idea to revolutionizing how people discover and attend events
+            Kulmid started from the value of Isku-Kalsooni — trust among people. This is the story of how we're building bridges between communities.
           </p>
         </div>
       </section>
@@ -33,19 +33,18 @@ const OurStory = () => {
             <h2 className="text-3xl font-bold mb-8 text-center">The Beginning</h2>
             <div className="prose prose-lg max-w-none">
               <p className="text-lg mb-6">
-                It was a rainy Tuesday evening in 2019 when our founders, Sarah Chen and Marcus Rodriguez, 
-                found themselves frantically searching through dozens of websites, social media pages, and 
-                local listings just to find interesting events happening in their city that weekend.
+                Kulmid was born from a simple observation: communities thrive when people can easily 
+                connect through shared experiences. Whether it's a workshop, seminar, conference, or 
+                cultural gathering, events are the heartbeat of community life.
               </p>
               <p className="text-lg mb-6">
-                "There has to be a better way," Sarah said, scrolling through her fourth event discovery 
-                app of the night. Marcus, a software engineer who had been struggling with the same problem, 
-                looked up from his laptop. "What if we built it ourselves?"
+                We saw event organizers struggling with complicated platforms. We saw attendees missing 
+                out on great experiences simply because they couldn't find them. And we saw opportunities 
+                for connection being lost in the noise.
               </p>
               <p className="text-lg mb-6">
-                That moment sparked the idea for EventEase. They realized that while there were plenty of 
-                event platforms out there, none truly solved the core problem: making event discovery 
-                effortless, personalized, and genuinely useful for real people with real interests.
+                So we decided to build something different. Something rooted in Isku-Kalsooni — trust. 
+                A platform that makes organizing and discovering events simple, accessible, and effective.
               </p>
             </div>
           </div>
@@ -60,46 +59,43 @@ const OurStory = () => {
             <div className="space-y-12">
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div>
-                  <h3 className="text-2xl font-semibold mb-4">2019: The Prototype</h3>
+                  <h3 className="text-2xl font-semibold mb-4">2024: Building the Foundation</h3>
                   <p className="text-lg">
-                    Working nights and weekends from Sarah's garage, they built the first version of EventEase. 
-                    It was rough around the edges, but it solved their problem - and that of their friends who 
-                    became their first beta users.
+                    We started small, focusing on getting the basics right. A clean interface. 
+                    Easy event creation. Simple discovery. Every feature built with user feedback.
                   </p>
                 </div>
                 <div className="bg-primary/10 p-6 rounded-lg">
-                  <div className="text-3xl font-bold text-primary mb-2">50</div>
-                  <div className="text-sm text-muted-foreground">Beta users in the first month</div>
+                  <div className="text-3xl font-bold text-primary mb-2">Foundation</div>
+                  <div className="text-sm text-muted-foreground">Building with purpose and trust</div>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div className="md:order-2">
-                  <h3 className="text-2xl font-semibold mb-4">2020: The Pivot</h3>
+                  <h3 className="text-2xl font-semibold mb-4">Community First</h3>
                   <p className="text-lg">
-                    When the pandemic hit, they could have given up. Instead, they pivoted to virtual events, 
-                    helping communities stay connected when physical gatherings weren't possible. This decision 
-                    expanded their vision and user base globally.
+                    Every decision we make starts with one question: Does this serve our community? 
+                    From feature prioritization to platform design, community needs guide us.
                   </p>
                 </div>
                 <div className="md:order-1 bg-primary/10 p-6 rounded-lg">
-                  <div className="text-3xl font-bold text-primary mb-2">10K</div>
-                  <div className="text-sm text-muted-foreground">Virtual events hosted during pandemic</div>
+                  <div className="text-3xl font-bold text-primary mb-2">Growing</div>
+                  <div className="text-sm text-muted-foreground">Events across multiple cities</div>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div>
-                  <h3 className="text-2xl font-semibold mb-4">2021: The Growth</h3>
+                  <h3 className="text-2xl font-semibold mb-4">Looking Ahead</h3>
                   <p className="text-lg">
-                    As the world reopened, EventEase was perfectly positioned. They had learned how to handle 
-                    both virtual and in-person events, creating a hybrid experience that no one else offered. 
-                    Investment followed, and so did rapid expansion.
+                    We're just getting started. Every event hosted, every connection made, and every 
+                    community strengthened motivates us to keep building, keep improving, keep serving.
                   </p>
                 </div>
                 <div className="bg-primary/10 p-6 rounded-lg">
-                  <div className="text-3xl font-bold text-primary mb-2">100K</div>
-                  <div className="text-sm text-muted-foreground">Active users by end of 2021</div>
+                  <div className="text-3xl font-bold text-primary mb-2">Forward</div>
+                  <div className="text-sm text-muted-foreground">Building the future together</div>
                 </div>
               </div>
             </div>
@@ -113,17 +109,17 @@ const OurStory = () => {
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-8">Our Philosophy</h2>
             <blockquote className="text-2xl italic text-primary mb-8">
-              "Events aren't just gatherings; they're moments where connections are made, 
-              ideas are born, and communities come alive."
+              "Events aren't just gatherings; they're moments where trust is built, 
+              knowledge is shared, and communities grow stronger."
             </blockquote>
             <p className="text-lg mb-6">
-              This philosophy drives everything we do at EventEase. We believe that the right event 
-              at the right time can change someone's life - whether it's finding a new career opportunity, 
-              meeting lifelong friends, or discovering a passion they never knew they had.
+              This philosophy drives everything we do at Kulmid. We believe in Isku-Kalsooni — 
+              trust among people. When communities can easily gather, share, and learn together, 
+              everyone benefits.
             </p>
             <p className="text-lg">
-              Our mission isn't just to help people find events; it's to help them find their tribe, 
-              their inspiration, and their next great adventure.
+              Kulmid is not just a tool. It is a bridge between people, stories, and opportunities. 
+              We're honored to play a part in bringing communities together.
             </p>
           </div>
         </div>
@@ -135,20 +131,19 @@ const OurStory = () => {
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-8">Looking Forward</h2>
             <p className="text-lg mb-6">
-              Today, EventEase serves millions of users across six continents, but we're just getting started. 
-              We're working on AI-powered event recommendations, augmented reality event previews, and 
-              tools that will make event planning as easy as attending them.
+              Kulmid is growing every day. We're continuously improving our platform, adding features 
+              that our community requests, and expanding to serve more cities and more communities.
             </p>
             <p className="text-lg">
-              The story of EventEase is really the story of every person who has found their community 
+              The story of Kulmid is really the story of every person who has found their community 
               through our platform. It's the story of connections made, experiences shared, and 
-              memories created.
+              knowledge transferred.
             </p>
             <div className="mt-12 p-8 bg-primary/10 rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">What's Next?</h3>
+              <h3 className="text-xl font-semibold mb-4">Join Our Journey</h3>
               <p className="text-lg">
-                We're building the future of event discovery and community connection. 
-                Want to be part of our story? Join us.
+                We're building the future of community event management, one gathering at a time. 
+                Want to be part of our story?
               </p>
             </div>
           </div>

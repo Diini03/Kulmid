@@ -7,40 +7,41 @@ import heroImg from "@/assets/hero-eventease.jpg";
 const About = () => {
   return (
     <Layout>
-      <Seo title="About" description="Learn about EventEase's mission, story, and team building the future of event experiences." canonical="/about" />
+      <Seo title="About" description="Learn about Kulmid's mission to connect communities through trust and meaningful events." canonical="/about" />
       
       {/* Hero Section */}
       <section className="container py-12 md:py-20">
         <div className="max-w-6xl mx-auto text-center space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold">About EventEase</h1>
-          <p className="text-xl text-muted-foreground">
-            We're on a mission to revolutionize how people discover, book, and experience events worldwide.
+          <h1 className="text-4xl md:text-5xl font-bold">About Kulmid</h1>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Kulmid is a platform that helps people create, organize, and attend events easily. 
+            We believe in bringing communities together through trust and meaningful connections.
           </p>
         </div>
       </section>
 
       {/* Mission & Vision */}
       <section className="container py-12">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
           <div>
-            <img src={heroImg} alt="EventEase team collaboration" className="rounded-xl object-cover w-full h-64 md:h-80" />
+            <img src={heroImg} alt="Kulmid community events" className="rounded-xl object-cover w-full h-64 md:h-80" />
           </div>
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
               <p className="text-muted-foreground leading-relaxed">
-                EventEase exists to break down barriers between event creators and attendees. We believe that 
-                meaningful experiences should be accessible, discoverable, and seamlessly bookable for everyone, 
-                everywhere.
+                Kulmid exists to strengthen communities through the power of gathering. 
+                We grew from the value of Isku-Kalsooni — trust among people. When people meet, 
+                ideas are born, relationships grow, and communities strengthen. We make those moments possible.
               </p>
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-3">What We Do</h3>
               <ul className="text-muted-foreground space-y-2">
-                <li>• Connect people with experiences that inspire and educate</li>
-                <li>• Empower event organizers with powerful, intuitive tools</li>
-                <li>• Foster communities through shared interests and passions</li>
-                <li>• Simplify event discovery with smart recommendations</li>
+                <li>• Connect people through meaningful events and shared experiences</li>
+                <li>• Empower organizers with simple, accessible tools</li>
+                <li>• Build bridges between communities, stories, and opportunities</li>
+                <li>• Foster trust and collaboration through gathering</li>
               </ul>
             </div>
           </div>
@@ -54,18 +55,18 @@ const About = () => {
           <div className="space-y-8">
             <div className="prose max-w-none">
               <p className="text-muted-foreground leading-relaxed">
-                EventEase was born from a simple frustration: finding and booking great events was unnecessarily complicated. 
-                Our founders, Sarah Chen and Marcus Rodriguez, experienced this firsthand while trying to organize a tech 
-                meetup in San Francisco in 2019.
+                Kulmid started from the value of Isku-Kalsooni — trust among people. 
+                We noticed how difficult it was to organize and discover events, so we built a platform 
+                that brings everything into one place. But more than that, we built a bridge.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                What started as a weekend project to solve their own problem quickly grew into something much bigger. 
-                They realized that event organizers and attendees everywhere faced the same challenges: fragmented platforms, 
-                complex booking processes, and poor discovery mechanisms.
+                A bridge between people who want to learn and those who want to teach. Between communities 
+                seeking connection and events that bring them together. Between ideas and the gatherings 
+                that give them life.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                Today, EventEase serves thousands of event organizers and millions of attendees across 120+ cities worldwide. 
-                From intimate workshops to massive conferences, we're proud to power experiences that bring people together.
+                Kulmid is not just a tool. It is a commitment to the belief that when people meet, 
+                something beautiful happens. Communities thrive. Knowledge spreads. Opportunities emerge.
               </p>
             </div>
           </div>
@@ -78,51 +79,21 @@ const About = () => {
         <div className="max-w-6xl mx-auto">
           <div className="grid gap-6 md:gap-8">
             {[
-              { year: "2019", title: "Founded", desc: "Sarah and Marcus launch EventEase from a San Francisco garage, hosting their first 50 events." },
-              { year: "2020", title: "Virtual Events", desc: "Pivoted quickly to support virtual events during the pandemic, helping 1000+ organizers go digital." },  
-              { year: "2021", title: "Growth Milestone", desc: "Celebrated our 10,000th event and expanded to 25 cities across North America." },
-              { year: "2022", title: "Series A Funding", desc: "Raised $15M Series A to accelerate growth and enhance our AI-powered recommendation engine." },
-              { year: "2023", title: "International Expansion", desc: "Launched in Europe with offices in London and Berlin, supporting events in 12 languages." },
-              { year: "2024", title: "Global Scale", desc: "Reached 120+ cities worldwide with 500K+ tickets sold and 95% customer satisfaction." }
+              { year: "2024", title: "Platform Launch", desc: "Kulmid officially launched, bringing modern event management to our community." },
+              { year: "2024", title: "Growing Together", desc: "Events hosted across multiple cities, connecting communities and creating opportunities." },
+              { year: "2024", title: "Building Trust", desc: "Focused on user experience and platform reliability, earning the trust of organizers and attendees." },
+              { year: "2025", title: "Expanding Reach", desc: "Continuing to grow, improve features, and serve more communities every day." }
             ].map((milestone, index) => (
-              <div key={milestone.year} className="flex gap-6 group">
+              <div key={milestone.year + index} className="flex gap-6 group">
                 <div className="flex flex-col items-center">
                   <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                     {milestone.year.slice(-2)}
                   </div>
-                  {index !== 5 && <div className="w-0.5 h-16 bg-border mt-4"></div>}
+                  {index !== 3 && <div className="w-0.5 h-16 bg-border mt-4"></div>}
                 </div>
                 <div className="flex-1 pb-8">
                   <h3 className="text-xl font-semibold">{milestone.year} — {milestone.title}</h3>
                   <p className="text-muted-foreground mt-2">{milestone.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="container py-12">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Meet Our Team</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { name: "Sarah Chen", role: "Co-Founder & CEO", bio: "Former PM at Airbnb, passionate about connecting communities through technology." },
-              { name: "Marcus Rodriguez", role: "Co-Founder & CTO", bio: "Ex-Google engineer with 10+ years building scalable platforms." },
-              { name: "Emily Watson", role: "Head of Design", bio: "Award-winning designer focused on creating delightful user experiences." },
-              { name: "David Kim", role: "VP of Engineering", bio: "Former Netflix tech lead specializing in recommendation systems." },
-              { name: "Lisa Thompson", role: "Head of Growth", bio: "Marketing expert who's helped scale multiple B2C startups." },
-              { name: "James Park", role: "Head of Partnerships", bio: "Event industry veteran with deep connections across venues and organizers." }
-            ].map((member) => (
-              <div key={member.name} className="text-center space-y-4 hover-scale">
-                <div className="w-24 h-24 mx-auto rounded-full bg-secondary flex items-center justify-center text-2xl font-bold">
-                  {member.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <div>
-                  <h3 className="font-semibold">{member.name}</h3>
-                  <p className="text-sm text-primary">{member.role}</p>
-                  <p className="text-sm text-muted-foreground mt-2">{member.bio}</p>
                 </div>
               </div>
             ))}
@@ -136,10 +107,10 @@ const About = () => {
           <h2 className="text-3xl font-bold text-center mb-12">Our Values</h2>
           <div className="grid md:grid-cols-2 gap-8">
             {[
-              { title: "Community First", desc: "We believe events are about bringing people together and creating lasting connections." },
-              { title: "Accessibility", desc: "Great experiences should be available to everyone, regardless of background or location." },
-              { title: "Innovation", desc: "We constantly push boundaries to make event discovery and booking more intuitive." },
-              { title: "Transparency", desc: "Open communication and honest pricing are at the core of everything we do." }
+              { title: "Trust (Isku-Kalsooni)", desc: "Trust and unity are at the heart of everything we do. We build technology that strengthens relationships." },
+              { title: "Accessibility", desc: "Great experiences should be available to everyone. We keep our platform simple and inclusive." },
+              { title: "Innovation", desc: "We use technology to strengthen human connections, not replace them." },
+              { title: "Community", desc: "Communities thrive when people gather. We're proud to be part of that journey." }
             ].map((value) => (
               <div key={value.title} className="rounded-xl border p-6 hover-scale">
                 <h3 className="text-xl font-semibold mb-3">{value.title}</h3>

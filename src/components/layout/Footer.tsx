@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import kulmidLogoText from "@/assets/kulmid-logo-text.png";
 
 export const Footer = () => {
   return (
@@ -8,10 +9,9 @@ export const Footer = () => {
           {/* Logo */}
           <Link 
             to="/" 
-            className="flex items-center gap-2 font-semibold tracking-tight text-lg hover-lift transition-all"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <span>EventEase</span>
-            <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" aria-hidden />
+            <img src={kulmidLogoText} alt="Kulmid" className="h-8" />
           </Link>
 
           {/* Navigation Links */}
@@ -57,7 +57,7 @@ export const Footer = () => {
           {/* Copyright */}
           <div className="text-center pt-6 border-t border-border w-full">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} EventEase. All rights reserved.
+              © {new Date().getFullYear()} Kulmid. All rights reserved.
             </p>
           </div>
         </div>

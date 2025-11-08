@@ -21,137 +21,51 @@ interface TeamMember {
 }
 
 const OurTeam = () => {
-  const leadership: TeamMember[] = [
+  const team: TeamMember[] = [
     {
-      name: "Sarah Chen",
-      role: "Co-Founder & CEO",
-      department: "Leadership",
-      bio: "Sarah brings over 12 years of experience in product management and user experience design. Before EventEase, she led product teams at major tech companies and has a passion for creating technology that brings people together.",
-      image: "/placeholder.svg",
-      expertise: ["Product Strategy", "User Experience", "Team Leadership", "Market Analysis"],
-      socials: {
-        linkedin: "#",
-        twitter: "#",
-        email: "sarah@eventease.com"
-      }
-    },
-    {
-      name: "Marcus Rodriguez",
-      role: "Co-Founder & CTO",
-      department: "Leadership",
-      bio: "Marcus is a full-stack engineer with 15+ years in scalable system architecture. He's passionate about building robust, user-friendly platforms and has previously architected systems handling millions of daily users.",
-      image: "/placeholder.svg",
-      expertise: ["System Architecture", "Full-Stack Development", "DevOps", "Security"],
-      socials: {
-        linkedin: "#",
-        github: "#",
-        email: "marcus@eventease.com"
-      }
-    },
-    {
-      name: "Dr. Amira Okonkwo",
-      role: "Chief Operating Officer",
-      department: "Leadership",
-      bio: "Dr. Okonkwo brings a unique blend of business strategy and operational excellence. With an MBA from Wharton and a PhD in Organizational Psychology, she ensures EventEase operates efficiently while maintaining our people-first culture.",
-      image: "/placeholder.svg",
-      expertise: ["Operations", "Strategic Planning", "Organizational Development", "Analytics"],
-      socials: {
-        linkedin: "#",
-        email: "amira@eventease.com"
-      }
-    }
-  ];
-
-  const engineering: TeamMember[] = [
-    {
-      name: "Alex Kim",
-      role: "Senior Frontend Engineer",
+      name: "Eng. Muno Muqtar",
+      role: "Backend Developer",
       department: "Engineering",
-      bio: "Alex specializes in creating beautiful, accessible user interfaces. They lead our design system initiative and ensure every user interaction is delightful and intuitive.",
+      bio: "Specializes in robust server architecture and database design. Ensures Kulmid's platform runs smoothly and securely with scalable backend systems.",
       image: "/placeholder.svg",
-      expertise: ["React", "TypeScript", "Design Systems", "Accessibility"],
-      socials: {
-        github: "#",
-        linkedin: "#"
-      }
+      expertise: ["Backend Development", "Database Design", "API Development", "Security"],
+      socials: { linkedin: "#", github: "#" }
     },
     {
-      name: "Jordan Taylor",
-      role: "Backend Engineering Lead",
+      name: "Eng. Ramadan Abdirahman",
+      role: "UI/UX Designer",
+      department: "Design",
+      bio: "Crafts intuitive and beautiful user experiences. Passionate about making technology accessible to everyone through thoughtful design.",
+      image: "/placeholder.svg",
+      expertise: ["UI/UX Design", "User Research", "Design Systems", "Prototyping"],
+      socials: { linkedin: "#", github: "#" }
+    },
+    {
+      name: "Eng. Najiib Mohamed",
+      role: "System Architect",
       department: "Engineering",
-      bio: "Jordan architects our core platform infrastructure. With expertise in distributed systems and real-time applications, they ensure EventEase can scale to serve millions of users.",
+      bio: "Designs scalable system architecture and ensures technical excellence across all platform components. Focuses on performance and reliability.",
       image: "/placeholder.svg",
-      expertise: ["Node.js", "Microservices", "Database Design", "API Development"],
-      socials: {
-        github: "#",
-        linkedin: "#"
-      }
+      expertise: ["System Architecture", "Cloud Infrastructure", "Performance Optimization", "DevOps"],
+      socials: { linkedin: "#", github: "#" }
     },
     {
-      name: "Sofia Petrov",
-      role: "DevOps Engineer",
+      name: "Eng. Abdulahi Jees",
+      role: "Project Lead",
+      department: "Management",
+      bio: "Coordinates development efforts and ensures Kulmid meets user needs. Bridges technical requirements with product vision and community feedback.",
+      image: "/placeholder.svg",
+      expertise: ["Project Management", "Product Strategy", "Team Leadership", "Agile Development"],
+      socials: { linkedin: "#", github: "#" }
+    },
+    {
+      name: "Eng. Diini Kahie",
+      role: "Frontend Developer",
       department: "Engineering",
-      bio: "Sofia manages our cloud infrastructure and deployment pipelines. She's passionate about automation, security, and ensuring our platform maintains 99.9% uptime.",
+      bio: "Brings designs to life with clean, efficient code. Focused on creating responsive and performant user interfaces that delight users.",
       image: "/placeholder.svg",
-      expertise: ["AWS", "Kubernetes", "CI/CD", "Monitoring"],
-      socials: {
-        github: "#",
-        linkedin: "#"
-      }
-    }
-  ];
-
-  const product: TeamMember[] = [
-    {
-      name: "Ryan O'Sullivan",
-      role: "Head of Product",
-      department: "Product",
-      bio: "Ryan drives our product vision and roadmap. With a background in user research and data analysis, he ensures every feature we build creates genuine value for our users.",
-      image: "/placeholder.svg",
-      expertise: ["Product Management", "User Research", "Data Analysis", "A/B Testing"],
-      socials: {
-        linkedin: "#",
-        twitter: "#"
-      }
-    },
-    {
-      name: "Maya Patel",
-      role: "UX/UI Designer",
-      department: "Product",
-      bio: "Maya crafts the visual and interaction design of EventEase. Her human-centered design approach ensures our platform is not just functional, but truly enjoyable to use.",
-      image: "/placeholder.svg",
-      expertise: ["UI/UX Design", "Prototyping", "User Testing", "Design Systems"],
-      socials: {
-        linkedin: "#",
-        twitter: "#"
-      }
-    }
-  ];
-
-  const business: TeamMember[] = [
-    {
-      name: "James Mitchell",
-      role: "Head of Business Development",
-      department: "Business",
-      bio: "James builds strategic partnerships and drives our expansion into new markets. His network and negotiation skills have been instrumental in EventEase's global growth.",
-      image: "/placeholder.svg",
-      expertise: ["Partnership Development", "Market Expansion", "Negotiation", "Strategy"],
-      socials: {
-        linkedin: "#",
-        email: "james@eventease.com"
-      }
-    },
-    {
-      name: "Lisa Wang",
-      role: "Head of Marketing",
-      department: "Business",
-      bio: "Lisa leads our marketing initiatives and brand strategy. She's passionate about storytelling and helps event organizers and attendees discover the value of our platform.",
-      image: "/placeholder.svg",
-      expertise: ["Digital Marketing", "Brand Strategy", "Content Marketing", "Growth"],
-      socials: {
-        linkedin: "#",
-        twitter: "#"
-      }
+      expertise: ["Frontend Development", "React", "TypeScript", "Responsive Design"],
+      socials: { linkedin: "#", github: "#" }
     }
   ];
 
@@ -222,17 +136,17 @@ const OurTeam = () => {
   return (
     <Layout>
       <Seo 
-        title="Our Team - EventEase" 
-        description="Meet the passionate team behind EventEase - talented individuals working together to revolutionize event discovery and management."
+        title="Our Team - Kulmid" 
+        description="Meet the passionate team behind Kulmid - talented engineers working together to build the future of event management."
       />
       
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-r from-primary/10 to-primary/5">
         <div className="container text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Meet Our Team</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Meet the Team Behind Kulmid</h1>
           <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
-            The passionate individuals working together to revolutionize how people discover, 
-            attend, and organize events around the world.
+            A group of engineers passionate about technology, collaboration, and community impact. 
+            Building the future of event management together.
           </p>
         </div>
       </section>
@@ -242,47 +156,34 @@ const OurTeam = () => {
         <div className="container">
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">50+</div>
+              <div className="text-3xl font-bold text-primary mb-2">5</div>
               <div className="text-lg font-semibold mb-1">Team Members</div>
-              <p className="text-sm text-muted-foreground">Across 6 countries</p>
+              <p className="text-sm text-muted-foreground">Engineers building Kulmid</p>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">15+</div>
-              <div className="text-lg font-semibold mb-1">Nationalities</div>
-              <p className="text-sm text-muted-foreground">Diverse global team</p>
+              <div className="text-3xl font-bold text-primary mb-2">1</div>
+              <div className="text-lg font-semibold mb-1">Mission</div>
+              <p className="text-sm text-muted-foreground">Connect communities through trust</p>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">8</div>
-              <div className="text-lg font-semibold mb-1">Departments</div>
-              <p className="text-sm text-muted-foreground">Cross-functional collaboration</p>
+              <div className="text-3xl font-bold text-primary mb-2">∞</div>
+              <div className="text-lg font-semibold mb-1">Potential</div>
+              <p className="text-sm text-muted-foreground">Unlimited growth ahead</p>
             </div>
             <div>
               <div className="text-3xl font-bold text-primary mb-2">100%</div>
-              <div className="text-lg font-semibold mb-1">Remote-First</div>
-              <p className="text-sm text-muted-foreground">Flexible work culture</p>
+              <div className="text-lg font-semibold mb-1">Committed</div>
+              <p className="text-sm text-muted-foreground">Dedicated to our users</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Leadership Team */}
-      {renderTeamSection("Leadership Team", leadership)}
-
-      {/* Engineering Team */}
-      <div className="bg-muted/50">
-        {renderTeamSection("Engineering Team", engineering)}
-      </div>
-
-      {/* Product Team */}
-      {renderTeamSection("Product Team", product)}
-
-      {/* Business Team */}
-      <div className="bg-muted/50">
-        {renderTeamSection("Business Team", business)}
-      </div>
+      {/* Development Team */}
+      {renderTeamSection("Our Development Team", team)}
 
       {/* Culture & Values */}
-      <section className="py-20">
+      <section className="py-20 bg-muted/50">
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12">Our Culture</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -290,10 +191,10 @@ const OurTeam = () => {
               <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🚀</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Innovation First</h3>
+              <h3 className="text-xl font-semibold mb-3">Innovation</h3>
               <p className="text-muted-foreground">
-                We encourage experimentation, embrace failure as learning, and constantly push 
-                the boundaries of what's possible in event technology.
+                We embrace new technologies to solve real community problems and make event 
+                management accessible to everyone.
               </p>
             </div>
             <div className="text-center p-6">
@@ -302,38 +203,21 @@ const OurTeam = () => {
               </div>
               <h3 className="text-xl font-semibold mb-3">Collaboration</h3>
               <p className="text-muted-foreground">
-                We believe the best ideas come from diverse perspectives working together. 
-                Every voice matters and every opinion is valued.
+                We work together, combining our strengths to build better solutions. Every voice 
+                matters in shaping Kulmid's future.
               </p>
             </div>
             <div className="text-center p-6">
               <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">💡</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Continuous Learning</h3>
+              <h3 className="text-xl font-semibold mb-3">Impact</h3>
               <p className="text-muted-foreground">
-                We invest in our team's growth through conferences, courses, and dedicated 
-                learning time. Growing together makes us stronger.
+                Every feature we build strengthens communities and creates opportunities. We measure 
+                success by the connections we enable.
               </p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Join Us */}
-      <section className="py-20 bg-primary/5">
-        <div className="container text-center">
-          <h2 className="text-3xl font-bold mb-6">Join Our Team</h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            We're always looking for talented, passionate individuals who want to help shape 
-            the future of events. Check out our open positions and become part of our story.
-          </p>
-          <Button size="lg" className="mr-4">
-            View Open Positions
-          </Button>
-          <Button variant="outline" size="lg">
-            Learn About Our Culture
-          </Button>
         </div>
       </section>
     </Layout>

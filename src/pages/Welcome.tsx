@@ -8,7 +8,7 @@ const Welcome = () => {
   return (
     <Layout>
       <Seo
-        title="Welcome to EventEase"
+        title="Welcome to Kulmid"
         description="Discover, book & experience events like never before. Set up an event page, invite friends and sell tickets."
         canonical="/"
       />
