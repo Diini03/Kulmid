@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, MapPin, Clock, Share2, DollarSign } from "lucide-react";
+import { CalendarDays, MapPin, Clock, Share2, DollarSign, Link2, Copy, Check, Twitter, Facebook, Linkedin, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthRequiredModal } from "@/components/auth/AuthGuard";
@@ -21,6 +21,8 @@ const EventDetails = () => {
   const [qty, setQty] = useState(1);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authAction, setAuthAction] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [shortLinkCopied, setShortLinkCopied] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -48,17 +50,45 @@ const EventDetails = () => {
     }
   };
 
+  const shareUrl = `${window.location.origin}/events/${id}`;
+  const shortUrl = `${window.location.origin}/e/${id}`;
+
+  const handleCopyLink = (url: string, isShort: boolean = false) => {
+    navigator.clipboard.writeText(url);
+    if (isShort) {
+      setShortLinkCopied(true);
+      setTimeout(() => setShortLinkCopied(false), 2000);
+    } else {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+    toast({
+      title: "✅ Link copied!",
+      description: "Event link has been copied to clipboard",
+    });
+  };
+
   const handleShareClick = () => {
     if (!user) {
       setAuthAction("share this event");
       setShowAuthModal(true);
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied!",
-        description: "Event link has been copied to clipboard",
-      });
+      handleCopyLink(shareUrl);
     }
+  };
+
+  const handleSocialShare = (platform: string) => {
+    const text = encodeURIComponent(`Check out ${event?.title}!`);
+    const url = encodeURIComponent(shortUrl);
+    
+    const urls: Record<string, string> = {
+      twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+      whatsapp: `https://wa.me/?text=${text}%20${url}`
+    };
+    
+    window.open(urls[platform], '_blank', 'width=600,height=400');
   };
 
   if (loading) {
@@ -172,7 +202,7 @@ const EventDetails = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-3 pt-4 border-t">
+                  <div className="space-y-4 pt-4 border-t">
                     <Button 
                       onClick={handleBookClick} 
                       size="lg" 
@@ -180,15 +210,90 @@ const EventDetails = () => {
                     >
                       Register
                     </Button>
-                    <Button 
-                      onClick={handleShareClick}
-                      variant="outline" 
-                      size="lg" 
-                      className="w-full"
-                    >
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Share
-                    </Button>
+                    
+                    {/* Event Links Section */}
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <Link2 className="h-4 w-4 text-primary" />
+                        <span>Event Links</span>
+                      </div>
+                      
+                      {/* Short URL */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Short Link:</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 px-3 py-2 bg-muted rounded-md text-sm truncate">
+                            {shortUrl}
+                          </div>
+                          <Button 
+                            onClick={() => handleCopyLink(shortUrl, true)}
+                            variant="outline" 
+                            size="icon"
+                            className="flex-shrink-0"
+                          >
+                            {shortLinkCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Full URL */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Full Link:</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 px-3 py-2 bg-muted rounded-md text-sm truncate">
+                            {shareUrl}
+                          </div>
+                          <Button 
+                            onClick={() => handleCopyLink(shareUrl, false)}
+                            variant="outline" 
+                            size="icon"
+                            className="flex-shrink-0"
+                          >
+                            {linkCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Social Share Buttons */}
+                      <div className="grid grid-cols-4 gap-2 pt-2">
+                        <Button 
+                          onClick={() => handleSocialShare('twitter')}
+                          variant="outline" 
+                          size="icon"
+                          title="Share on Twitter"
+                        >
+                          <Twitter className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          onClick={() => handleSocialShare('facebook')}
+                          variant="outline" 
+                          size="icon"
+                          title="Share on Facebook"
+                        >
+                          <Facebook className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          onClick={() => handleSocialShare('linkedin')}
+                          variant="outline" 
+                          size="icon"
+                          title="Share on LinkedIn"
+                        >
+                          <Linkedin className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          onClick={() => handleSocialShare('whatsapp')}
+                          variant="outline" 
+                          size="icon"
+                          title="Share on WhatsApp"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

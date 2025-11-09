@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
@@ -36,6 +36,12 @@ import Create from "./pages/Create";
 import MyEvents from "./pages/MyEvents";
 
 const queryClient = new QueryClient();
+
+// Short URL Redirect Component
+const ShortEventRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/events/${id}`} replace />;
+};
 
 const App = () => (
   <HelmetProvider>
@@ -71,6 +77,7 @@ const App = () => (
                   {/* Public Routes - Anyone can browse events */}
                   <Route path="/events" element={<Events />} />
                   <Route path="/events/:id" element={<EventDetails />} />
+                  <Route path="/e/:id" element={<ShortEventRedirect />} />
                   <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
