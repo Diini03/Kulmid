@@ -35,6 +35,7 @@ import AdminSettings from "./pages/AdminSettings";
 import CalendarView from "./pages/CalendarView";
 import Create from "./pages/Create";
 import MyEvents from "./pages/MyEvents";
+import AdminAnalytics from "./pages/AdminAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => (
                   <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
                   <Route path="/my-events" element={<ProtectedRoute><MyEvents /></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute><OrganizerDashboard /></ProtectedRoute>} />
+                  <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics /></ProtectedRoute>} />
                   <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
                   <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
                   

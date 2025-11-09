@@ -8,7 +8,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  BarChart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -19,7 +20,7 @@ interface AdminLayoutProps {
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
-  { icon: Calendar, label: "Events", path: "/admin" },
+  { icon: BarChart, label: "Analytics", path: "/admin/analytics" },
   { icon: Users, label: "Users", path: "/admin/users" },
   { icon: Settings, label: "Settings", path: "/admin/settings" }
 ];
