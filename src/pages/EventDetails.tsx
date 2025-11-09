@@ -50,7 +50,7 @@ const EventDetails = () => {
     }
   };
 
-  const shareUrl = `${window.location.origin}/events/${id}`;
+  const shareUrl = `${window.location.origin}/event/${id}`;
   const shortUrl = `${window.location.origin}/e/${id}`;
 
   const handleCopyLink = (url: string, isShort: boolean = false) => {

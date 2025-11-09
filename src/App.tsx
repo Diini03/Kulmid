@@ -17,6 +17,7 @@ import { PublicRoute } from "./components/auth/PublicRoute";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
+import EventView from "./pages/EventView";
 import Favorites from "./pages/Favorites";
 import About from "./pages/About";
 import OurStory from "./pages/OurStory";
@@ -37,10 +38,10 @@ import MyEvents from "./pages/MyEvents";
 
 const queryClient = new QueryClient();
 
-// Short URL Redirect Component
+// Short URL Redirect Component - redirects to standalone event view
 const ShortEventRedirect = () => {
   const { id } = useParams();
-  return <Navigate to={`/events/${id}`} replace />;
+  return <Navigate to={`/event/${id}`} replace />;
 };
 
 const App = () => (
@@ -77,7 +78,11 @@ const App = () => (
                   {/* Public Routes - Anyone can browse events */}
                   <Route path="/events" element={<Events />} />
                   <Route path="/events/:id" element={<EventDetails />} />
+                  
+                  {/* Standalone Event View - No layout, clean shareable page */}
+                  <Route path="/event/:id" element={<EventView />} />
                   <Route path="/e/:id" element={<ShortEventRedirect />} />
+                  
                   <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
