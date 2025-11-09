@@ -1,11 +1,12 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, MapPin, DollarSign, ExternalLink } from "lucide-react";
+import { CalendarDays, MapPin, DollarSign, ExternalLink, Globe, Users, Video } from "lucide-react";
 import { useState, useEffect } from "react";
+import { categories, type EventCategory } from "@/constants/categories";
 
 const EventView = () => {
   const { id } = useParams();
@@ -31,9 +32,9 @@ const EventView = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Seo title="Loading..." />
-        <div className="container py-20 text-center">Loading event...</div>
+        <div className="animate-pulse text-muted-foreground">Loading event...</div>
       </div>
     );
   }
@@ -42,9 +43,10 @@ const EventView = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Seo title="Event Not Found" />
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Event not found</h1>
-          <Button asChild>
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold">Event not found</h1>
+          <p className="text-muted-foreground">This event may have been removed or doesn't exist.</p>
+          <Button asChild size="lg">
             <a href={window.location.origin}>Visit Kulmid</a>
           </Button>
         </div>
@@ -53,122 +55,289 @@ const EventView = () => {
   }
 
   const eventDate = new Date(event.date);
+  const categoryConfig = categories.find(c => c.name === event.category);
+  
+  // Format date parts
+  const monthShort = eventDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const day = eventDate.getDate();
+  const weekday = eventDate.toLocaleDateString('en-US', { weekday: 'long' });
+  const time = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const fullDate = eventDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  const getEventTypeDisplay = () => {
+    switch (event.event_type) {
+      case 'in-person':
+        return { label: 'In-Person', icon: MapPin, color: 'text-green-600 dark:text-green-400' };
+      case 'online':
+        return { label: 'Online', icon: Globe, color: 'text-blue-600 dark:text-blue-400' };
+      case 'hybrid':
+        return { label: 'Hybrid', icon: Users, color: 'text-purple-600 dark:text-purple-400' };
+      default:
+        return null;
+    }
+  };
+
+  const eventTypeDisplay = getEventTypeDisplay();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <Seo 
         title={event.title} 
-        description={`${event.location} • ${eventDate.toLocaleDateString()}`} 
+        description={event.description || `${event.category} event at ${event.location} • ${fullDate}`} 
         canonical={`/event/${event.id}`} 
       />
 
       {/* Floating Kulmid Link */}
-      <div className="fixed top-4 right-4 z-50">
-        <Button asChild variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm">
+      <div className="fixed top-6 right-6 z-50">
+        <Button 
+          asChild 
+          variant="outline" 
+          size="sm" 
+          className="bg-background/95 backdrop-blur-sm border-2 shadow-lg hover:shadow-xl transition-all hover-lift"
+        >
           <a href={window.location.origin} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="h-4 w-4 mr-2" />
-            View on Kulmid
+            Visit Kulmid
           </a>
         </Button>
       </div>
 
-      {/* Hero Image */}
-      <section className="relative h-[50vh] md:h-[60vh] bg-muted">
-        <img 
-          src={event.image_url || '/placeholder.svg'} 
-          alt={event.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-      </section>
+      {/* Main Content Container */}
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="grid lg:grid-cols-[380px_1fr] gap-8 lg:gap-12">
+          
+          {/* LEFT SIDEBAR - Sticky */}
+          <aside className="lg:sticky lg:top-8 h-fit space-y-6">
+            {/* Event Image */}
+            <Card className="overflow-hidden border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover-lift">
+              <div className="relative aspect-[4/3] overflow-hidden group">
+                <img 
+                  src={event.image_url || '/placeholder.svg'} 
+                  alt={event.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
+              </div>
+            </Card>
 
-      {/* Content */}
-      <section className="container py-8 md:py-12">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Badge>{event.category}</Badge>
+            {/* Date Card */}
+            <Card className="border-2 shadow-md">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 text-center">
+                    <div className="text-sm font-semibold text-primary">{monthShort}</div>
+                    <div className="text-4xl font-bold">{day}</div>
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="font-semibold text-foreground">{weekday}</div>
+                    <div className="text-sm text-muted-foreground mt-1">{time}</div>
+                  </div>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">{event.title}</h1>
+              </CardContent>
+            </Card>
+
+            {/* Event Details Card */}
+            <Card className="border-2 shadow-md">
+              <CardContent className="p-6 space-y-4">
+                {/* Location */}
+                {(event.event_type === 'in-person' || event.event_type === 'hybrid') && event.location && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="text-sm">
+                      <div className="font-medium mb-1">Location</div>
+                      <div className="text-muted-foreground">{event.location}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Meeting Link */}
+                {(event.event_type === 'online' || event.event_type === 'hybrid') && event.meeting_link && (
+                  <div className="flex items-start gap-3">
+                    <Video className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="text-sm flex-1">
+                      <div className="font-medium mb-2">Meeting Link</div>
+                      <Button 
+                        asChild 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                      >
+                        <a href={event.meeting_link} target="_blank" rel="noopener noreferrer">
+                          Join Online
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Price */}
+                <div className="flex items-start gap-3 pt-2 border-t">
+                  <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <div className="font-medium mb-1">Price</div>
+                    <div className="text-3xl font-bold text-primary">
+                      ${event.price}
+                      {event.price === 0 && <span className="text-lg font-normal text-muted-foreground ml-2">Free</span>}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* CTA Button */}
+            <Button 
+              asChild 
+              size="lg" 
+              className="w-full text-lg py-6 shadow-lg hover:shadow-xl transition-all hover-lift"
+            >
+              <a href={`${window.location.origin}/events/${event.id}`}>
+                Register on Kulmid
+              </a>
+            </Button>
+
+            {/* Share Buttons */}
+            <Card className="border-2 shadow-md">
+              <CardContent className="p-6">
+                <div className="text-sm font-medium mb-3">Share this event</div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(event.title)}`, '_blank')}
+                    className="flex-1"
+                  >
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
+                    className="flex-1"
+                  >
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank')}
+                    className="flex-1"
+                  >
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(event.title + ' ' + window.location.href)}`, '_blank')}
+                    className="flex-1"
+                  >
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
+
+          {/* RIGHT MAIN CONTENT */}
+          <main className="space-y-8">
+            {/* Header Section */}
+            <div className="space-y-4">
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="text-sm px-3 py-1">
+                  {event.category}
+                </Badge>
+                {eventTypeDisplay && (
+                  <Badge variant="outline" className="text-sm px-3 py-1">
+                    <eventTypeDisplay.icon className={`h-3.5 w-3.5 mr-1.5 ${eventTypeDisplay.color}`} />
+                    {eventTypeDisplay.label}
+                  </Badge>
+                )}
               </div>
 
-              <div className="prose prose-lg dark:prose-invert max-w-none">
-                <h2 className="text-2xl font-semibold">About this event</h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  {event.description || `Join us for an exceptional ${event.category.toLowerCase()} that brings together industry leaders, innovators, and passionate professionals. This event is designed to inspire, educate, and create meaningful connections.`}
-                </p>
+              {/* Title */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+                {event.title}
+              </h1>
+            </div>
+
+            {/* About Section */}
+            <Card className="border-2 shadow-md">
+              <CardContent className="p-8">
+                <h2 className="text-2xl font-bold mb-6">About This Event</h2>
                 
-                {!event.description && (
-                  <>
+                {event.description ? (
+                  <div className="prose prose-lg dark:prose-invert max-w-none">
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {event.description}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <p className="text-muted-foreground leading-relaxed">
+                      Join us for an exceptional {event.category.toLowerCase()} that brings together industry leaders, innovators, and passionate professionals. This event is designed to inspire, educate, and create meaningful connections.
+                    </p>
+                    
                     <p className="text-muted-foreground leading-relaxed">
                       Our carefully curated program features cutting-edge insights, hands-on workshops, and networking opportunities that will enhance your professional journey.
                     </p>
                     
-                    <h3 className="text-xl font-semibold mt-8">What you'll gain</h3>
-                    <ul className="space-y-2 text-muted-foreground">
-                      <li>Expert insights from industry leaders</li>
-                      <li>Practical skills through interactive workshops</li>
-                      <li>Networking with like-minded professionals</li>
-                      <li>Exclusive resources and materials</li>
-                    </ul>
-                  </>
+                    <div className="pt-4">
+                      <h3 className="text-xl font-semibold mb-4">What You'll Gain</h3>
+                      <ul className="space-y-3 text-muted-foreground">
+                        <li className="flex items-start gap-3">
+                          <span className="text-primary mt-1">✓</span>
+                          <span>Expert insights from industry leaders</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-primary mt-1">✓</span>
+                          <span>Practical skills through interactive workshops</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-primary mt-1">✓</span>
+                          <span>Networking with like-minded professionals</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-primary mt-1">✓</span>
+                          <span>Exclusive resources and materials</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 )}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <Card className="border-2">
-                <CardContent className="p-6 space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <CalendarDays className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div className="text-sm">
-                        <div className="font-medium mb-1">Date & Time</div>
-                        <div className="text-muted-foreground">
-                          {eventDate.toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            month: 'long', 
-                            day: 'numeric', 
-                            year: 'numeric' 
-                          })}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div className="text-sm">
-                        <div className="font-medium mb-1">Location</div>
-                        <div className="text-muted-foreground">{event.location}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div className="text-sm">
-                        <div className="font-medium mb-1">Price</div>
-                        <div className="text-2xl font-bold">${event.price}</div>
-                      </div>
-                    </div>
+            {/* Organized By Section */}
+            <Card className="border-2 shadow-md">
+              <CardContent className="p-8">
+                <h3 className="text-xl font-semibold mb-4">Organized By</h3>
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-primary">K</span>
                   </div>
-
-                  <div className="pt-4 border-t">
-                    <Button asChild size="lg" className="w-full">
-                      <a href={`${window.location.origin}/events/${event.id}`}>
-                        Register on Kulmid
-                      </a>
-                    </Button>
+                  <div>
+                    <div className="font-semibold text-lg">Kulmid</div>
+                    <div className="text-sm text-muted-foreground">Event Platform</div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Event ID Reference */}
+            <div className="text-sm text-muted-foreground">
+              Event ID: {event.id}
             </div>
-          </div>
+          </main>
         </div>
-      </section>
+      </div>
     </div>
   );
 };
