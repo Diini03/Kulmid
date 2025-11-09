@@ -42,7 +42,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
       <aside
         className={`${
           sidebarOpen ? "w-64" : "w-20"
-        } bg-card border-r transition-all duration-300 flex flex-col`}
+        } bg-card border-r transition-all duration-300 flex flex-col h-screen fixed left-0 top-0`}
       >
         {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
@@ -118,7 +118,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className={`flex-1 overflow-auto ${sidebarOpen ? "ml-64" : "ml-20"} transition-all duration-300`}>
         <div className="container py-8">{children}</div>
       </main>
     </div>

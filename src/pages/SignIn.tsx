@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInSchema, resetPasswordSchema, type SignInFormData, type ResetPasswordFormData } from "@/lib/validations";
 import { ADMIN_CREDENTIALS } from "@/constants/admin";
@@ -107,18 +107,6 @@ const SignIn = () => {
       <Seo title="Sign In" canonical="/signin" />
       <div className="w-full rounded-xl border bg-card p-8 shadow-lg">
           <h1 className="text-2xl font-bold mb-6">Welcome back</h1>
-          <div className="mb-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
-            <div className="flex items-center gap-2 text-sm">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              <div>
-                <p className="font-medium">Admin Access</p>
-                <p className="text-xs text-muted-foreground">
-                  Username: <code className="bg-background px-1 rounded">admin</code> | 
-                  Password: <code className="bg-background px-1 rounded">Admin@123</code>
-                </p>
-              </div>
-            </div>
-          </div>
           <form onSubmit={signInForm.handleSubmit(onSignIn)} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email or Username</Label>
