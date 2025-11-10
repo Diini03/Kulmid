@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import kulmidLogo from "@/assets/kulmid-logo-text.png";
 
 export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   const { theme, setTheme } = useTheme();
@@ -25,8 +26,8 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Minimal Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container flex h-16 items-center justify-between">
-          <Link to="/" className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            EventEase
+          <Link to="/" className="flex items-center">
+            <img src={kulmidLogo} alt="Kulmid" className="h-8" />
           </Link>
           
           <DropdownMenu>
