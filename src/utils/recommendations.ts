@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { RECOMMENDATION_CONFIG } from "@/constants/recommendations";
 
 export interface EventItem {
   id: string;
@@ -20,11 +21,56 @@ export interface UserPreferences {
 }
 
 /**
+ * Fetch supplemental events to ensure minimum threshold
+ */
+async function fetchSupplementalEvents({
+  excludeIds,
+  excludeCategories,
+  limit,
+}: {
+  excludeIds: string[];
+  excludeCategories?: string[];
+  limit: number;
+}): Promise<EventItem[]> {
+  let query = supabase
+    .from("events")
+    .select("*")
+    .in("status", ["approved", "upcoming", "ongoing"])
+    .order("date", { ascending: true })
+    .limit(limit);
+
+  // Exclude already fetched events
+  if (excludeIds.length > 0) {
+    query = query.not("id", "in", `(${excludeIds.join(",")})`);
+  }
+
+  // Optional: exclude user's already-preferred categories to show variety
+  if (
+    RECOMMENDATION_CONFIG.PREFER_DIFFERENT_CATEGORIES &&
+    excludeCategories &&
+    excludeCategories.length > 0
+  ) {
+    query = query.not("category", "in", `(${excludeCategories.join(",")})`);
+  }
+
+  const { data } = await query;
+  return data || [];
+}
+
+/**
  * Fetch personalized events based on user preferences
+ * Implements smart fallback to ensure minimum event threshold
  */
 export async function getPersonalizedEvents(
   userId: string
-): Promise<{ events: EventItem[]; hasPreferences: boolean }> {
+): Promise<{
+  events: EventItem[];
+  hasPreferences: boolean;
+  isSupplemented: boolean;
+  preferenceMatchCount: number;
+}> {
+  const { MINIMUM_EVENTS_THRESHOLD } = RECOMMENDATION_CONFIG;
+
   try {
     // Fetch user preferences
     const { data: prefs, error: prefsError } = await supabase
@@ -41,13 +87,18 @@ export async function getPersonalizedEvents(
         .in("status", ["approved", "upcoming", "ongoing"])
         .order("date", { ascending: true });
 
-      return { events: allEvents || [], hasPreferences: false };
+      return {
+        events: allEvents || [],
+        hasPreferences: false,
+        isSupplemented: false,
+        preferenceMatchCount: 0,
+      };
     }
 
     // Update event statuses first
     await supabase.rpc("update_event_status");
 
-    // Build query based on preferences
+    // Fetch preference-matched events
     let query = supabase
       .from("events")
       .select("*")
@@ -61,12 +112,39 @@ export async function getPersonalizedEvents(
     // Order by date
     query = query.order("date", { ascending: true });
 
-    const { data: events } = await query;
+    const { data: preferenceEvents } = await query;
+    const matchCount = preferenceEvents?.length || 0;
 
-    return { events: events || [], hasPreferences: true };
+    // Check if we need to supplement with additional events
+    if (matchCount < MINIMUM_EVENTS_THRESHOLD) {
+      const supplementalEvents = await fetchSupplementalEvents({
+        excludeIds: preferenceEvents?.map((e) => e.id) || [],
+        excludeCategories: prefs.event_categories,
+        limit: MINIMUM_EVENTS_THRESHOLD - matchCount,
+      });
+
+      return {
+        events: [...(preferenceEvents || []), ...supplementalEvents],
+        hasPreferences: true,
+        isSupplemented: true,
+        preferenceMatchCount: matchCount,
+      };
+    }
+
+    return {
+      events: preferenceEvents || [],
+      hasPreferences: true,
+      isSupplemented: false,
+      preferenceMatchCount: matchCount,
+    };
   } catch (error) {
     console.error("Error fetching personalized events:", error);
-    return { events: [], hasPreferences: false };
+    return {
+      events: [],
+      hasPreferences: false,
+      isSupplemented: false,
+      preferenceMatchCount: 0,
+    };
   }
 }
 

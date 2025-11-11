@@ -28,14 +28,24 @@ const HomePage = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasPreferences, setHasPreferences] = useState(false);
+  const [isSupplemented, setIsSupplemented] = useState(false);
+  const [preferenceMatchCount, setPreferenceMatchCount] = useState(0);
 
   useEffect(() => {
     const fetchEvents = async () => {
       if (!user) return;
       
-      const { events: personalizedEvents, hasPreferences: prefs } = await getPersonalizedEvents(user.id);
+      const {
+        events: personalizedEvents,
+        hasPreferences: prefs,
+        isSupplemented: supplemented,
+        preferenceMatchCount: matchCount,
+      } = await getPersonalizedEvents(user.id);
+      
       setEvents(personalizedEvents);
       setHasPreferences(prefs);
+      setIsSupplemented(supplemented);
+      setPreferenceMatchCount(matchCount);
       setLoading(false);
     };
 
@@ -73,13 +83,26 @@ const HomePage = () => {
         <div className="container mx-auto max-w-6xl py-20 md:py-28">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance">
-              {hasPreferences ? "Your personalized events" : "Find your next experience"}
+              {hasPreferences
+                ? isSupplemented
+                  ? "Events for you"
+                  : "Your personalized events"
+                : "Find your next experience"}
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              {hasPreferences 
-                ? "Events curated based on your interests and preferences"
+              {hasPreferences
+                ? isSupplemented
+                  ? `We found ${preferenceMatchCount} ${
+                      preferenceMatchCount === 1 ? "event" : "events"
+                    } matching your interests, and added more you might enjoy`
+                  : "Events curated based on your interests and preferences"
                 : "Discover events that inspire, educate, and connect."}
             </p>
+            {hasPreferences && isSupplemented && (
+              <Button asChild variant="outline" className="mt-4">
+                <Link to="/onboarding">Update my preferences</Link>
+              </Button>
+            )}
           </div>
         </div>
       </section>
