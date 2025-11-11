@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Loader2, MapPin, Globe, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -22,6 +23,10 @@ const eventSchema = z.object({
   category: z.enum(["Seminar", "Workshop", "Conference", "Festival", "Sports"]),
   price: z.number().min(0, "Price must be positive"),
   description: z.string().min(10, "Description must be at least 10 characters"),
+  host_name: z.string().min(2, "Host name must be at least 2 characters").max(100, "Host name must be less than 100 characters"),
+  host_description: z.string().max(500, "Host description must be less than 500 characters").optional().or(z.literal("")),
+  host_email: z.string().email("Must be a valid email").optional().or(z.literal("")),
+  host_phone: z.string().max(20, "Phone number must be less than 20 characters").optional().or(z.literal("")),
 }).refine((data) => {
   if (data.event_type === "in-person" || data.event_type === "hybrid") {
     return !!data.location && data.location.length >= 3;
@@ -64,6 +69,10 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
       category: event.category,
       price: event.price,
       description: event.description || "",
+      host_name: event.host_name || "",
+      host_description: event.host_description || "",
+      host_email: event.host_email || "",
+      host_phone: event.host_phone || "",
     } : {
       title: "",
       date: "",
@@ -73,6 +82,10 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
       category: "Seminar",
       price: 0,
       description: "",
+      host_name: "",
+      host_description: "",
+      host_email: "",
+      host_phone: "",
     }
   });
 
@@ -140,6 +153,10 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
         image_url: imageUrl,
         status: event ? undefined : 'approved', // Admin events are auto-approved
         created_by: currentUser.id,
+        host_name: data.host_name,
+        host_description: data.host_description || null,
+        host_email: data.host_email || null,
+        host_phone: data.host_phone || null,
       };
 
       if (event) {
@@ -357,6 +374,77 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
               </FormItem>
             )}
           />
+        </div>
+
+        {/* Host Information Section */}
+        <div className="space-y-4 pt-6 border-t">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Host Information</h3>
+            <Badge variant="outline" className="text-xs">Required</Badge>
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="host_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Host Name/Organization *</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Tech Innovators Inc. or John Doe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="host_description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>About the Host (Optional)</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Brief description about the hosting organization or individual..."
+                    className="min-h-[100px]"
+                    {...field} 
+                  />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">Max 500 characters</p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="host_email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Email (Optional)</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="contact@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="host_phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Phone (Optional)</FormLabel>
+                  <FormControl>
+                    <Input type="tel" placeholder="+1 (555) 123-4567" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         <div>

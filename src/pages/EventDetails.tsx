@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, MapPin, DollarSign, Copy, Check, Video, Globe, Users } from "lucide-react";
+import { CalendarDays, MapPin, DollarSign, Copy, Check, Video, Globe, Users, Mail, Phone, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthRequiredModal } from "@/components/auth/AuthGuard";
@@ -316,7 +316,7 @@ const EventDetails = () => {
             </aside>
 
             {/* RIGHT MAIN CONTENT */}
-            <main className="space-y-8">
+            <main className="space-y-8 max-w-4xl">
               {/* Header Section */}
               <div className="space-y-4">
                 {/* Badges */}
@@ -343,12 +343,12 @@ const EventDetails = () => {
                 <CardContent className="p-8">
                   <h2 className="text-2xl font-bold mb-6">About This Event</h2>
                   
-                  {event.description ? (
-                    <div className="prose prose-lg dark:prose-invert max-w-none">
-                      <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                        {event.description}
-                      </p>
-                    </div>
+                {event.description ? (
+                  <div className="prose prose-lg dark:prose-invert max-w-3xl">
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {event.description}
+                    </p>
+                  </div>
                   ) : (
                     <div className="space-y-6">
                       <p className="text-muted-foreground leading-relaxed">
@@ -388,15 +388,64 @@ const EventDetails = () => {
               {/* Organized By Section */}
               <Card className="border-2 shadow-md">
                 <CardContent className="p-8">
-                  <h3 className="text-xl font-semibold mb-4">Organized By</h3>
-                  <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-primary">K</span>
+                  <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-primary" />
+                    Organized By
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {/* Host Name */}
+                    <div className="flex items-start gap-4">
+                      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-2xl font-bold text-primary">
+                          {event.host_name ? event.host_name.charAt(0).toUpperCase() : 'K'}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-lg">
+                          {event.host_name || 'Kulmid'}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {event.host_name ? 'Event Organizer' : 'Event Platform'}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-semibold text-lg">Kulmid</div>
-                      <div className="text-sm text-muted-foreground">Event Platform</div>
-                    </div>
+
+                    {/* Host Description */}
+                    {event.host_description && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {event.host_description}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Contact Information */}
+                    {(event.host_email || event.host_phone) && (
+                      <div className="pt-4 border-t space-y-3">
+                        <div className="text-sm font-medium text-foreground mb-2">Contact Information</div>
+                        
+                        {event.host_email && (
+                          <a 
+                            href={`mailto:${event.host_email}`}
+                            className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                          >
+                            <Mail className="h-4 w-4 flex-shrink-0 group-hover:text-primary" />
+                            <span className="break-all">{event.host_email}</span>
+                          </a>
+                        )}
+                        
+                        {event.host_phone && (
+                          <a 
+                            href={`tel:${event.host_phone}`}
+                            className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                          >
+                            <Phone className="h-4 w-4 flex-shrink-0 group-hover:text-primary" />
+                            <span>{event.host_phone}</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -22,6 +22,10 @@ export type Database = {
           date: string
           description: string | null
           event_type: string | null
+          host_description: string | null
+          host_email: string | null
+          host_name: string | null
+          host_phone: string | null
           id: string
           image_url: string | null
           location: string
@@ -39,6 +43,10 @@ export type Database = {
           date: string
           description?: string | null
           event_type?: string | null
+          host_description?: string | null
+          host_email?: string | null
+          host_name?: string | null
+          host_phone?: string | null
           id: string
           image_url?: string | null
           location: string
@@ -56,6 +64,10 @@ export type Database = {
           date?: string
           description?: string | null
           event_type?: string | null
+          host_description?: string | null
+          host_email?: string | null
+          host_name?: string | null
+          host_phone?: string | null
           id?: string
           image_url?: string | null
           location?: string
