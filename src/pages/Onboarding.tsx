@@ -83,7 +83,7 @@ const Onboarding = () => {
       if (error) throw error;
 
       toast.success("Welcome to EventEase");
-      navigate("/home");
+      navigate("/discover");
     } catch (error) {
       console.error("Error skipping onboarding:", error);
       toast.error("Failed to complete onboarding. Please try again.");
@@ -112,7 +112,7 @@ const Onboarding = () => {
       if (error) throw error;
 
       toast.success("Preferences saved! Welcome to EventEase");
-      navigate("/home");
+      navigate("/discover");
     } catch (error) {
       console.error("Error saving preferences:", error);
       toast.error("Failed to save preferences. Please try again.");

@@ -6,8 +6,9 @@ import { EventCard } from "@/components/events/EventCard";
 import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { categories } from "@/constants/categories";
+import { Sparkles, Settings, ArrowRight } from "lucide-react";
 type EventItem = {
   id: string;
   title: string;
@@ -24,6 +25,8 @@ const Discover = () => {
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [hasPreferences, setHasPreferences] = useState(false);
+  const [preferenceCount, setPreferenceCount] = useState(0);
   const {
     user
   } = useAuth();
@@ -61,6 +64,40 @@ const Discover = () => {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const checkPreferences = async () => {
+      if (!user) {
+        setHasPreferences(false);
+        setPreferenceCount(0);
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('event_categories')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (data?.event_categories && data.event_categories.length > 0) {
+        setHasPreferences(true);
+        
+        // Count matching events
+        const { data: matchingEvents } = await supabase
+          .from('events')
+          .select('id')
+          .in('category', data.event_categories)
+          .in('status', ['approved', 'upcoming', 'ongoing']);
+        
+        setPreferenceCount(matchingEvents?.length || 0);
+      } else {
+        setHasPreferences(false);
+        setPreferenceCount(0);
+      }
+    };
+    
+    checkPreferences();
+  }, [user]);
   const handleViewAll = () => {
     if (user) {
       navigate("/events");
@@ -88,6 +125,44 @@ const Discover = () => {
             <p className="text-lg md:text-xl text-muted-foreground text-balance">
               Explore experiences that inspire you
             </p>
+
+            {/* Personalization Button */}
+            {user && hasPreferences && (
+              <div className="pt-4">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  variant="default"
+                  className="gap-2"
+                >
+                  <Link to="/home">
+                    <Sparkles className="h-4 w-4" />
+                    {preferenceCount > 0 
+                      ? `View ${preferenceCount} events matched to your interests`
+                      : "View personalized recommendations"
+                    }
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            )}
+            
+            {/* Show onboarding prompt if no preferences */}
+            {user && !hasPreferences && (
+              <div className="pt-4">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Link to="/onboarding">
+                    <Settings className="h-4 w-4" />
+                    Set your preferences for personalized events
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </section>

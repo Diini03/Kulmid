@@ -48,7 +48,7 @@ const SignIn = () => {
     // Regular user sign in
     const { error } = await signIn(data.email, data.password);
     if (!error) {
-      navigate('/home');
+      navigate('/discover');
     }
   };
 
