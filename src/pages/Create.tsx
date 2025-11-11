@@ -16,7 +16,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon } from "lucide-react";
+import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title must be less than 100 characters"),
@@ -27,6 +28,10 @@ const eventSchema = z.object({
   meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   category: z.enum(["Seminar", "Workshop", "Conference", "Festival", "Sports"]),
   price: z.number().min(0, "Price must be 0 or higher"),
+  host_name: z.string().min(2, "Host name must be at least 2 characters").max(100, "Host name must be less than 100 characters"),
+  host_description: z.string().max(500, "Host description must be less than 500 characters").optional().or(z.literal("")),
+  host_email: z.string().email("Must be a valid email").optional().or(z.literal("")),
+  host_phone: z.string().max(20, "Phone number must be less than 20 characters").optional().or(z.literal("")),
 }).refine((data) => {
   if (data.event_type === "in-person" || data.event_type === "hybrid") {
     return !!data.location && data.location.length >= 3;
@@ -66,6 +71,10 @@ const Create = () => {
       meeting_link: "",
       category: "Seminar",
       price: 0,
+      host_name: "",
+      host_description: "",
+      host_email: "",
+      host_phone: "",
     }
   });
 
@@ -155,6 +164,10 @@ const Create = () => {
         image_url: imageUrl,
         status: eventStatus,
         created_by: user.id,
+        host_name: data.host_name,
+        host_description: data.host_description || null,
+        host_email: data.host_email || null,
+        host_phone: data.host_phone || null,
       };
 
       const { error } = await supabase
@@ -486,6 +499,80 @@ const Create = () => {
                             />
                           </FormControl>
                           <FormDescription>Use 0 for free events</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Host Information Section */}
+                <div className="bg-card rounded-xl border shadow-sm p-6 space-y-6">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Host Information</h3>
+                    <Badge variant="outline" className="text-xs">Required</Badge>
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="host_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Host Name/Organization *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Tech Innovators Inc. or John Doe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="host_description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>About the Host (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Brief description about the hosting organization or individual..."
+                            className="min-h-[100px] resize-none"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Max 500 characters
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="host_email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Email (Optional)</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="contact@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="host_phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Phone (Optional)</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="+1 (555) 123-4567" {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}

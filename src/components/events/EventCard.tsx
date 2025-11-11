@@ -92,15 +92,15 @@ export const EventCard = ({ event }: Props) => {
         </div>
         <CardContent className="p-5 space-y-4">
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+            <h3 className="text-lg font-semibold leading-tight line-clamp-2 min-h-[3.5rem] group-hover:text-primary transition-colors">
               {event.title}
             </h3>
             <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 min-h-[1.25rem]">
                 <CalendarDays className="h-4 w-4 flex-shrink-0" />
-                <span>{new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span className="truncate">{new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 min-h-[1.25rem]">
                 <MapPin className="h-4 w-4 flex-shrink-0" />
                 <span className="truncate">{event.location}</span>
               </div>
