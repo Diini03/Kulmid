@@ -37,6 +37,7 @@ import Create from "./pages/Create";
 import MyEvents from "./pages/MyEvents";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import EventBuilder from "./pages/EventBuilder";
+import { useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,21 @@ const queryClient = new QueryClient();
 const ShortEventRedirect = () => {
   const { id } = useParams();
   return <Navigate to={`/event/${id}`} replace />;
+};
+
+// Wrapper component to redirect admins from user routes
+const UserOnlyRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAdmin, adminCheckComplete } = useAuth();
+  
+  if (!adminCheckComplete) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+  
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+  
+  return <>{children}</>;
 };
 
 const App = () => (
@@ -75,22 +91,22 @@ const App = () => (
                   <Route path="/contact" element={<Contact />} />
                   
                   {/* Protected Routes - Require authentication */}
-                  <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+                  <Route path="/home" element={<ProtectedRoute><UserOnlyRoute><HomePage /></UserOnlyRoute></ProtectedRoute>} />
                   
                   {/* Public Routes - Anyone can browse events */}
-                  <Route path="/events" element={<Events />} />
-                  <Route path="/events/:id" element={<EventDetails />} />
+                  <Route path="/events" element={<UserOnlyRoute><Events /></UserOnlyRoute>} />
+                  <Route path="/events/:id" element={<UserOnlyRoute><EventDetails /></UserOnlyRoute>} />
                   
                   {/* Standalone Event View - No layout, clean shareable page */}
-                  <Route path="/event/:id" element={<EventView />} />
+                  <Route path="/event/:id" element={<UserOnlyRoute><EventView /></UserOnlyRoute>} />
                   <Route path="/e/:id" element={<ShortEventRedirect />} />
                   
-                  <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-                  <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
-                  <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
+                  <Route path="/favorites" element={<ProtectedRoute><UserOnlyRoute><Favorites /></UserOnlyRoute></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute><UserOnlyRoute><UserDashboard /></UserOnlyRoute></ProtectedRoute>} />
+                  <Route path="/calendar" element={<ProtectedRoute><UserOnlyRoute><CalendarView /></UserOnlyRoute></ProtectedRoute>} />
+                  <Route path="/create" element={<ProtectedRoute><UserOnlyRoute><Create /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
-                  <Route path="/my-events" element={<ProtectedRoute><MyEvents /></ProtectedRoute>} />
+                  <Route path="/my-events" element={<ProtectedRoute><UserOnlyRoute><MyEvents /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute><OrganizerDashboard /></ProtectedRoute>} />
                   <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics /></ProtectedRoute>} />
                   <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
