@@ -166,8 +166,8 @@ const Create = () => {
         imageUrl = await uploadImage(imageFile);
       }
 
-      // Admin events get 'approved' status, user events get 'pending'
-      const eventStatus = isAdmin ? 'approved' : 'pending';
+      // Admin events get 'approved' status, user events get 'draft'
+      const eventStatus = isAdmin ? 'approved' : 'draft';
 
       const eventData = {
         id: `ev-${Date.now()}`,
@@ -194,7 +194,7 @@ const Create = () => {
 
       if (error) throw error;
       
-      // Different messages for admin vs regular user
+      // Different messages and redirects for admin vs regular user
       if (isAdmin) {
         toast({
           title: "Event published!",
@@ -203,10 +203,10 @@ const Create = () => {
         navigate("/admin");
       } else {
         toast({
-          title: "Event submitted!",
-          description: "Your event has been submitted for review. You'll be notified once it's approved.",
+          title: "Event created!",
+          description: "Your event has been created in draft mode. Continue building your event!",
         });
-        navigate("/my-events");
+        navigate(`/event/${eventData.id}/builder`);
       }
     } catch (error: any) {
       toast({

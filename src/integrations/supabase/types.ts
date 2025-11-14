@@ -14,6 +14,94 @@ export type Database = {
   }
   public: {
     Tables: {
+      event_guests: {
+        Row: {
+          created_at: string | null
+          email: string
+          event_id: string
+          id: string
+          name: string | null
+          notes: string | null
+          rsvp_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          event_id: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          rsvp_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          event_id?: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          rsvp_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_guests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_invitations: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          custom_message: string | null
+          custom_title: string | null
+          email: string
+          event_id: string
+          id: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          custom_message?: string | null
+          custom_title?: string | null
+          email: string
+          event_id: string
+          id?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          custom_message?: string | null
+          custom_title?: string | null
+          email?: string
+          event_id?: string
+          id?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_invitations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           category: string
