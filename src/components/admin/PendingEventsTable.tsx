@@ -24,6 +24,10 @@ type PendingEvent = {
   status: string;
   created_by: string;
   created_at: string;
+  creator?: {
+    full_name: string;
+    user_id: string;
+  };
 };
 
 interface PendingEventsTableProps {
@@ -112,6 +116,7 @@ export const PendingEventsTable = ({ events, onUpdate }: PendingEventsTableProps
         <TableHeader>
           <TableRow>
             <TableHead>Event</TableHead>
+            <TableHead>Submitted By</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Category</TableHead>
@@ -127,6 +132,11 @@ export const PendingEventsTable = ({ events, onUpdate }: PendingEventsTableProps
                 <div className="font-medium">{event.title}</div>
                 <div className="text-sm text-muted-foreground line-clamp-1">
                   {event.description}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="font-medium text-sm">
+                  {event.creator?.full_name || "Unknown User"}
                 </div>
               </TableCell>
               <TableCell>

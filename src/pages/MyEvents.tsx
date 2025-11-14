@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { EventForm } from "@/components/admin/EventForm";
 import { Calendar, MapPin, Globe, DollarSign, Pencil, Trash2, Plus, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 
@@ -36,6 +38,7 @@ const MyEvents = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
@@ -243,10 +246,32 @@ const MyEvents = () => {
                             variant="outline" 
                             size="sm"
                             className="flex-1"
-                            onClick={() => navigate(`/event/${event.id}`)}
+                            onClick={() => setEditingEvent(event)}
                           >
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setDeleteId(event.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        </>
+                      )}
+                      {event.status === "rejected" && (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setEditingEvent(event)}
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit & Resubmit
                           </Button>
                           <Button 
                             variant="outline" 
@@ -285,6 +310,26 @@ const MyEvents = () => {
         </Tabs>
       </div>
 
+      {/* Edit Dialog */}
+      <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Event</DialogTitle>
+          </DialogHeader>
+          {editingEvent && (
+            <EventForm
+              event={editingEvent}
+              onSuccess={() => {
+                setEditingEvent(null);
+                fetchMyEvents();
+              }}
+              onCancel={() => setEditingEvent(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

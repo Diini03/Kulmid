@@ -43,6 +43,11 @@ const eventSchema = z.object({
 }, {
   message: "Meeting link is required for online and hybrid events",
   path: ["meeting_link"],
+}).refine((data) => {
+  return !!data.host_email || !!data.host_phone;
+}, {
+  message: "Please provide at least one contact method (email or phone)",
+  path: ["host_email"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -57,6 +62,7 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -93,7 +99,19 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setImageFile(e.target.files[0]);
+      const file = e.target.files[0];
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setImageFile(file);
+      setImageError(null);
     }
   };
 
@@ -126,6 +144,17 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   };
 
   const onSubmit = async (data: EventFormData) => {
+    // Validate image is selected for new events
+    if (!event && !imageFile) {
+      setImageError("Event image is required");
+      toast({
+        title: "Image required",
+        description: "Please upload an event image before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setUploading(true);
     try {
       // Get current user for created_by
@@ -448,16 +477,25 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
         </div>
 
         <div>
-          <FormLabel>Event Image</FormLabel>
+          <FormLabel>
+            Event Image {!event && <span className="text-destructive">*</span>}
+          </FormLabel>
           <Input 
             type="file" 
             accept="image/*"
             onChange={handleImageChange}
             className="mt-2"
+            required={!event}
           />
+          {imageError && (
+            <p className="text-sm text-destructive mt-1">{imageError}</p>
+          )}
           {event?.image_url && !imageFile && (
             <p className="text-sm text-muted-foreground mt-1">Current image will be kept if no new image is uploaded</p>
           )}
+          <p className="text-sm text-muted-foreground mt-1">
+            {event ? "Upload a new image to replace the current one" : "Upload an event image (Required, max 5MB)"}
+          </p>
         </div>
 
         <div className="flex gap-2 justify-end pt-4">
