@@ -12,7 +12,7 @@ import { PendingEventsTable } from "@/components/admin/PendingEventsTable";
 import { Calendar, Users, TrendingUp } from "lucide-react";
 
 const OrganizerDashboard = () => {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, adminCheckComplete, loading } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [stats, setStats] = useState({
@@ -23,21 +23,33 @@ const OrganizerDashboard = () => {
   const categories = ["All", "Pending", "Conference", "Workshop", "Sports", "Festival", "Seminar", "Past Events"];
 
   const fetchEvents = async () => {
-    // Update event statuses first
-    await supabase.rpc('update_event_status');
-    
-    const { data, error } = await supabase
-      .from('events')
-      .select(`
-        *,
-        creator:profiles!events_created_by_fkey(
-          full_name,
-          user_id
-        )
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      console.log('Fetching events as admin...');
+      
+      // Update event statuses first
+      await supabase.rpc('update_event_status');
+      
+      const { data, error } = await supabase
+        .from('events')
+        .select(`
+          *,
+          creator:profiles!events_created_by_fkey(
+            full_name,
+            user_id
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-    if (data) setEvents(data);
+      if (error) {
+        console.error('Error fetching events:', error);
+        return;
+      }
+
+      console.log('Events fetched:', data?.length || 0);
+      if (data) setEvents(data);
+    } catch (error) {
+      console.error('Error in fetchEvents:', error);
+    }
   };
 
   const fetchStats = async () => {
@@ -56,6 +68,7 @@ const OrganizerDashboard = () => {
   };
 
   useEffect(() => {
+    console.log('OrganizerDashboard useEffect - isAdmin:', isAdmin, 'loading:', loading);
     if (isAdmin) {
       fetchEvents();
       fetchStats();
@@ -70,8 +83,16 @@ const OrganizerDashboard = () => {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && adminCheckComplete) {
     return <Navigate to="/" replace />;
+  }
+  
+  if (!adminCheckComplete) {
+    return (
+      <AdminLayout>
+        <div className="py-12">Checking permissions...</div>
+      </AdminLayout>
+    );
   }
 
   // Filter events based on active category
