@@ -10,12 +10,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInSchema, resetPasswordSchema, type SignInFormData, type ResetPasswordFormData } from "@/lib/validations";
-import { ADMIN_CREDENTIALS } from "@/constants/admin";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const { signIn, adminSignIn, resetPassword, loading } = useAuth();
+  const { signIn, resetPassword, loading } = useAuth();
   const navigate = useNavigate();
   
   const signInForm = useForm<SignInFormData>({
@@ -27,25 +26,6 @@ const SignIn = () => {
   });
 
   const onSignIn = async (data: SignInFormData) => {
-    // Check if credentials match admin
-    if (
-      data.email === ADMIN_CREDENTIALS.username ||
-      data.email === ADMIN_CREDENTIALS.email
-    ) {
-      if (data.password === ADMIN_CREDENTIALS.password) {
-        const { error } = await adminSignIn(
-          ADMIN_CREDENTIALS.email,
-          ADMIN_CREDENTIALS.password,
-          "Admin"
-        );
-        if (!error) {
-          navigate('/admin');
-        }
-        return;
-      }
-    }
-
-    // Regular user sign in
     const { error } = await signIn(data.email, data.password);
     if (!error) {
       navigate('/discover');
