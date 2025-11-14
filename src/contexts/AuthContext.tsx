@@ -274,35 +274,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     try {
-      // Clear local state first
+      // Sign out from Supabase first - this clears all auth tokens
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Supabase sign out error:', error);
+        throw error;
+      }
+      
+      // Clear local state
       setUser(null);
       setSession(null);
       setProfile(null);
       setIsAdmin(false);
-      setAdminCheckComplete(false);
-      
-      await supabase.auth.signOut();
+      setAdminCheckComplete(true);
       
       toast({
         title: "Signed out",
         description: "You have been successfully signed out."
       });
       
-      // Force navigation to welcome page after a small delay to ensure state is cleared
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      // Force reload to clear any cached state
+      window.location.href = '/';
     } catch (error: any) {
       console.error('Sign out error:', error);
+      
+      // Even on error, clear local state and redirect
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setIsAdmin(false);
+      setAdminCheckComplete(true);
+      
       toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive"
+        title: "Signed out",
+        description: "You have been signed out."
       });
-      // Still navigate even on error
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      
+      window.location.href = '/';
     }
   };
 
