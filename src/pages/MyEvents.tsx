@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EventForm } from "@/components/admin/EventForm";
-import { Calendar, MapPin, Globe, DollarSign, Pencil, Trash2, Plus, AlertCircle } from "lucide-react";
+import { Calendar, MapPin, Globe, DollarSign, Pencil, Trash2, Plus, AlertCircle, Users } from "lucide-react";
 import { format } from "date-fns";
 
 type EventItem = {
@@ -262,6 +262,17 @@ const MyEvents = () => {
                             Delete
                           </Button>
                         </>
+                      )}
+                      {(event.status === "approved" || event.status === "upcoming" || event.status === "ongoing") && (
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => navigate(`/event/${event.id}/builder`)}
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Manage Event & Guests
+                        </Button>
                       )}
                       {event.status === "pending" && (
                         <>
