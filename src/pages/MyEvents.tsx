@@ -118,6 +118,7 @@ const MyEvents = () => {
 
   const getCounts = () => ({
     all: events.length,
+    draft: events.filter(e => e.status === "draft").length,
     pending: events.filter(e => e.status === "pending").length,
     approved: events.filter(e => ["approved", "upcoming", "ongoing"].includes(e.status)).length,
     rejected: events.filter(e => e.status === "rejected").length,
@@ -157,6 +158,7 @@ const MyEvents = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
+            <TabsTrigger value="draft">Draft ({counts.draft})</TabsTrigger>
             <TabsTrigger value="pending">Pending ({counts.pending})</TabsTrigger>
             <TabsTrigger value="approved">Live ({counts.approved})</TabsTrigger>
             <TabsTrigger value="rejected">Rejected ({counts.rejected})</TabsTrigger>
@@ -240,6 +242,27 @@ const MyEvents = () => {
                       )}
                     </CardContent>
                     <CardFooter className="flex gap-2 border-t pt-4">
+                      {event.status === "draft" && (
+                        <>
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => navigate(`/event/${event.id}/builder`)}
+                          >
+                            Continue Building
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setDeleteId(event.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        </>
+                      )}
                       {event.status === "pending" && (
                         <>
                           <Button 

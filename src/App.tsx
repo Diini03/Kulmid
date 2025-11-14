@@ -36,6 +36,7 @@ import CalendarView from "./pages/CalendarView";
 import Create from "./pages/Create";
 import MyEvents from "./pages/MyEvents";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import EventBuilder from "./pages/EventBuilder";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const App = () => (
                   <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
                   <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
+                  <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
                   <Route path="/my-events" element={<ProtectedRoute><MyEvents /></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute><OrganizerDashboard /></ProtectedRoute>} />
                   <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics /></ProtectedRoute>} />
