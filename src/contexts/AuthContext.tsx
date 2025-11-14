@@ -17,6 +17,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   isAdmin: boolean;
+  adminCheckComplete: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -39,6 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
   const { toast } = useToast();
 
   const fetchProfile = async (userId: string) => {
@@ -69,10 +71,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .eq('role', 'admin')
         .maybeSingle();
       
-      setIsAdmin(!!data);
+      if (error) {
+        console.error('Error checking admin role:', error);
+        setIsAdmin(false);
+        setAdminCheckComplete(true);
+        return;
+      }
+      
+      const hasAdminRole = !!data;
+      console.log('Admin role check:', { userId, hasAdminRole, data });
+      setIsAdmin(hasAdminRole);
+      setAdminCheckComplete(true);
     } catch (error) {
       console.error('Error checking admin role:', error);
       setIsAdmin(false);
+      setAdminCheckComplete(true);
     }
   };
 
@@ -84,6 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          setAdminCheckComplete(false);
           // Defer profile fetch to avoid blocking auth state changes
           setTimeout(() => {
             fetchProfile(session.user.id);
@@ -92,6 +106,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else {
           setProfile(null);
           setIsAdmin(false);
+          setAdminCheckComplete(true);
         }
         
         setLoading(false);
@@ -106,6 +121,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (session?.user) {
         fetchProfile(session.user.id);
         checkAdminRole(session.user.id);
+      } else {
+        setAdminCheckComplete(true);
       }
       
       setLoading(false);
@@ -309,6 +326,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     profile,
     loading,
     isAdmin,
+    adminCheckComplete,
     signUp,
     signIn,
     signOut,
