@@ -279,6 +279,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setSession(null);
       setProfile(null);
       setIsAdmin(false);
+      setAdminCheckComplete(false);
       
       await supabase.auth.signOut();
       
@@ -287,8 +288,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         description: "You have been successfully signed out."
       });
       
-      // Force navigation to welcome page
-      window.location.href = '/';
+      // Force navigation to welcome page after a small delay to ensure state is cleared
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     } catch (error: any) {
       console.error('Sign out error:', error);
       toast({
@@ -297,7 +300,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         variant: "destructive"
       });
       // Still navigate even on error
-      window.location.href = '/';
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     }
   };
 
