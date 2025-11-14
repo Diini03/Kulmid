@@ -282,6 +282,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw error;
       }
       
+      // HARD CLEAR: remove any residual Supabase auth keys from localStorage
+      try {
+        for (const key of Object.keys(localStorage)) {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            localStorage.removeItem(key);
+          }
+        }
+      } catch (e) {
+        console.warn('Local storage cleanup warning:', e);
+      }
+      
       // Clear local state
       setUser(null);
       setSession(null);
