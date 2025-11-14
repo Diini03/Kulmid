@@ -36,13 +36,23 @@ const EventBuilder = () => {
       .from("events")
       .select("*")
       .eq("id", id)
-      .eq("created_by", user?.id)
       .single();
 
     if (error) {
       toast({
         title: "Error",
-        description: "Event not found or you don't have permission to edit it.",
+        description: "Event not found.",
+        variant: "destructive",
+      });
+      navigate("/my-events");
+      return;
+    }
+
+    // Check if user owns this event
+    if (data.created_by !== user?.id) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to manage this event.",
         variant: "destructive",
       });
       navigate("/my-events");
