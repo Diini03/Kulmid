@@ -57,16 +57,19 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
           </Link>
 
-          <div className="hidden md:flex items-center gap-6 text-sm">
-            <NavLink to="/events" className={linkCls}>
-              <Calendar className="h-4 w-4" />
-              Events
-            </NavLink>
-            <NavLink to="/discover" className={linkCls}>
-              <Compass className="h-4 w-4" />
-              Discover
-            </NavLink>
-          </div>
+          {/* Hide user navigation for admins */}
+          {!isAdmin && (
+            <div className="hidden md:flex items-center gap-6 text-sm">
+              <NavLink to="/events" className={linkCls}>
+                <Calendar className="h-4 w-4" />
+                Events
+              </NavLink>
+              <NavLink to="/discover" className={linkCls}>
+                <Compass className="h-4 w-4" />
+                Discover
+              </NavLink>
+            </div>
+          )}
         </div>
 
         {/* Right Side - Actions */}
@@ -76,8 +79,8 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             {currentTime}
           </div>
 
-          {/* Create Event Button - Authenticated Users */}
-          {user && (
+          {/* Create Event Button - Authenticated Users (Not Admins) */}
+          {user && !isAdmin && (
             <Button asChild size="sm" className="hidden md:flex">
               <Link to="/create">Create Event</Link>
             </Button>
@@ -88,8 +91,8 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             <Search className="h-4 w-4" />
           </Button>
 
-          {/* Notifications - Authenticated Users */}
-          {user && (
+          {/* Notifications - Authenticated Users (Not Admins) */}
+          {user && !isAdmin && (
             <Button variant="ghost" size="icon" aria-label="Notifications">
               <Bell className="h-4 w-4" />
             </Button>
