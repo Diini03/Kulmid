@@ -48,6 +48,11 @@ const eventSchema = z.object({
 }, {
   message: "Meeting link is required for online and hybrid events",
   path: ["meeting_link"],
+}).refine((data) => {
+  return !!data.host_email || !!data.host_phone;
+}, {
+  message: "Please provide at least one contact method (email or phone)",
+  path: ["host_email"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -59,6 +64,7 @@ const Create = () => {
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -95,6 +101,7 @@ const Create = () => {
       }
       
       setImageFile(file);
+      setImageError(null);
       
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -137,6 +144,17 @@ const Create = () => {
         variant: "destructive",
       });
       navigate("/signin");
+      return;
+    }
+
+    // Validate image is selected
+    if (!imageFile) {
+      setImageError("Event image is required");
+      toast({
+        title: "Image required",
+        description: "Please upload an event image before submitting",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -239,7 +257,9 @@ const Create = () => {
               {/* Left Side - Image Upload */}
               <div className="lg:col-span-2">
                 <div className="sticky top-20">
-                  <FormLabel className="text-base mb-3 block">Event Cover Image</FormLabel>
+                  <FormLabel className="text-base mb-3 block">
+                    Event Cover Image <span className="text-destructive">*</span>
+                  </FormLabel>
                   <div className="relative">
                     <input
                       type="file"
@@ -247,11 +267,12 @@ const Create = () => {
                       onChange={handleImageChange}
                       className="hidden"
                       id="image-upload"
+                      required
                     />
                     <label
                       htmlFor="image-upload"
                       className={`block rounded-xl border-2 border-dashed cursor-pointer transition-all overflow-hidden ${
-                        imagePreview ? 'border-primary' : 'border-muted-foreground/25 hover:border-primary/50'
+                        imagePreview ? 'border-primary' : imageError ? 'border-destructive' : 'border-muted-foreground/25 hover:border-primary/50'
                       }`}
                     >
                       {imagePreview ? (
@@ -281,8 +302,11 @@ const Create = () => {
                       )}
                     </label>
                   </div>
+                  {imageError && (
+                    <p className="text-sm text-destructive mt-2">{imageError}</p>
+                  )}
                   <p className="text-sm text-muted-foreground mt-2">
-                    Choose a high-quality image that represents your event
+                    Choose a high-quality image that represents your event (Required)
                   </p>
                 </div>
               </div>

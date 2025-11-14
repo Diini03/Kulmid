@@ -55,6 +55,7 @@ export const EventsTable = ({ events, onUpdate }: EventsTableProps) => {
             <TableHead className="font-semibold">Date</TableHead>
             <TableHead className="font-semibold">Location</TableHead>
             <TableHead className="font-semibold">Category</TableHead>
+            <TableHead className="font-semibold">Created By</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="font-semibold">Price</TableHead>
             <TableHead className="text-right font-semibold">Actions</TableHead>
@@ -76,6 +77,13 @@ export const EventsTable = ({ events, onUpdate }: EventsTableProps) => {
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                   {event.category}
                 </span>
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-col">
+                  <span className="font-medium">
+                    {event.creator?.full_name || "Unknown User"}
+                  </span>
+                </div>
               </TableCell>
               <TableCell>
                 <Badge 
