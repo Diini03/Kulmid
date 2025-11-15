@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInSchema, resetPasswordSchema, type SignInFormData, type ResetPasswordFormData } from "@/lib/validations";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +29,18 @@ const SignIn = () => {
   const onSignIn = async (data: SignInFormData) => {
     const { error } = await signIn(data.email, data.password);
     if (!error) {
-      navigate('/discover');
+      // Check if user is admin and redirect accordingly
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+      
+      if (roleData?.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/discover');
+      }
     }
   };
 
