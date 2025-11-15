@@ -36,7 +36,7 @@ const EventBuilder = () => {
       .from("events")
       .select("*")
       .eq("id", id)
-      .single();
+      .maybeSingle();
 
     if (error) {
       toast({
