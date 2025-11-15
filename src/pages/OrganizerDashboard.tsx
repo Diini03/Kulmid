@@ -31,7 +31,12 @@ const OrganizerDashboard = () => {
       
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          *,
+          creator:profiles!events_created_by_fkey(
+            full_name
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
