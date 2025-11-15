@@ -33,7 +33,7 @@ const OrganizerDashboard = () => {
         .from('events')
         .select(`
           *,
-          creator:profiles!events_created_by_fkey(
+          creator:profiles(
             full_name
           )
         `)
