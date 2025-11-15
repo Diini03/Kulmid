@@ -77,7 +77,7 @@ export async function getPersonalizedEvents(
       .from("user_preferences")
       .select("event_categories, preferred_format, topics, allow_recommendations")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
 
     if (prefsError || !prefs || !prefs.allow_recommendations) {
       // No preferences or recommendations disabled - return all events
@@ -157,7 +157,7 @@ export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
       .from("user_preferences")
       .select("id")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
 
     if (error) return false;
     return !!data;

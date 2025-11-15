@@ -34,7 +34,7 @@ const SignIn = () => {
         .from('user_roles')
         .select('role')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
+        .maybeSingle();
       
       if (roleData?.role === 'admin') {
         navigate('/admin');

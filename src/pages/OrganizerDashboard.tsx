@@ -91,19 +91,19 @@ const OrganizerDashboard = () => {
 
   // Filter events based on active category
   const filteredEvents = activeCategory === "All" 
-    ? events.filter(event => event.status !== 'past' && event.status !== 'pending')
+    ? events.filter(event => event.status !== 'past' && event.status !== 'pending' && event.status !== 'rejected')
     : activeCategory === "Pending"
     ? events.filter(event => event.status === 'pending')
     : activeCategory === "Past Events"
     ? events.filter(event => event.status === 'past')
-    : events.filter(event => event.category === activeCategory && event.status !== 'past' && event.status !== 'pending');
+    : events.filter(event => event.category === activeCategory && event.status !== 'past' && event.status !== 'pending' && event.status !== 'rejected');
 
   // Get category counts
   const getCategoryCount = (category: string) => {
-    if (category === "All") return events.filter(event => event.status !== 'past' && event.status !== 'pending').length;
+    if (category === "All") return events.filter(event => event.status !== 'past' && event.status !== 'pending' && event.status !== 'rejected').length;
     if (category === "Pending") return events.filter(event => event.status === 'pending').length;
     if (category === "Past Events") return events.filter(event => event.status === 'past').length;
-    return events.filter(event => event.category === category && event.status !== 'past' && event.status !== 'pending').length;
+    return events.filter(event => event.category === category && event.status !== 'past' && event.status !== 'pending' && event.status !== 'rejected').length;
   };
 
   return (
