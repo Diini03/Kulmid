@@ -167,7 +167,7 @@ const Create = () => {
       }
 
       // Admin events get 'approved' status, user events get 'draft'
-      const eventStatus = isAdmin ? 'approved' : 'draft';
+      const eventStatus = isAdmin ? 'approved' : 'pending';
 
       const eventData = {
         id: `ev-${Date.now()}`,
