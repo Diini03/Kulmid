@@ -31,12 +31,7 @@ const OrganizerDashboard = () => {
       
       const { data, error } = await supabase
         .from('events')
-        .select(`
-          *,
-          creator:profiles(
-            full_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -44,8 +39,26 @@ const OrganizerDashboard = () => {
         return;
       }
 
+      // Fetch creator names separately
+      if (data) {
+        const eventsWithCreators = await Promise.all(
+          data.map(async (event) => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('user_id', event.created_by)
+              .maybeSingle();
+            
+            return {
+              ...event,
+              creator: profile
+            };
+          })
+        );
+        setEvents(eventsWithCreators);
+      }
+
       console.log('Events fetched:', data?.length || 0);
-      if (data) setEvents(data);
     } catch (error) {
       console.error('Error in fetchEvents:', error);
     }
