@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Mail, UserPlus } from "lucide-react";
 import InviteGuestsDialog from "./InviteGuestsDialog";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import RegistrationsTab from "./RegistrationsTab";
 
 interface EventBuilderGuestsProps {
   eventId: string;
@@ -54,94 +56,105 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Guest List ({guests.length})</CardTitle>
-            <Button onClick={() => setShowInviteDialog(true)}>
-              <Mail className="h-4 w-4 mr-2" />
-              Invite Guests
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {guests.length === 0 ? (
-            <div className="text-center py-12">
-              <UserPlus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No guests yet</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setShowInviteDialog(true)}
-              >
-                Invite Your First Guest
+    <Tabs defaultValue="invitations" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="invitations">Invitations</TabsTrigger>
+        <TabsTrigger value="registrations">Registrations</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="invitations" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Guest List ({guests.length})</CardTitle>
+              <Button onClick={() => setShowInviteDialog(true)}>
+                <Mail className="h-4 w-4 mr-2" />
+                Invite Guests
               </Button>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {guests.map((guest) => (
-                <div
-                  key={guest.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg"
+          </CardHeader>
+          <CardContent>
+            {guests.length === 0 ? (
+              <div className="text-center py-12">
+                <UserPlus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No guests yet</p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => setShowInviteDialog(true)}
                 >
-                  <div>
-                    <p className="font-medium">{guest.name || guest.email}</p>
-                    {guest.name && <p className="text-sm text-muted-foreground">{guest.email}</p>}
+                  Invite Your First Guest
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {guests.map((guest) => (
+                  <div
+                    key={guest.id}
+                    className="flex items-center justify-between p-4 border border-border rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium">{guest.name || guest.email}</p>
+                      {guest.name && <p className="text-sm text-muted-foreground">{guest.email}</p>}
+                    </div>
+                    <Badge variant={getStatusColor(guest.status)}>
+                      {guest.status}
+                    </Badge>
                   </div>
-                  <Badge variant={getStatusColor(guest.status)}>
-                    {guest.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Invitation History ({invitations.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {invitations.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No invitations sent yet</p>
-          ) : (
-            <div className="space-y-2">
-              {invitations.map((invitation) => (
-                <div
-                  key={invitation.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{invitation.email}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Sent {new Date(invitation.sent_at).toLocaleDateString()}
-                    </p>
-                    {invitation.custom_title && (
-                      <p className="text-sm text-muted-foreground italic">
-                        "{invitation.custom_title}"
+        <Card>
+          <CardHeader>
+            <CardTitle>Invitation History ({invitations.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {invitations.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No invitations sent yet</p>
+            ) : (
+              <div className="space-y-2">
+                {invitations.map((invitation) => (
+                  <div
+                    key={invitation.id}
+                    className="flex items-center justify-between p-4 border border-border rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium">{invitation.email}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Sent {new Date(invitation.sent_at).toLocaleDateString()}
                       </p>
-                    )}
+                      {invitation.custom_title && (
+                        <p className="text-sm text-muted-foreground italic">
+                          "{invitation.custom_title}"
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant="secondary">{invitation.status}</Badge>
                   </div>
-                  <Badge variant="secondary">{invitation.status}</Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      <InviteGuestsDialog
-        eventId={eventId}
-        open={showInviteDialog}
-        onOpenChange={setShowInviteDialog}
-        onSuccess={() => {
-          fetchGuests();
-          fetchInvitations();
-        }}
-      />
-    </div>
+        <InviteGuestsDialog
+          eventId={eventId}
+          open={showInviteDialog}
+          onOpenChange={setShowInviteDialog}
+          onSuccess={() => {
+            fetchGuests();
+            fetchInvitations();
+          }}
+        />
+      </TabsContent>
+
+      <TabsContent value="registrations">
+        <RegistrationsTab eventId={eventId} />
+      </TabsContent>
+    </Tabs>
   );
 };
 

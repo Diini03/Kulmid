@@ -1,1 +1,13 @@
 project_id = "txjglujklpxsfhedwwkl"
+
+[functions.send-event-invitation]
+verify_jwt = false
+
+[functions.send-registration-confirmation]
+verify_jwt = false
+
+[functions.send-registration-notification]
+verify_jwt = false
+
+[functions.handle-registration-action]
+verify_jwt = false
