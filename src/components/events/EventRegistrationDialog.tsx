@@ -69,6 +69,10 @@ const EventRegistrationDialog = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (loading) return;
+    
     setErrors({});
 
     // Validate form
@@ -90,15 +94,15 @@ const EventRegistrationDialog = ({
       // Check if user already registered
       const { data: existing } = await supabase
         .from("event_guests")
-        .select("id")
+        .select("id, status")
         .eq("event_id", eventId)
-        .eq("email", formData.email)
+        .eq("email", formData.email.trim().toLowerCase())
         .maybeSingle();
 
       if (existing) {
         toast({
           title: "Already Registered",
-          description: "You have already registered for this event.",
+          description: `You have already registered for this event. Status: ${existing.status}`,
           variant: "destructive",
         });
         setLoading(false);
@@ -108,24 +112,36 @@ const EventRegistrationDialog = ({
       // Insert registration
       const { error } = await supabase.from("event_guests").insert({
         event_id: eventId,
-        name: formData.name,
-        email: formData.email,
-        phone_number: formData.phone_number,
-        organization: formData.organization || null,
-        job_title: formData.job_title || null,
-        degree: formData.degree || null,
-        why_interested: formData.why_interested,
-        what_to_gain: formData.what_to_gain || null,
-        heard_from: formData.heard_from || null,
-        questions: formData.questions || null,
-        dietary_restrictions: formData.dietary_restrictions || null,
-        special_requirements: formData.special_requirements || null,
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone_number: formData.phone_number.trim(),
+        organization: formData.organization?.trim() || null,
+        job_title: formData.job_title?.trim() || null,
+        degree: formData.degree?.trim() || null,
+        why_interested: formData.why_interested.trim(),
+        what_to_gain: formData.what_to_gain?.trim() || null,
+        heard_from: formData.heard_from?.trim() || null,
+        questions: formData.questions?.trim() || null,
+        dietary_restrictions: formData.dietary_restrictions?.trim() || null,
+        special_requirements: formData.special_requirements?.trim() || null,
         registration_type: "registration",
         status: autoApprove ? "registered" : "pending",
         rsvp_at: autoApprove ? new Date().toISOString() : null,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle duplicate registration error specifically
+        if (error.code === '23505') {
+          toast({
+            title: "Already Registered",
+            description: "You have already registered for this event.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       // Send confirmation email
       await supabase.functions.invoke("send-registration-confirmation", {
