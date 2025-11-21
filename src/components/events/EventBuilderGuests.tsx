@@ -23,10 +23,12 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
   }, [eventId]);
 
   const fetchGuests = async () => {
+    // Only fetch invited guests (not registrations)
     const { data } = await supabase
       .from("event_guests")
       .select("*")
       .eq("event_id", eventId)
+      .or("registration_type.eq.invitation,registration_type.is.null")
       .order("created_at", { ascending: false });
 
     if (data) setGuests(data);
@@ -66,7 +68,7 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Guest List ({guests.length})</CardTitle>
+              <CardTitle>Invited Guests ({guests.length})</CardTitle>
               <Button onClick={() => setShowInviteDialog(true)}>
                 <Mail className="h-4 w-4 mr-2" />
                 Invite Guests
