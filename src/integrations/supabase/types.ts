@@ -16,37 +16,73 @@ export type Database = {
     Tables: {
       event_guests: {
         Row: {
+          about: string | null
           created_at: string | null
+          degree: string | null
+          dietary_restrictions: string | null
           email: string
           event_id: string
+          heard_from: string | null
           id: string
+          job_title: string | null
           name: string | null
           notes: string | null
+          organization: string | null
+          phone_number: string | null
+          questions: string | null
+          registration_type: string | null
           rsvp_at: string | null
+          special_requirements: string | null
           status: string
           updated_at: string | null
+          what_to_gain: string | null
+          why_interested: string | null
         }
         Insert: {
+          about?: string | null
           created_at?: string | null
+          degree?: string | null
+          dietary_restrictions?: string | null
           email: string
           event_id: string
+          heard_from?: string | null
           id?: string
+          job_title?: string | null
           name?: string | null
           notes?: string | null
+          organization?: string | null
+          phone_number?: string | null
+          questions?: string | null
+          registration_type?: string | null
           rsvp_at?: string | null
+          special_requirements?: string | null
           status?: string
           updated_at?: string | null
+          what_to_gain?: string | null
+          why_interested?: string | null
         }
         Update: {
+          about?: string | null
           created_at?: string | null
+          degree?: string | null
+          dietary_restrictions?: string | null
           email?: string
           event_id?: string
+          heard_from?: string | null
           id?: string
+          job_title?: string | null
           name?: string | null
           notes?: string | null
+          organization?: string | null
+          phone_number?: string | null
+          questions?: string | null
+          registration_type?: string | null
           rsvp_at?: string | null
+          special_requirements?: string | null
           status?: string
           updated_at?: string | null
+          what_to_gain?: string | null
+          why_interested?: string | null
         }
         Relationships: [
           {
@@ -104,6 +140,7 @@ export type Database = {
       }
       events: {
         Row: {
+          auto_approve_registrations: boolean | null
           category: string
           created_at: string | null
           created_by: string
@@ -117,14 +154,17 @@ export type Database = {
           id: string
           image_url: string | null
           location: string
+          max_attendees: number | null
           meeting_link: string | null
           price: number
+          registration_deadline: string | null
           rejection_reason: string | null
           status: string
           title: string
           updated_at: string | null
         }
         Insert: {
+          auto_approve_registrations?: boolean | null
           category: string
           created_at?: string | null
           created_by: string
@@ -138,14 +178,17 @@ export type Database = {
           id: string
           image_url?: string | null
           location: string
+          max_attendees?: number | null
           meeting_link?: string | null
           price?: number
+          registration_deadline?: string | null
           rejection_reason?: string | null
           status?: string
           title: string
           updated_at?: string | null
         }
         Update: {
+          auto_approve_registrations?: boolean | null
           category?: string
           created_at?: string | null
           created_by?: string
@@ -159,8 +202,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           location?: string
+          max_attendees?: number | null
           meeting_link?: string | null
           price?: number
+          registration_deadline?: string | null
           rejection_reason?: string | null
           status?: string
           title?: string

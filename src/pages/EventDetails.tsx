@@ -4,7 +4,6 @@ import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, MapPin, DollarSign, Copy, Check, Video, Globe, Users, Mail, Phone, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -12,18 +11,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthRequiredModal } from "@/components/auth/AuthGuard";
 import { toast } from "@/hooks/use-toast";
 import { categories, type EventCategory } from "@/constants/categories";
+import EventRegistrationDialog from "@/components/events/EventRegistrationDialog";
 
 const EventDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [bookOpen, setBookOpen] = useState(false);
-  const [qty, setQty] = useState(1);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authAction, setAuthAction] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [shortLinkCopied, setShortLinkCopied] = useState(false);
+  const [userRegistrationStatus, setUserRegistrationStatus] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -35,19 +35,33 @@ const EventDetails = () => {
 
       if (data) {
         setEvent(data);
+        
+        // Check if user already registered
+        if (user) {
+          const { data: registration } = await supabase
+            .from('event_guests')
+            .select('status')
+            .eq('event_id', id)
+            .eq('email', user.email)
+            .maybeSingle();
+          
+          if (registration) {
+            setUserRegistrationStatus(registration.status);
+          }
+        }
       }
       setLoading(false);
     };
 
     fetchEvent();
-  }, [id]);
+  }, [id, user]);
 
-  const handleBookClick = () => {
+  const handleRegisterClick = () => {
     if (!user) {
-      setAuthAction("book this event");
+      setAuthAction("register for this event");
       setShowAuthModal(true);
     } else {
-      setBookOpen(true);
+      setRegistrationOpen(true);
     }
   };
 
@@ -230,13 +244,30 @@ const EventDetails = () => {
               </Card>
 
               {/* CTA Button */}
-              <Button 
-                onClick={handleBookClick}
-                size="lg" 
-                className="w-full text-lg py-6 shadow-lg hover:shadow-xl transition-all hover-lift"
-              >
-                Register for Event
-              </Button>
+              {userRegistrationStatus ? (
+                <div className="space-y-2">
+                  <Badge 
+                    className="w-full justify-center py-3 text-base"
+                    variant={
+                      userRegistrationStatus === "registered" ? "default" :
+                      userRegistrationStatus === "pending" ? "secondary" :
+                      "destructive"
+                    }
+                  >
+                    {userRegistrationStatus === "registered" && "✅ Registered"}
+                    {userRegistrationStatus === "pending" && "⏳ Pending Approval"}
+                    {userRegistrationStatus === "rejected" && "❌ Registration Declined"}
+                  </Badge>
+                </div>
+              ) : (
+                <Button 
+                  onClick={handleRegisterClick}
+                  size="lg" 
+                  className="w-full text-lg py-6 shadow-lg hover:shadow-xl transition-all hover-lift"
+                >
+                  Register for Event
+                </Button>
+              )}
 
               {/* Share Section with Links */}
               <Card className="border-2 shadow-md">
@@ -461,44 +492,14 @@ const EventDetails = () => {
         action={authAction}
       />
 
-      <Dialog open={bookOpen} onOpenChange={setBookOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Register for event</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Number of tickets</span>
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => setQty(q => Math.max(1, q-1))}
-                >
-                  -
-                </Button>
-                <span className="w-12 text-center font-medium">{qty}</span>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => setQty(q => q+1)}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-            <div className="flex items-center justify-between pt-4 border-t">
-              <span className="font-semibold">Total</span>
-              <span className="text-2xl font-bold">${event.price * qty}</span>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setBookOpen(false)} className="w-full" size="lg">
-              Confirm Registration
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EventRegistrationDialog
+        open={registrationOpen}
+        onOpenChange={setRegistrationOpen}
+        eventId={id!}
+        eventTitle={event.title}
+        price={event.price}
+        autoApprove={event.auto_approve_registrations || false}
+      />
     </Layout>
   );
 };
