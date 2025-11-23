@@ -277,22 +277,20 @@ const MyEvents = () => {
                       {event.status === "pending" && (
                         <>
                           <Button 
-                            variant="outline" 
+                            variant="default" 
                             size="sm"
                             className="flex-1"
-                            onClick={() => setEditingEvent(event)}
+                            onClick={() => navigate(`/event/${event.id}/builder`)}
                           >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
+                            <Users className="mr-2 h-4 w-4" />
+                            Manage Event & Guests
                           </Button>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className="flex-1"
                             onClick={() => setDeleteId(event.id)}
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </>
                       )}
