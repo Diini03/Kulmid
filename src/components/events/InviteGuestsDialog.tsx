@@ -74,7 +74,16 @@ const InviteGuestsDialog = ({ eventId, open, onOpenChange, onSuccess }: InviteGu
     setSending(true);
 
     try {
+      // Ensure we send the auth token so the edge function can authenticate the organizer
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("You must be signed in to send invitations");
+      }
+
       const { data, error } = await supabase.functions.invoke("send-event-invitation", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: {
           eventId,
           emails,
