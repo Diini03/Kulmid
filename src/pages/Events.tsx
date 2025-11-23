@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { smartShuffleEvents, fetchRegistrationCounts } from "@/utils/eventSorting";
 
 type EventItem = {
   id: string;
@@ -21,6 +22,7 @@ type EventItem = {
 };
 
 const sorters: Record<string, (a: EventItem, b: EventItem) => number> = {
+  Recommended: () => 0, // Will be handled by smart shuffle
   Soonest: (a, b) => +new Date(a.date) - +new Date(b.date),
   Latest: (a, b) => +new Date(b.date) - +new Date(a.date),
   "Price: Low to High": (a, b) => a.price - b.price,
@@ -33,13 +35,14 @@ const EventsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get('category');
   
-  const [sort, setSort] = useState<string>("Soonest");
+  const [sort, setSort] = useState<string>("Recommended");
   const [activeFilter, setActiveFilter] = useState<string>(
     categoryFromUrl && categories.includes(categoryFromUrl as any) 
       ? categoryFromUrl 
       : "All"
   );
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
+  const [registrationCounts, setRegistrationCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,19 +50,20 @@ const EventsPage = () => {
     
     const fetchEvents = async () => {
       try {
-        // Only update status once when mounting, not on every render
-        // This RPC call is expensive and causes slowness
-        
         const { data, error } = await supabase
           .from('events')
           .select('*')
-          .in('status', ['approved', 'upcoming', 'ongoing'])
-          .order('date', { ascending: true }); // Pre-sort in DB for better performance
+          .in('status', ['approved', 'upcoming', 'ongoing']);
 
         if (error) throw error;
         
         if (mounted && data) {
           setAllEvents(data);
+          
+          // Fetch registration counts for popularity scoring
+          const eventIds = data.map(e => e.id);
+          const counts = await fetchRegistrationCounts(supabase, eventIds);
+          setRegistrationCounts(counts);
         }
       } catch (error) {
         console.error('Error fetching events:', error);
@@ -84,9 +88,14 @@ const EventsPage = () => {
       list = list.filter(e => e.category === activeFilter);
     }
     
-    const sorter = sorters[sort] || sorters.Soonest;
+    // Use smart shuffle for "Recommended" sort
+    if (sort === "Recommended") {
+      return smartShuffleEvents(list, registrationCounts);
+    }
+    
+    const sorter = sorters[sort] || sorters.Recommended;
     return list.sort(sorter);
-  }, [sort, activeFilter, allEvents]);
+  }, [sort, activeFilter, allEvents, registrationCounts]);
 
   const handleFilterChange = (category: string) => {
     setActiveFilter(category);

@@ -3,7 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/events/EventCard";
-
+import { smartShuffleEvents, fetchRegistrationCounts } from "@/utils/eventSorting";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -35,26 +35,33 @@ const Discover = () => {
     const fetchData = async () => {
       await supabase.rpc('update_event_status');
       
-      // Fetch featured events for display
-      const { data: featuredEvents } = await supabase
+      // Fetch all events for smart shuffle
+      const { data: allEvents } = await supabase
         .from('events')
         .select('*')
-        .in('status', ['approved', 'upcoming', 'ongoing'])
-        .limit(6);
+        .in('status', ['approved', 'upcoming', 'ongoing']);
       
-      if (featuredEvents) {
-        setEvents(featuredEvents);
+      if (allEvents) {
+        // Fetch registration counts
+        const eventIds = allEvents.map(e => e.id);
+        const registrationCounts = await fetchRegistrationCounts(supabase, eventIds);
+        
+        // Smart shuffle with popularity weighting
+        const shuffled = smartShuffleEvents(allEvents, registrationCounts);
+        
+        // Take top 6 for featured section
+        setEvents(shuffled.slice(0, 6));
       }
 
       // Fetch all events to count by category
-      const { data: allEvents } = await supabase
+      const { data: categoryEvents } = await supabase
         .from('events')
         .select('category')
         .in('status', ['approved', 'upcoming', 'ongoing']);
       
-      if (allEvents) {
+      if (categoryEvents) {
         const counts: Record<string, number> = {};
-        allEvents.forEach(event => {
+        categoryEvents.forEach(event => {
           counts[event.category] = (counts[event.category] || 0) + 1;
         });
         setEventCounts(counts);
