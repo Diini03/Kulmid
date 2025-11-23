@@ -57,7 +57,8 @@ const EventDetails = () => {
   }, [id, user]);
 
   const handleRegisterClick = () => {
-    if (!user) {
+    // Only require authentication for paid events
+    if (event.price > 0 && !user) {
       setAuthAction("register for this event");
       setShowAuthModal(true);
     } else {
