@@ -37,6 +37,7 @@ import Create from "./pages/Create";
 import MyEvents from "./pages/MyEvents";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import EventBuilder from "./pages/EventBuilder";
+import EventScanner from "./pages/EventScanner";
 import { useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
@@ -106,6 +107,7 @@ const App = () => (
                   <Route path="/calendar" element={<ProtectedRoute><UserOnlyRoute><CalendarView /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/create" element={<ProtectedRoute><UserOnlyRoute><Create /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
+                  <Route path="/event/:eventId/scanner" element={<ProtectedRoute><EventScanner /></ProtectedRoute>} />
                   <Route path="/my-events" element={<ProtectedRoute><UserOnlyRoute><MyEvents /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute><OrganizerDashboard /></ProtectedRoute>} />
                   <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics /></ProtectedRoute>} />

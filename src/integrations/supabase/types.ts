@@ -17,6 +17,10 @@ export type Database = {
       event_guests: {
         Row: {
           about: string | null
+          check_in_token: string | null
+          checked_in: boolean | null
+          checked_in_at: string | null
+          checked_in_by: string | null
           created_at: string | null
           degree: string | null
           dietary_restrictions: string | null
@@ -40,6 +44,10 @@ export type Database = {
         }
         Insert: {
           about?: string | null
+          check_in_token?: string | null
+          checked_in?: boolean | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string | null
           degree?: string | null
           dietary_restrictions?: string | null
@@ -63,6 +71,10 @@ export type Database = {
         }
         Update: {
           about?: string | null
+          check_in_token?: string | null
+          checked_in?: boolean | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string | null
           degree?: string | null
           dietary_restrictions?: string | null
