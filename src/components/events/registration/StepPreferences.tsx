@@ -9,9 +9,10 @@ interface StepPreferencesProps {
     dietary_restrictions: string;
     special_requirements: string;
     questions: string;
+    create_account?: boolean;
   };
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onSelectChange: (name: string, value: string) => void;
+  onSelectChange: (name: string, value: string | boolean) => void;
 }
 
 const dietaryOptions = [
@@ -106,6 +107,28 @@ export const StepPreferences = ({ formData, onChange, onSelectChange }: StepPref
           rows={2}
           className="resize-none"
         />
+      </div>
+
+      <div className="pt-4 border-t">
+        <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
+          <Checkbox
+            id="create_account"
+            checked={formData.create_account || false}
+            onCheckedChange={(checked) => onSelectChange("create_account", checked as boolean)}
+            className="mt-1"
+          />
+          <div className="space-y-1">
+            <label
+              htmlFor="create_account"
+              className="text-sm font-medium leading-none cursor-pointer"
+            >
+              📧 Create an account to track your registrations
+            </label>
+            <p className="text-xs text-muted-foreground">
+              We'll send you a link to set your password and access your event dashboard
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-muted/50 rounded-lg p-4 text-center">

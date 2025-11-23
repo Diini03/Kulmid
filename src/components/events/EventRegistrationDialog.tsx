@@ -30,12 +30,14 @@ const EventRegistrationDialog = ({
     setLoading(true);
 
     try {
+      const email = formData.email.trim().toLowerCase();
+      
       // Check if user already registered
       const { data: existing } = await supabase
         .from("event_guests")
         .select("id, status")
         .eq("event_id", eventId)
-        .eq("email", formData.email.trim().toLowerCase())
+        .eq("email", email)
         .maybeSingle();
 
       if (existing) {
@@ -48,20 +50,52 @@ const EventRegistrationDialog = ({
         return;
       }
 
+      // Create account if requested
+      if (formData.create_account) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: email,
+          password: Math.random().toString(36).slice(-12) + "A1!", // Temporary password
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              full_name: formData.name.trim(),
+            },
+          },
+        });
+
+        if (authError) {
+          // If user already exists, that's okay - they can still register for the event
+          if (authError.message.includes("already registered")) {
+            console.log("User account already exists, proceeding with registration");
+          } else {
+            throw authError;
+          }
+        }
+      }
+
+      // Convert arrays to strings for database
+      const whatToGainStr = Array.isArray(formData.what_to_gain) 
+        ? formData.what_to_gain.join(", ") 
+        : formData.what_to_gain || null;
+      
+      const dietaryStr = Array.isArray(formData.dietary_restrictions)
+        ? formData.dietary_restrictions.join(", ")
+        : formData.dietary_restrictions || null;
+
       // Insert registration
       const { error } = await supabase.from("event_guests").insert({
         event_id: eventId,
         name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
+        email: email,
         phone_number: formData.phone_number.trim(),
         organization: formData.organization?.trim() || null,
         job_title: formData.job_title?.trim() || null,
         degree: formData.degree?.trim() || null,
         why_interested: formData.why_interested.trim(),
-        what_to_gain: formData.what_to_gain?.trim() || null,
+        what_to_gain: whatToGainStr,
         heard_from: formData.heard_from?.trim() || null,
         questions: formData.questions?.trim() || null,
-        dietary_restrictions: formData.dietary_restrictions?.trim() || null,
+        dietary_restrictions: dietaryStr,
         special_requirements: formData.special_requirements?.trim() || null,
         registration_type: "registration",
         status: autoApprove ? "registered" : "pending",
@@ -85,10 +119,11 @@ const EventRegistrationDialog = ({
       // Send confirmation email
       await supabase.functions.invoke("send-registration-confirmation", {
         body: {
-          email: formData.email,
+          email: email,
           name: formData.name,
           eventTitle,
           status: autoApprove ? "registered" : "pending",
+          accountCreated: formData.create_account,
         },
       });
 
@@ -100,11 +135,17 @@ const EventRegistrationDialog = ({
         },
       });
 
+      let description = autoApprove
+        ? "You're all set! Check your email for details."
+        : "Your registration is pending organizer approval. You'll receive an email once it's confirmed.";
+      
+      if (formData.create_account) {
+        description += " We've also sent you a link to set your password and access your dashboard.";
+      }
+
       toast({
         title: autoApprove ? "✅ Registration Confirmed!" : "⏳ Registration Received!",
-        description: autoApprove
-          ? "You're all set! Check your email for details."
-          : "Your registration is pending organizer approval. You'll receive an email once it's confirmed.",
+        description,
       });
 
       onOpenChange(false);
