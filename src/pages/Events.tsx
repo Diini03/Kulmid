@@ -43,21 +43,38 @@ const EventsPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     const fetchEvents = async () => {
-      await supabase.rpc('update_event_status');
-      
-      const { data } = await supabase
-        .from('events')
-        .select('*')
-        .in('status', ['approved', 'upcoming', 'ongoing']);
+      try {
+        // Only update status once when mounting, not on every render
+        // This RPC call is expensive and causes slowness
+        
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .in('status', ['approved', 'upcoming', 'ongoing'])
+          .order('date', { ascending: true }); // Pre-sort in DB for better performance
 
-      if (data) {
-        setAllEvents(data);
+        if (error) throw error;
+        
+        if (mounted && data) {
+          setAllEvents(data);
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     };
 
     fetchEvents();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const events = useMemo(() => {

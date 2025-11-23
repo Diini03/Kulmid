@@ -32,24 +32,40 @@ const HomePage = () => {
   const [preferenceMatchCount, setPreferenceMatchCount] = useState(0);
 
   useEffect(() => {
+    let mounted = true;
+    
     const fetchEvents = async () => {
-      if (!user) return;
+      if (!user) {
+        if (mounted) setLoading(false);
+        return;
+      }
       
-      const {
-        events: personalizedEvents,
-        hasPreferences: prefs,
-        isSupplemented: supplemented,
-        preferenceMatchCount: matchCount,
-      } = await getPersonalizedEvents(user.id);
-      
-      setEvents(personalizedEvents);
-      setHasPreferences(prefs);
-      setIsSupplemented(supplemented);
-      setPreferenceMatchCount(matchCount);
-      setLoading(false);
+      try {
+        const {
+          events: personalizedEvents,
+          hasPreferences: prefs,
+          isSupplemented: supplemented,
+          preferenceMatchCount: matchCount,
+        } = await getPersonalizedEvents(user.id);
+        
+        if (mounted) {
+          setEvents(personalizedEvents);
+          setHasPreferences(prefs);
+          setIsSupplemented(supplemented);
+          setPreferenceMatchCount(matchCount);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error fetching personalized events:', error);
+        if (mounted) setLoading(false);
+      }
     };
 
     fetchEvents();
+    
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
   if (authLoading) {
