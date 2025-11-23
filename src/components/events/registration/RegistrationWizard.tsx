@@ -46,6 +46,7 @@ export const RegistrationWizard = ({ onSubmit, loading, onCancel }: Registration
     questions: "",
     dietary_restrictions: "",
     special_requirements: "",
+    create_account: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -57,7 +58,7 @@ export const RegistrationWizard = ({ onSubmit, loading, onCancel }: Registration
     }
   };
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = (name: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));

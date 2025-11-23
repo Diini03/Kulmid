@@ -13,6 +13,7 @@ interface ConfirmationEmailRequest {
   name: string;
   eventTitle: string;
   status: "registered" | "pending";
+  accountCreated?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -21,9 +22,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, name, eventTitle, status }: ConfirmationEmailRequest = await req.json();
+    const { email, name, eventTitle, status, accountCreated }: ConfirmationEmailRequest = await req.json();
 
-    console.log("Sending registration confirmation to:", email, "Status:", status);
+    console.log("Sending registration confirmation to:", email, "Status:", status, "Account created:", accountCreated);
 
     const isApproved = status === "registered";
     const subject = isApproved 
@@ -37,6 +38,12 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Hi ${name},</p>
           <p>Great news! Your registration for <strong>${eventTitle}</strong> has been confirmed.</p>
           <p>You're all set to attend. We look forward to seeing you there!</p>
+          ${accountCreated ? `
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin-top: 20px;">
+              <p style="margin: 0; color: #4b5563;"><strong>📧 Account Created</strong></p>
+              <p style="margin: 5px 0 0 0; color: #6b7280;">We've created an account for you! Check your inbox for a link to set your password and access your event dashboard.</p>
+            </div>
+          ` : ''}
           <p style="margin-top: 30px;">Best regards,<br>EventEase Team</p>
         </div>
       `
@@ -46,6 +53,12 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Hi ${name},</p>
           <p>Thank you for registering for <strong>${eventTitle}</strong>.</p>
           <p>Your registration is currently pending approval by the event organizer. You'll receive another email once your registration is confirmed.</p>
+          ${accountCreated ? `
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin-top: 20px;">
+              <p style="margin: 0; color: #4b5563;"><strong>📧 Account Created</strong></p>
+              <p style="margin: 5px 0 0 0; color: #6b7280;">We've created an account for you! Check your inbox for a link to set your password and access your event dashboard.</p>
+            </div>
+          ` : ''}
           <p style="margin-top: 30px;">Best regards,<br>EventEase Team</p>
         </div>
       `;
