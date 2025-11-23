@@ -66,13 +66,16 @@ const handler = async (req: Request): Promise<Response> => {
     for (const email of emails) {
       try {
         // Add to guest list or update if exists
+        // Set status to "registered" immediately for invitations (auto-approved)
         const { data: guestData, error: guestError } = await supabase
           .from("event_guests")
           .upsert({
             event_id: eventId,
             email: email,
-            status: "invited",
+            name: email.split("@")[0], // Use email prefix as default name
+            status: "registered", // Invitations are auto-approved
             registration_type: "invitation",
+            rsvp_at: new Date().toISOString(),
           }, {
             onConflict: "event_id,email",
             ignoreDuplicates: false,
@@ -103,11 +106,11 @@ const handler = async (req: Request): Promise<Response> => {
           .update({ check_in_token: checkInToken })
           .eq("id", guestData.id);
 
-        // Send styled email with QR code
+        // Send styled email with "You're Confirmed" styling (same as approved registrations)
         const emailResponse = await resend.emails.send({
           from: "Kulmid Events <onboarding@resend.dev>",
           to: [email],
-          subject: customTitle || `You're invited to ${event.title}`,
+          subject: customTitle || `✅ You're confirmed for ${event.title}`,
           html: `
             <!DOCTYPE html>
             <html>
@@ -128,14 +131,14 @@ const handler = async (req: Request): Promise<Response> => {
                         </td>
                       </tr>
 
-                      <!-- Invitation Badge -->
+                      <!-- Success Badge -->
                       <tr>
                         <td style="padding: 40px 40px 20px; text-align: center;">
-                          <div style="display: inline-block; background-color: #dbeafe; color: #1e40af; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px;">
-                            📧 Invitation
+                          <div style="display: inline-block; background-color: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px;">
+                            ✓ Confirmed
                           </div>
                           <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #111827; line-height: 1.3;">
-                            You're Invited!
+                            You've got a spot!
                           </h1>
                           <p style="margin: 0; font-size: 18px; color: #6b7280;">
                             ${event.title}
@@ -147,10 +150,8 @@ const handler = async (req: Request): Promise<Response> => {
                       <!-- Custom Message -->
                       <tr>
                         <td style="padding: 0 40px 20px;">
-                          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 16px;">
-                            <p style="margin: 0; font-size: 14px; color: #92400e; line-height: 1.6;">
-                              ${customMessage}
-                            </p>
+                          <div style="background-color: #f0f9ff; border-left: 4px solid #0ea5e9; border-radius: 6px; padding: 20px;">
+                            <p style="margin: 0; font-size: 15px; color: #0c4a6e; line-height: 1.6; white-space: pre-wrap;">${customMessage}</p>
                           </div>
                         </td>
                       </tr>
@@ -174,11 +175,20 @@ const handler = async (req: Request): Promise<Response> => {
                               ${event.description ? `
                               <tr>
                                 <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                                  <span style="font-weight: 600;">📝 About:</span><br>
-                                  <span style="color: #6b7280; font-size: 14px;">${event.description}</span>
+                                  <span style="font-weight: 600;">📝 About:</span> ${event.description}
                                 </td>
                               </tr>
                               ` : ''}
+                              <tr>
+                                <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                                  <span style="font-weight: 600;">👤 Guest:</span> ${email.split("@")[0]}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                                  <span style="font-weight: 600;">🎟️ Ticket:</span> 1× Standard
+                                </td>
+                              </tr>
                             </table>
                           </div>
                         </td>
@@ -187,9 +197,9 @@ const handler = async (req: Request): Promise<Response> => {
                       <!-- QR Code -->
                       <tr>
                         <td style="padding: 0 40px 30px; text-align: center;">
-                          <p style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #111827;">Your Access Code</p>
+                          <p style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #111827;">Your Check-In Code</p>
                           <div style="background-color: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; display: inline-block;">
-                            <img src="${qrCodeDataUrl}" alt="Event QR Code" style="display: block; width: 250px; height: 250px;">
+                            <img src="${qrCodeDataUrl}" alt="Check-in QR Code" style="display: block; width: 250px; height: 250px;">
                           </div>
                           <p style="margin: 15px 0 0; font-size: 13px; color: #6b7280;">
                             Show this QR code at the event entrance
@@ -213,7 +223,7 @@ const handler = async (req: Request): Promise<Response> => {
                             Powered by <strong style="color: #06b6d4;">Kulmid</strong>
                           </p>
                           <p style="margin: 0; font-size: 12px; color: #9ca3af;">
-                            You're receiving this invitation from ${event.host_name || 'the event organizer'}.
+                            You received this invitation from ${event.host_name || 'the event organizer'}.
                           </p>
                         </td>
                       </tr>
