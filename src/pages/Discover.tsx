@@ -3,7 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/events/EventCard";
-import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -24,7 +24,7 @@ const Discover = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  
   const [hasPreferences, setHasPreferences] = useState(false);
   const [preferenceCount, setPreferenceCount] = useState(0);
   const {
@@ -99,18 +99,11 @@ const Discover = () => {
     checkPreferences();
   }, [user]);
   const handleViewAll = () => {
-    if (user) {
-      navigate("/events");
-    } else {
-      setAuthModalOpen(true);
-    }
+    navigate("/events");
   };
+  
   const handleCategoryClick = (categoryName: string) => {
-    if (user) {
-      navigate(`/events?category=${categoryName}`);
-    } else {
-      setAuthModalOpen(true);
-    }
+    navigate(`/events?category=${categoryName}`);
   };
   return <Layout>
       <Seo title="Discover Events" description="Explore popular events near you, browse by category, or check out some of the great community calendars" canonical="/discover" />
@@ -217,7 +210,7 @@ const Discover = () => {
         </div>
       </section>
 
-      <AuthRequiredModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} message="Sign in to view all events and save your favorites" />
+      
     </Layout>;
 };
 export default Discover;
