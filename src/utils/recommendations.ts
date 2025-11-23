@@ -60,6 +60,7 @@ async function fetchSupplementalEvents({
 /**
  * Fetch personalized events based on user preferences
  * Implements smart fallback to ensure minimum event threshold
+ * Optimized with better error handling and performance
  */
 export async function getPersonalizedEvents(
   userId: string
@@ -72,12 +73,17 @@ export async function getPersonalizedEvents(
   const { MINIMUM_EVENTS_THRESHOLD } = RECOMMENDATION_CONFIG;
 
   try {
-    // Fetch user preferences
-    const { data: prefs, error: prefsError } = await supabase
-      .from("user_preferences")
-      .select("event_categories, preferred_format, topics, allow_recommendations")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Fetch user preferences and update event statuses in parallel for better performance
+    const [prefsResult, _] = await Promise.all([
+      supabase
+        .from("user_preferences")
+        .select("event_categories, preferred_format, topics, allow_recommendations")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabase.rpc("update_event_status")
+    ]);
+
+    const { data: prefs, error: prefsError } = prefsResult;
 
     if (prefsError || !prefs || !prefs.allow_recommendations) {
       // No preferences or recommendations disabled - return all events
@@ -85,7 +91,8 @@ export async function getPersonalizedEvents(
         .from("events")
         .select("*")
         .in("status", ["approved", "upcoming", "ongoing"])
-        .order("date", { ascending: true });
+        .order("date", { ascending: true })
+        .limit(50); // Limit to 50 events for better performance
 
       return {
         events: allEvents || [],
@@ -94,9 +101,6 @@ export async function getPersonalizedEvents(
         preferenceMatchCount: 0,
       };
     }
-
-    // Update event statuses first
-    await supabase.rpc("update_event_status");
 
     // Fetch preference-matched events
     let query = supabase
@@ -109,10 +113,16 @@ export async function getPersonalizedEvents(
       query = query.in("category", prefs.event_categories);
     }
 
-    // Order by date
-    query = query.order("date", { ascending: true });
+    // Order by date and limit results
+    query = query.order("date", { ascending: true }).limit(50);
 
-    const { data: preferenceEvents } = await query;
+    const { data: preferenceEvents, error: eventsError } = await query;
+    
+    if (eventsError) {
+      console.error("Error fetching preference events:", eventsError);
+      throw eventsError;
+    }
+    
     const matchCount = preferenceEvents?.length || 0;
 
     // Check if we need to supplement with additional events
@@ -139,12 +149,30 @@ export async function getPersonalizedEvents(
     };
   } catch (error) {
     console.error("Error fetching personalized events:", error);
-    return {
-      events: [],
-      hasPreferences: false,
-      isSupplemented: false,
-      preferenceMatchCount: 0,
-    };
+    
+    // Fallback: return all events if personalization fails
+    try {
+      const { data: fallbackEvents } = await supabase
+        .from("events")
+        .select("*")
+        .in("status", ["approved", "upcoming", "ongoing"])
+        .order("date", { ascending: true })
+        .limit(50);
+        
+      return {
+        events: fallbackEvents || [],
+        hasPreferences: false,
+        isSupplemented: false,
+        preferenceMatchCount: 0,
+      };
+    } catch {
+      return {
+        events: [],
+        hasPreferences: false,
+        isSupplemented: false,
+        preferenceMatchCount: 0,
+      };
+    }
   }
 }
 

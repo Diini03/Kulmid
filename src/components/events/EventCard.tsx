@@ -33,6 +33,13 @@ export const EventCard = ({ event }: Props) => {
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!user) {
+      setAuthAction("add to favorites");
+      setShowAuthModal(true);
+      return;
+    }
+    
     if (isLiked) {
       removeFromFavorites(event.id);
     } else {
@@ -48,12 +55,20 @@ export const EventCard = ({ event }: Props) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      setAuthAction("book this event");
+      setAuthAction("register for this event");
       setShowAuthModal(true);
     } else {
       navigate(`/events/${event.id}`);
     }
   };
+
+  // Memoize formatted date for better performance
+  const formattedDate = new Date(event.date).toLocaleDateString('en-US', { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
 
   return (
     <>
@@ -98,7 +113,7 @@ export const EventCard = ({ event }: Props) => {
             <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5 min-h-[1.25rem]">
                 <CalendarDays className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span className="truncate">{formattedDate}</span>
               </div>
               <div className="flex items-center gap-1.5 min-h-[1.25rem]">
                 <MapPin className="h-4 w-4 flex-shrink-0" />

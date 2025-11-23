@@ -26,34 +26,54 @@ const EventDetails = () => {
   const [userRegistrationStatus, setUserRegistrationStatus] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+    
     const fetchEvent = async () => {
-      const { data } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      try {
+        // Fetch event data and user registration in parallel for better performance
+        const eventPromise = supabase
+          .from('events')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
 
-      if (data) {
-        setEvent(data);
-        
-        // Check if user already registered
-        if (user) {
-          const { data: registration } = await supabase
-            .from('event_guests')
-            .select('status')
-            .eq('event_id', id)
-            .eq('email', user.email)
-            .maybeSingle();
-          
-          if (registration) {
-            setUserRegistrationStatus(registration.status);
-          }
+        const registrationPromise = user
+          ? supabase
+              .from('event_guests')
+              .select('status')
+              .eq('event_id', id)
+              .eq('email', user.email)
+              .maybeSingle()
+          : Promise.resolve({ data: null });
+
+        const [eventResult, registrationResult] = await Promise.all([
+          eventPromise,
+          registrationPromise,
+        ]);
+
+        if (!mounted) return;
+
+        if (eventResult.data) {
+          setEvent(eventResult.data);
+        }
+
+        if (registrationResult.data) {
+          setUserRegistrationStatus(registrationResult.data.status);
+        }
+      } catch (error) {
+        console.error('Error fetching event:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
         }
       }
-      setLoading(false);
     };
 
     fetchEvent();
+    
+    return () => {
+      mounted = false;
+    };
   }, [id, user]);
 
   const handleRegisterClick = () => {
