@@ -116,14 +116,32 @@ const EventRegistrationDialog = ({
         throw error;
       }
 
-      // Send confirmation email
+      // Get event details for email
+      const { data: event } = await supabase
+        .from("events")
+        .select("date, location")
+        .eq("id", eventId)
+        .single();
+
+      // Get guest ID
+      const { data: guestData } = await supabase
+        .from("event_guests")
+        .select("id")
+        .eq("event_id", eventId)
+        .eq("email", email)
+        .single();
+
+      // Send confirmation email with QR code
       await supabase.functions.invoke("send-registration-confirmation", {
         body: {
           email: email,
           name: formData.name,
           eventTitle,
+          eventDate: event?.date ? new Date(event.date).toLocaleString() : "",
+          eventLocation: event?.location || "",
           status: autoApprove ? "registered" : "pending",
           accountCreated: formData.create_account,
+          guestId: guestData?.id,
         },
       });
 

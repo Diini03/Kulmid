@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { Resend } from "npm:resend@2.0.0";
+import QRCode from "npm:qrcode@1.5.3";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -17,6 +18,10 @@ interface ActionRequest {
   rejectionReason?: string;
 }
 
+const generateCheckInToken = (guestId: string, eventId: string): string => {
+  return `${guestId}-${eventId}-${crypto.randomUUID()}`;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -29,10 +34,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get guest details
+    // Get guest and event details
     const { data: guest, error: guestError } = await supabase
       .from("event_guests")
-      .select("*, events(title)")
+      .select("*, events!inner(id, title, date, location)")
       .eq("id", guestId)
       .single();
 
@@ -40,47 +45,226 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Guest not found");
     }
 
-    // Update status
-    const newStatus = action === "approve" ? "registered" : "rejected";
-    const { error: updateError } = await supabase
-      .from("event_guests")
-      .update({
-        status: newStatus,
-        rsvp_at: action === "approve" ? new Date().toISOString() : null,
-        notes: rejectionReason || null,
-      })
-      .eq("id", guestId);
+    let subject = "";
+    let htmlContent = "";
 
-    if (updateError) throw updateError;
+    if (action === "approve") {
+      // Generate check-in token and QR code
+      const checkInToken = generateCheckInToken(guestId, guest.events.id);
+      const checkInUrl = `${supabaseUrl}/functions/v1/verify-check-in?token=${checkInToken}`;
+      const qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
 
-    // Send email to guest
-    const subject = action === "approve"
-      ? `✅ Registration Approved - ${guest.events.title}`
-      : `Registration Update - ${guest.events.title}`;
+      // Update status with token
+      const { error: updateError } = await supabase
+        .from("event_guests")
+        .update({
+          status: "registered",
+          rsvp_at: new Date().toISOString(),
+          check_in_token: checkInToken,
+        })
+        .eq("id", guestId);
 
-    const htmlContent = action === "approve"
-      ? `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #10b981;">✅ Registration Approved!</h1>
-          <p>Hi ${guest.name},</p>
-          <p>Great news! Your registration for <strong>${guest.events.title}</strong> has been approved by the organizer.</p>
-          <p>We look forward to seeing you at the event!</p>
-          <p style="margin-top: 30px;">Best regards,<br>EventEase Team</p>
-        </div>
-      `
-      : `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #ef4444;">Registration Update</h1>
-          <p>Hi ${guest.name},</p>
-          <p>We regret to inform you that your registration for <strong>${guest.events.title}</strong> could not be approved at this time.</p>
-          ${rejectionReason ? `<p><strong>Reason:</strong> ${rejectionReason}</p>` : ""}
-          <p>If you have any questions, please contact the event organizer directly.</p>
-          <p style="margin-top: 30px;">Best regards,<br>EventEase Team</p>
-        </div>
+      if (updateError) throw updateError;
+
+      const eventDate = new Date(guest.events.date).toLocaleString();
+
+      subject = `✅ You're confirmed for ${guest.events.title}`;
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); padding: 30px 40px; text-align: center;">
+                      <img src="${supabaseUrl}/storage/v1/object/public/event-images/kulmid-logo-text.png" alt="Kulmid" style="height: 40px; margin-bottom: 10px;">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 40px 40px 20px; text-align: center;">
+                      <div style="display: inline-block; background-color: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px;">
+                        ✓ Confirmed
+                      </div>
+                      <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #111827; line-height: 1.3;">
+                        You've got a spot!
+                      </h1>
+                      <p style="margin: 0; font-size: 18px; color: #6b7280;">
+                        ${guest.events.title}
+                      </p>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 0 40px 30px;">
+                      <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                          <tr>
+                            <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                              <span style="font-weight: 600;">📅 Date:</span> ${eventDate}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                              <span style="font-weight: 600;">📍 Location:</span> ${guest.events.location}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                              <span style="font-weight: 600;">👤 Guest:</span> ${guest.name}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                              <span style="font-weight: 600;">🎟️ Ticket:</span> 1× Standard
+                            </td>
+                          </tr>
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 0 40px 30px; text-align: center;">
+                      <p style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #111827;">Your Check-In Code</p>
+                      <div style="background-color: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; display: inline-block;">
+                        <img src="${qrCodeDataUrl}" alt="Check-in QR Code" style="display: block; width: 250px; height: 250px;">
+                      </div>
+                      <p style="margin: 15px 0 0; font-size: 13px; color: #6b7280;">
+                        Show this QR code at the event entrance
+                      </p>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 0 40px 40px; text-align: center;">
+                      <a href="${supabaseUrl}" style="display: inline-block; background-color: #06b6d4; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 0 8px 12px;">
+                        View Event Details
+                      </a>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="background-color: #f9fafb; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                      <p style="margin: 0 0 10px; font-size: 13px; color: #6b7280;">
+                        Powered by <strong style="color: #06b6d4;">Kulmid</strong>
+                      </p>
+                      <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                        You're receiving this because you registered for this event.
+                      </p>
+                    </td>
+                  </tr>
+
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
+    } else {
+      // Rejection
+      const { error: updateError } = await supabase
+        .from("event_guests")
+        .update({
+          status: "rejected",
+          notes: rejectionReason || null,
+        })
+        .eq("id", guestId);
+
+      if (updateError) throw updateError;
+
+      const eventDate = new Date(guest.events.date).toLocaleString();
+
+      subject = `❌ Registration Not Approved - ${guest.events.title}`;
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 20px;">
+            <tr>
+              <td align="center">
+                <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); padding: 30px 40px; text-align: center;">
+                      <img src="${supabaseUrl}/storage/v1/object/public/event-images/kulmid-logo-text.png" alt="Kulmid" style="height: 40px;">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 40px 40px 20px; text-align: center;">
+                      <div style="display: inline-block; background-color: #fee2e2; color: #991b1b; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px;">
+                        ❌ Not Approved
+                      </div>
+                      <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #111827;">
+                        Registration Not Approved
+                      </h1>
+                      <p style="margin: 0; font-size: 18px; color: #6b7280;">
+                        ${guest.events.title}
+                      </p>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 0 40px 30px;">
+                      <p style="margin: 0 0 20px; font-size: 15px; color: #374151; line-height: 1.6;">
+                        Hi ${guest.name},
+                      </p>
+                      <p style="margin: 0 0 20px; font-size: 15px; color: #374151; line-height: 1.6;">
+                        Unfortunately, your registration for this event was not approved.
+                      </p>
+                      ${rejectionReason ? `
+                      <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 14px; color: #991b1b;">
+                          <strong>Reason:</strong><br>
+                          <span style="color: #dc2626;">${rejectionReason}</span>
+                        </p>
+                      </div>
+                      ` : ''}
+                      <p style="margin: 0; font-size: 15px; color: #374151; line-height: 1.6;">
+                        If you have any questions, please contact the event organizer.
+                      </p>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="background-color: #f9fafb; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                      <p style="margin: 0 0 10px; font-size: 13px; color: #6b7280;">
+                        Powered by <strong style="color: #06b6d4;">Kulmid</strong>
+                      </p>
+                    </td>
+                  </tr>
+
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+    }
 
     await resend.emails.send({
-      from: "EventEase <onboarding@resend.dev>",
+      from: "Kulmid Events <onboarding@resend.dev>",
       to: [guest.email],
       subject,
       html: htmlContent,
@@ -89,7 +273,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`${action} processed successfully for guest:`, guestId);
 
     return new Response(
-      JSON.stringify({ success: true, status: newStatus }),
+      JSON.stringify({ success: true, status: action === "approve" ? "registered" : "rejected" }),
       {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },

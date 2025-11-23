@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, UserPlus } from "lucide-react";
+import { Mail, UserPlus, QrCode } from "lucide-react";
 import InviteGuestsDialog from "./InviteGuestsDialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RegistrationsTab from "./RegistrationsTab";
+import { useNavigate } from "react-router-dom";
 
 interface EventBuilderGuestsProps {
   eventId: string;
@@ -16,6 +17,7 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
   const [guests, setGuests] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchGuests();
@@ -58,7 +60,26 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
   };
 
   return (
-    <Tabs defaultValue="invitations" className="space-y-6">
+    <div className="space-y-6">
+      {/* QR Scanner Button */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-lg mb-1">Event Check-In</h3>
+              <p className="text-sm text-muted-foreground">
+                Scan QR codes at the event entrance to check in attendees
+              </p>
+            </div>
+            <Button onClick={() => navigate(`/event/${eventId}/scanner`)} size="lg">
+              <QrCode className="h-5 w-5 mr-2" />
+              Open Scanner
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Tabs defaultValue="invitations" className="space-y-6">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="invitations">Invitations</TabsTrigger>
         <TabsTrigger value="registrations">Registrations</TabsTrigger>
@@ -156,7 +177,8 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
       <TabsContent value="registrations">
         <RegistrationsTab eventId={eventId} />
       </TabsContent>
-    </Tabs>
+      </Tabs>
+    </div>
   );
 };
 
