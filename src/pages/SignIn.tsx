@@ -98,7 +98,7 @@ const SignIn = () => {
     <AuthLayout>
       <Seo title="Sign In" canonical="/signin" />
       <div className="w-full rounded-xl border bg-card p-8 shadow-lg">
-          <h1 className="text-2xl font-bold mb-6">Welcome back</h1>
+        <h1 className="text-2xl font-bold mb-6">Welcome back</h1>
           <form onSubmit={signInForm.handleSubmit(onSignIn)} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email or Username</Label>
