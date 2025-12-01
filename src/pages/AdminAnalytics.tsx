@@ -9,6 +9,7 @@ import { PopularEventsTable } from "@/components/admin/analytics/PopularEventsTa
 import { TopCategoriesList } from "@/components/admin/analytics/TopCategoriesList";
 import { ActivityFeed } from "@/components/admin/analytics/ActivityFeed";
 import { EventStatusBreakdown } from "@/components/admin/analytics/EventStatusBreakdown";
+import { AttendanceInsights } from "@/components/admin/analytics/AttendanceInsights";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
@@ -68,6 +69,9 @@ const AdminAnalytics = () => {
 
         {/* Event Status Breakdown */}
         <EventStatusBreakdown key={`status-${refreshKey}`} />
+
+        {/* Attendance Insights */}
+        <AttendanceInsights key={`attendance-${refreshKey}`} />
 
         {/* Recent Activity Feed */}
         <ActivityFeed key={`activity-${refreshKey}`} />

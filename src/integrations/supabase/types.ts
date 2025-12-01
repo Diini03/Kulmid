@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_stats: {
+        Row: {
+          actual_rate: number | null
+          calculated_at: string | null
+          confidence: string | null
+          created_at: string | null
+          event_id: string
+          id: string
+          predicted_attendance: number | null
+          predicted_rate: number | null
+          total_checked_in: number
+          total_registrations: number
+        }
+        Insert: {
+          actual_rate?: number | null
+          calculated_at?: string | null
+          confidence?: string | null
+          created_at?: string | null
+          event_id: string
+          id?: string
+          predicted_attendance?: number | null
+          predicted_rate?: number | null
+          total_checked_in?: number
+          total_registrations: number
+        }
+        Update: {
+          actual_rate?: number | null
+          calculated_at?: string | null
+          confidence?: string | null
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          predicted_attendance?: number | null
+          predicted_rate?: number | null
+          total_checked_in?: number
+          total_registrations?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_stats_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_guests: {
         Row: {
           about: string | null
