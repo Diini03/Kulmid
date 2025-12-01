@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface EventBuilderSettingsProps {
@@ -48,6 +48,34 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
     }
   };
 
+  const handleResubmit = async () => {
+    try {
+      const { error } = await supabase
+        .from("events")
+        .update({ 
+          status: 'pending',
+          rejection_reason: null 
+        })
+        .eq("id", event.id)
+        .eq("created_by", user?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Resubmitted",
+        description: "Your event has been resubmitted for approval.",
+      });
+
+      navigate("/my-events");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -63,13 +91,37 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
             </p>
             <p className="text-sm text-muted-foreground">
               {event.status === "draft" && "Your event is in draft mode. Submit for review to publish it."}
-              {event.status === "pending" && "Your event is pending admin approval."}
+              {event.status === "pending" && "Your event is pending admin approval. You can still manage guests while waiting."}
               {event.status === "approved" && "Your event has been approved and is visible to the public."}
-              {event.status === "rejected" && `Your event was rejected. Reason: ${event.rejection_reason}`}
+              {event.status === "rejected" && "Your event was rejected. You can still manage it and resubmit for approval after addressing the feedback."}
             </p>
+            {event.status === "rejected" && event.rejection_reason && (
+              <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-sm font-medium text-destructive">Rejection Reason:</p>
+                <p className="text-sm text-destructive/80 mt-1">{event.rejection_reason}</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {event.status === "rejected" && (
+        <Card className="border-primary">
+          <CardHeader>
+            <CardTitle>Resubmit for Approval</CardTitle>
+            <CardDescription>Ready to submit your event again?</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              After addressing the rejection feedback, you can resubmit your event for admin review.
+            </p>
+            <Button onClick={handleResubmit}>
+              <Send className="h-4 w-4 mr-2" />
+              Resubmit for Approval
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-destructive">
         <CardHeader>
