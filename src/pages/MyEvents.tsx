@@ -94,6 +94,31 @@ const MyEvents = () => {
     setDeleteId(null);
   };
 
+  const handleResubmit = async (eventId: string) => {
+    const { error } = await supabase
+      .from('events')
+      .update({ 
+        status: 'pending',
+        rejection_reason: null 
+      })
+      .eq('id', eventId)
+      .eq('created_by', user?.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Resubmitted",
+        description: "Your event has been resubmitted for approval.",
+      });
+      fetchMyEvents();
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
       pending: { variant: "secondary", label: "Pending Review" },
@@ -297,22 +322,28 @@ const MyEvents = () => {
                       {event.status === "rejected" && (
                         <>
                           <Button 
-                            variant="outline" 
+                            variant="default" 
                             size="sm"
                             className="flex-1"
-                            onClick={() => setEditingEvent(event)}
+                            onClick={() => navigate(`/event/${event.id}/builder`)}
                           >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit & Resubmit
+                            <Users className="mr-2 h-4 w-4" />
+                            Manage Event & Guests
                           </Button>
                           <Button 
                             variant="outline" 
                             size="sm"
                             className="flex-1"
+                            onClick={() => handleResubmit(event.id)}
+                          >
+                            Resubmit for Approval
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
                             onClick={() => setDeleteId(event.id)}
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </>
                       )}
@@ -323,14 +354,6 @@ const MyEvents = () => {
                           onClick={() => navigate(`/event/${event.id}`)}
                         >
                           View Event
-                        </Button>
-                      )}
-                      {event.status === "rejected" && (
-                        <Button 
-                          className="w-full"
-                          onClick={() => navigate("/create")}
-                        >
-                          Create New Event
                         </Button>
                       )}
                     </CardFooter>
