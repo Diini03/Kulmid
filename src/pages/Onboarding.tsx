@@ -72,13 +72,13 @@ const Onboarding = () => {
     
     setLoading(true);
     try {
-      // Insert minimal preferences to mark onboarding as complete
-      const { error } = await supabase.from("user_preferences").insert({
+      // Upsert minimal preferences to mark onboarding as complete
+      const { error } = await supabase.from("user_preferences").upsert({
         user_id: user.id,
         event_categories: [],
         topics: [],
         allow_recommendations: false,
-      });
+      }, { onConflict: 'user_id' });
 
       if (error) throw error;
 
@@ -97,7 +97,7 @@ const Onboarding = () => {
     
     setLoading(true);
     try {
-      const { error } = await supabase.from("user_preferences").insert({
+      const { error } = await supabase.from("user_preferences").upsert({
         user_id: user.id,
         event_categories: preferences.event_categories || [],
         attendance_frequency: preferences.attendance_frequency,
@@ -107,7 +107,7 @@ const Onboarding = () => {
         age_range: preferences.age_range,
         source: preferences.source,
         allow_recommendations: preferences.allow_recommendations ?? true,
-      });
+      }, { onConflict: 'user_id' });
 
       if (error) throw error;
 
