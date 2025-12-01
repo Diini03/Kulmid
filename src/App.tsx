@@ -40,6 +40,7 @@ import EventBuilder from "./pages/EventBuilder";
 import EventScanner from "./pages/EventScanner";
 import SystemDocumentation from "./pages/SystemDocumentation";
 import Settings from "./pages/Settings";
+import Help from "./pages/Help";
 import { useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,7 @@ const App = () => (
                   <Route path="/achievements" element={<Achievements />} />
                   <Route path="/our-team" element={<OurTeam />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/help" element={<Help />} />
                   
                   {/* Protected Routes - Require authentication */}
                   <Route path="/home" element={<ProtectedRoute><UserOnlyRoute><HomePage /></UserOnlyRoute></ProtectedRoute>} />
