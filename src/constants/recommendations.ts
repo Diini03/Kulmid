@@ -3,3 +3,13 @@ export const RECOMMENDATION_CONFIG = {
   PREFER_DIFFERENT_CATEGORIES: true, // For supplemental events
   SHOW_PREFERENCE_BADGES: false, // Toggle for EventCard badges
 } as const;
+
+export const SCORING_WEIGHTS = {
+  CATEGORY_MATCH: 30,
+  TOPIC_MATCH: 20,
+  FORMAT_MATCH: 15,
+  FAVORITE_SIMILARITY: 25,
+  REGISTRATION_SIMILARITY: 20,
+  POPULARITY: 10,
+  RECENCY: 5,
+} as const;
