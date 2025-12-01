@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { categories } from "@/constants/categories";
-import { Save } from "lucide-react";
+import { Save, Sparkles } from "lucide-react";
+import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
 
 const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -40,6 +41,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(event.image_url || "");
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -140,9 +142,36 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor="description">Description</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setAiDialogOpen(true)}
+                className="h-8 gap-1"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span className="text-xs">Suggest with AI</span>
+              </Button>
+            </div>
             <Textarea id="description" {...register("description")} rows={5} />
           </div>
+
+          <AIDescriptionDialog
+            open={aiDialogOpen}
+            onOpenChange={setAiDialogOpen}
+            eventContext={{
+              title: watch("title") || event.title,
+              category: watch("category"),
+              date: watch("date"),
+              event_type: watch("event_type"),
+              location: watch("location"),
+            }}
+            onAccept={(description) => {
+              setValue("description", description);
+            }}
+          />
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
