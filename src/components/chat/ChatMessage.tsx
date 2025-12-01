@@ -1,0 +1,46 @@
+import { Bot, User } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface ChatMessageProps {
+  role: "user" | "assistant";
+  content: string;
+  isTyping?: boolean;
+}
+
+export const ChatMessage = ({ role, content, isTyping }: ChatMessageProps) => {
+  const isUser = role === "user";
+
+  return (
+    <div className={cn("flex gap-3 mb-4", isUser && "flex-row-reverse")}>
+      <div
+        className={cn(
+          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
+          isUser ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+        )}
+      >
+        {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+      </div>
+      
+      <div
+        className={cn(
+          "flex-1 px-4 py-3 rounded-2xl max-w-[80%]",
+          isUser 
+            ? "bg-primary text-primary-foreground ml-auto" 
+            : "bg-secondary text-secondary-foreground"
+        )}
+      >
+        {isTyping ? (
+          <div className="flex gap-1">
+            <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+            <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+            <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          </div>
+        ) : (
+          <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+            {content}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

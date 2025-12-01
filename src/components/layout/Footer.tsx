@@ -53,6 +53,12 @@ export const Footer = () => {
             >
               Contact
             </Link>
+            <Link 
+              to="/help" 
+              className="text-muted-foreground hover:text-foreground transition-all hover:scale-105"
+            >
+              Help
+            </Link>
           </nav>
 
           {/* Social Media Links */}

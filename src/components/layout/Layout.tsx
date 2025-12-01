@@ -3,6 +3,7 @@ import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { BackToTop } from "@/components/common/BackToTop";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -16,6 +17,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       <Footer />
       <BackToTop />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <ChatWidget />
     </div>
   );
 };
