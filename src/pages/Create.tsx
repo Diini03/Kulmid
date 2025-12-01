@@ -16,8 +16,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2 } from "lucide-react";
+import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
 
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title must be less than 100 characters"),
@@ -65,6 +66,7 @@ const Create = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -339,7 +341,19 @@ const Create = () => {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <div className="flex items-center justify-between mb-2">
+                          <FormLabel>Description</FormLabel>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setAiDialogOpen(true)}
+                            className="h-8 gap-1"
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span className="text-xs">Suggest with AI</span>
+                          </Button>
+                        </div>
                         <FormControl>
                           <Textarea
                             placeholder="Tell attendees what makes your event special..."
@@ -353,6 +367,21 @@ const Create = () => {
                         <FormMessage />
                       </FormItem>
                     )}
+                  />
+
+                  <AIDescriptionDialog
+                    open={aiDialogOpen}
+                    onOpenChange={setAiDialogOpen}
+                    eventContext={{
+                      title: form.watch("title") || "Your Event",
+                      category: form.watch("category"),
+                      date: form.watch("date"),
+                      event_type: form.watch("event_type"),
+                      location: form.watch("location"),
+                    }}
+                    onAccept={(description) => {
+                      form.setValue("description", description);
+                    }}
                   />
 
                   {/* Date & Time */}
