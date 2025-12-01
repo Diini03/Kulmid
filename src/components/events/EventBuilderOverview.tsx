@@ -2,6 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, MapPin, Users, Link as LinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { AttendancePrediction } from "./AttendancePrediction";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 interface EventBuilderOverviewProps {
   event: any;
@@ -9,10 +12,27 @@ interface EventBuilderOverviewProps {
 }
 
 const EventBuilderOverview = ({ event }: EventBuilderOverviewProps) => {
+  // Fetch registration count
+  const [registrationCount, setRegistrationCount] = useState(0);
+
+  useEffect(() => {
+    const fetchRegistrationCount = async () => {
+      const { count } = await supabase
+        .from('event_guests')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', event.id);
+      
+      setRegistrationCount(count || 0);
+    };
+
+    fetchRegistrationCount();
+  }, [event.id]);
+
   return (
     <div className="space-y-6">
-      {/* Event Preview Card */}
-      <Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Event Preview Card */}
+        <Card>
         <CardHeader>
           <CardTitle>Event Preview</CardTitle>
         </CardHeader>
@@ -86,6 +106,14 @@ const EventBuilderOverview = ({ event }: EventBuilderOverviewProps) => {
           </div>
         </CardContent>
       </Card>
+
+        {/* Attendance Prediction Card */}
+        <AttendancePrediction 
+          eventId={event.id}
+          registrationCount={registrationCount}
+          event={event}
+        />
+      </div>
     </div>
   );
 };
