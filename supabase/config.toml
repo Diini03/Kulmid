@@ -4,7 +4,7 @@ project_id = "txjglujklpxsfhedwwkl"
 verify_jwt = false
 
 [functions.send-registration-confirmation]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-registration-notification]
 verify_jwt = false
