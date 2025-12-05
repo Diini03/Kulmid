@@ -23,6 +23,17 @@ interface ConfirmationEmailRequest {
   guestId: string;
 }
 
+// HTML escape function to prevent injection
+const escapeHtml = (str: string | null | undefined): string => {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 const generateCheckInToken = (guestId: string, eventId: string): string => {
   return `${guestId}-${eventId}-${crypto.randomUUID()}`;
 };
@@ -33,9 +44,115 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, name, eventTitle, eventDate, eventLocation, status, accountCreated, guestId }: ConfirmationEmailRequest = await req.json();
+    // Authentication check - verify JWT token
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error("Missing or invalid authorization header");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - missing authentication" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error("Authentication failed:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - invalid token" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Authenticated user:", user.id);
+
+    // Parse and validate request body
+    const body = await req.json();
+    const { email, name, eventTitle, eventDate, eventLocation, status, accountCreated, guestId } = body as ConfirmationEmailRequest;
+
+    // Input validation
+    if (!email || !name || !eventTitle || !eventDate || !eventLocation || !status || !guestId) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email format" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate status
+    if (status !== "registered" && status !== "pending") {
+      return new Response(
+        JSON.stringify({ error: "Invalid status value" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Use service role for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get guest and verify authorization
+    const { data: guest, error: guestError } = await supabase
+      .from("event_guests")
+      .select("id, event_id, email")
+      .eq("id", guestId)
+      .single();
+
+    if (guestError || !guest) {
+      console.error("Guest not found:", guestError?.message);
+      return new Response(
+        JSON.stringify({ error: "Guest not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Get event and verify user is the event owner or admin
+    const { data: event, error: eventError } = await supabase
+      .from("events")
+      .select("id, created_by")
+      .eq("id", guest.event_id)
+      .single();
+
+    if (eventError || !event) {
+      console.error("Event not found:", eventError?.message);
+      return new Response(
+        JSON.stringify({ error: "Event not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Check if user is event owner or admin
+    const { data: isAdmin } = await supabase.rpc('has_role', { 
+      _user_id: user.id, 
+      _role: 'admin' 
+    });
+
+    const isEventOwner = event.created_by === user.id;
+
+    if (!isEventOwner && !isAdmin) {
+      console.error("User not authorized to send confirmation for this event");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - not event owner or admin" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     console.log("Sending registration confirmation to:", email, "Status:", status, "Guest ID:", guestId);
+
+    // Escape user-provided content for HTML
+    const safeName = escapeHtml(name);
+    const safeEventTitle = escapeHtml(eventTitle);
+    const safeEventDate = escapeHtml(eventDate);
+    const safeEventLocation = escapeHtml(eventLocation);
 
     const isApproved = status === "registered";
     
@@ -44,40 +161,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Generate QR code for approved registrations
     if (isApproved) {
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const checkInToken = generateCheckInToken(guestId, guest.event_id);
       
-      // Get event_id from guest
-      const { data: guest } = await supabase
+      // Store token in database
+      await supabase
         .from("event_guests")
-        .select("event_id")
-        .eq("id", guestId)
-        .single();
+        .update({ check_in_token: checkInToken })
+        .eq("id", guestId);
 
-      if (guest) {
-        const checkInToken = generateCheckInToken(guestId, guest.event_id);
-        
-        // Store token in database
-        await supabase
-          .from("event_guests")
-          .update({ check_in_token: checkInToken })
-          .eq("id", guestId);
-
-        // Generate QR code
-        checkInUrl = `https://txjglujklpxsfhedwwkl.supabase.co/functions/v1/verify-check-in?token=${checkInToken}`;
-        qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: "#000000",
-            light: "#FFFFFF",
-          },
-        });
-      }
+      // Generate QR code
+      checkInUrl = `https://txjglujklpxsfhedwwkl.supabase.co/functions/v1/verify-check-in?token=${checkInToken}`;
+      qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
     }
 
     const subject = isApproved 
-      ? `✅ You're confirmed for ${eventTitle}` 
-      : `⏳ Registration Received - ${eventTitle}`;
+      ? `✅ You're confirmed for ${safeEventTitle}` 
+      : `⏳ Registration Received - ${safeEventTitle}`;
 
     const htmlContent = isApproved
       ? `
@@ -110,7 +216,7 @@ const handler = async (req: Request): Promise<Response> => {
                         You've got a spot!
                       </h1>
                       <p style="margin: 0; font-size: 18px; color: #6b7280;">
-                        ${eventTitle}
+                        ${safeEventTitle}
                       </p>
                     </td>
                   </tr>
@@ -122,17 +228,17 @@ const handler = async (req: Request): Promise<Response> => {
                         <table cellpadding="0" cellspacing="0" border="0" width="100%">
                           <tr>
                             <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">📅 Date:</span> ${eventDate}
+                              <span style="font-weight: 600;">📅 Date:</span> ${safeEventDate}
                             </td>
                           </tr>
                           <tr>
                             <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">📍 Location:</span> ${eventLocation}
+                              <span style="font-weight: 600;">📍 Location:</span> ${safeEventLocation}
                             </td>
                           </tr>
                           <tr>
                             <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">👤 Guest:</span> ${name}
+                              <span style="font-weight: 600;">👤 Guest:</span> ${safeName}
                             </td>
                           </tr>
                           <tr>
@@ -230,7 +336,7 @@ const handler = async (req: Request): Promise<Response> => {
                         Registration Received
                       </h1>
                       <p style="margin: 0; font-size: 18px; color: #6b7280;">
-                        ${eventTitle}
+                        ${safeEventTitle}
                       </p>
                     </td>
                   </tr>
@@ -239,7 +345,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <tr>
                     <td style="padding: 0 40px 30px;">
                       <p style="margin: 0 0 20px; font-size: 15px; color: #374151; line-height: 1.6;">
-                        Hi ${name},
+                        Hi ${safeName},
                       </p>
                       <p style="margin: 0 0 20px; font-size: 15px; color: #374151; line-height: 1.6;">
                         Thank you for registering! Your registration is currently pending approval by the event organizer. You'll receive another email with your ticket and QR code once confirmed.
@@ -248,12 +354,12 @@ const handler = async (req: Request): Promise<Response> => {
                         <table cellpadding="0" cellspacing="0" border="0" width="100%">
                           <tr>
                             <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">📅 Date:</span> ${eventDate}
+                              <span style="font-weight: 600;">📅 Date:</span> ${safeEventDate}
                             </td>
                           </tr>
                           <tr>
                             <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">📍 Location:</span> ${eventLocation}
+                              <span style="font-weight: 600;">📍 Location:</span> ${safeEventLocation}
                             </td>
                           </tr>
                         </table>
