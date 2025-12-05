@@ -11,6 +11,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// HTML escape function to prevent XSS in emails
+const escapeHtml = (str: string | null | undefined): string => {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 interface NotificationRequest {
   eventId: string;
   guestData: {
@@ -33,13 +44,52 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create authenticated client to verify user
+    const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) {
+      console.error("Authentication failed:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const { eventId, guestData }: NotificationRequest = await req.json();
-    
-    console.log("Sending notification for event:", eventId);
+
+    // Input validation
+    if (!eventId || typeof eventId !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Invalid eventId" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!guestData || !guestData.name || !guestData.email) {
+      return new Response(
+        JSON.stringify({ error: "Invalid guest data" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Sending notification for event:", eventId, "by user:", user.id);
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get event details and organizer info
+    // Get event details and verify user is authorized
     const { data: event, error: eventError } = await supabase
       .from("events")
       .select("title, host_email, created_by")
@@ -47,7 +97,22 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (eventError || !event) {
-      throw new Error("Event not found");
+      console.error("Event not found:", eventError?.message);
+      return new Response(
+        JSON.stringify({ error: "Event not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Verify caller is the event owner or an admin
+    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+    
+    if (event.created_by !== user.id && !isAdmin) {
+      console.error("User not authorized to send notifications for this event");
+      return new Response(
+        JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // Get organizer email from profiles if host_email not set
@@ -67,34 +132,50 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!organizerEmail) {
       console.error("No organizer email found");
-      throw new Error("Organizer email not found");
+      return new Response(
+        JSON.stringify({ error: "Organizer email not found" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
+
+    // Escape all user-provided content
+    const safeName = escapeHtml(guestData.name);
+    const safeEmail = escapeHtml(guestData.email);
+    const safePhone = escapeHtml(guestData.phone_number);
+    const safeOrganization = escapeHtml(guestData.organization);
+    const safeJobTitle = escapeHtml(guestData.job_title);
+    const safeDegree = escapeHtml(guestData.degree);
+    const safeWhyInterested = escapeHtml(guestData.why_interested);
+    const safeWhatToGain = escapeHtml(guestData.what_to_gain);
+    const safeHeardFrom = escapeHtml(guestData.heard_from);
+    const safeQuestions = escapeHtml(guestData.questions);
+    const safeEventTitle = escapeHtml(event.title);
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #3b82f6;">📬 New Registration for ${event.title}</h1>
+        <h1 style="color: #3b82f6;">📬 New Registration for ${safeEventTitle}</h1>
         
         <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h2 style="margin-top: 0;">Attendee Information</h2>
-          <p><strong>Name:</strong> ${guestData.name}</p>
-          <p><strong>Email:</strong> ${guestData.email}</p>
-          <p><strong>Phone:</strong> ${guestData.phone_number}</p>
-          ${guestData.organization ? `<p><strong>Organization:</strong> ${guestData.organization}</p>` : ""}
-          ${guestData.job_title ? `<p><strong>Job Title:</strong> ${guestData.job_title}</p>` : ""}
-          ${guestData.degree ? `<p><strong>Education:</strong> ${guestData.degree}</p>` : ""}
+          <p><strong>Name:</strong> ${safeName}</p>
+          <p><strong>Email:</strong> ${safeEmail}</p>
+          <p><strong>Phone:</strong> ${safePhone}</p>
+          ${safeOrganization ? `<p><strong>Organization:</strong> ${safeOrganization}</p>` : ""}
+          ${safeJobTitle ? `<p><strong>Job Title:</strong> ${safeJobTitle}</p>` : ""}
+          ${safeDegree ? `<p><strong>Education:</strong> ${safeDegree}</p>` : ""}
         </div>
 
         <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="margin-top: 0;">Why They're Interested</h3>
-          <p>${guestData.why_interested}</p>
-          ${guestData.what_to_gain ? `
+          <p>${safeWhyInterested}</p>
+          ${safeWhatToGain ? `
             <h3>What They Hope to Gain</h3>
-            <p>${guestData.what_to_gain}</p>
+            <p>${safeWhatToGain}</p>
           ` : ""}
-          ${guestData.heard_from ? `<p><strong>Heard From:</strong> ${guestData.heard_from}</p>` : ""}
-          ${guestData.questions ? `
+          ${safeHeardFrom ? `<p><strong>Heard From:</strong> ${safeHeardFrom}</p>` : ""}
+          ${safeQuestions ? `
             <h3>Questions for You</h3>
-            <p>${guestData.questions}</p>
+            <p>${safeQuestions}</p>
           ` : ""}
         </div>
 
@@ -109,7 +190,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "EventEase <onboarding@resend.dev>",
       to: [organizerEmail],
-      subject: `📬 New Registration: ${guestData.name} for ${event.title}`,
+      subject: `📬 New Registration: ${safeName} for ${safeEventTitle}`,
       html: htmlContent,
     });
 
@@ -122,7 +203,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-registration-notification:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Internal server error" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
