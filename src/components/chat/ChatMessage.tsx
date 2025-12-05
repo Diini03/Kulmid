@@ -1,5 +1,6 @@
 import { Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -36,8 +37,8 @@ export const ChatMessage = ({ role, content, isTyping }: ChatMessageProps) => {
             <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
           </div>
         ) : (
-          <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-            {content}
+          <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:my-2">
+            <ReactMarkdown>{content}</ReactMarkdown>
           </div>
         )}
       </div>
