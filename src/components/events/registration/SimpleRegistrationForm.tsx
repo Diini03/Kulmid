@@ -89,107 +89,121 @@ export const SimpleRegistrationForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
-        <Label htmlFor="name">
-          Full Name <span className="text-destructive">*</span>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-1.5">
+        <Label htmlFor="name" className="text-sm font-medium text-foreground">
+          Name <span className="text-destructive">*</span>
         </Label>
         <Input
           id="name"
           name="name"
-          placeholder="Enter your full name"
+          placeholder="Your Name"
           value={formData.name}
           onChange={handleChange}
           disabled={loading}
+          className="h-12 bg-muted/50 border-0 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all duration-200"
         />
         {errors.name && (
           <p className="text-sm text-destructive">{errors.name}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email">
-          Email Address <span className="text-destructive">*</span>
+      <div className="space-y-1.5">
+        <Label htmlFor="email" className="text-sm font-medium text-foreground">
+          Email <span className="text-destructive">*</span>
         </Label>
         <Input
           id="email"
           name="email"
           type="email"
-          placeholder="Enter your email address"
+          placeholder="you@email.com"
           value={formData.email}
           onChange={handleChange}
           disabled={loading}
+          className="h-12 bg-muted/50 border-0 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all duration-200"
         />
         {errors.email && (
           <p className="text-sm text-destructive">{errors.email}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="phone_number">
+      <div className="space-y-1.5">
+        <Label htmlFor="phone_number" className="text-sm font-medium text-foreground">
           Phone Number <span className="text-destructive">*</span>
         </Label>
         <Input
           id="phone_number"
           name="phone_number"
           type="tel"
-          placeholder="Enter your phone number"
+          placeholder="+252 7 1123456"
           value={formData.phone_number}
           onChange={handleChange}
           disabled={loading}
+          className="h-12 bg-muted/50 border-0 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all duration-200"
         />
         {errors.phone_number && (
           <p className="text-sm text-destructive">{errors.phone_number}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="organization">Organization / University</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="organization" className="text-sm font-medium text-foreground">
+          Organization / University
+        </Label>
         <Input
           id="organization"
           name="organization"
-          placeholder="Enter your organization or university"
+          placeholder="Your organization or university"
           value={formData.organization}
           onChange={handleChange}
           disabled={loading}
+          className="h-12 bg-muted/50 border-0 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all duration-200"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="address">Address / Location</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="address" className="text-sm font-medium text-foreground">
+          Address
+        </Label>
         <Input
           id="address"
           name="address"
-          placeholder="Enter your address or location"
+          placeholder="Your address or location"
           value={formData.address}
           onChange={handleChange}
           disabled={loading}
+          className="h-12 bg-muted/50 border-0 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all duration-200"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="why_interested">
-          Why are you interested in this event?{" "}
-          <span className="text-destructive">*</span>
+      <div className="space-y-1.5">
+        <Label htmlFor="why_interested" className="text-sm font-medium text-foreground">
+          Why are you interested in this event? <span className="text-destructive">*</span>
         </Label>
         <Textarea
           id="why_interested"
           name="why_interested"
-          placeholder="Tell us why you want to attend this event"
+          placeholder="Tell us why you want to attend"
           value={formData.why_interested}
           onChange={handleChange}
           disabled={loading}
           rows={3}
+          className="bg-muted/50 border-0 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all duration-200 resize-none"
         />
         {errors.why_interested && (
           <p className="text-sm text-destructive">{errors.why_interested}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="heard_from">How did you hear about us?</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="heard_from" className="text-sm font-medium text-foreground">
+          How did you hear about us?
+        </Label>
         <Select value={formData.heard_from} onValueChange={handleSelectChange}>
-          <SelectTrigger disabled={loading}>
+          <SelectTrigger 
+            disabled={loading}
+            className="h-12 bg-muted/50 border-0 rounded-lg text-foreground focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+          >
             <SelectValue placeholder="Select an option" />
           </SelectTrigger>
           <SelectContent>
@@ -202,37 +216,44 @@ export const SimpleRegistrationForm = ({
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="questions">Additional comments or questions</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="questions" className="text-sm font-medium text-foreground">
+          Additional comments or questions
+        </Label>
         <Textarea
           id="questions"
           name="questions"
-          placeholder="Any additional comments or questions?"
+          placeholder="Any questions or comments?"
           value={formData.questions}
           onChange={handleChange}
           disabled={loading}
           rows={3}
+          className="bg-muted/50 border-0 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all duration-200 resize-none"
         />
       </div>
 
-      <div className="flex gap-3 pt-4 border-t">
+      <div className="flex gap-3 pt-4">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           disabled={loading}
-          className="flex-1"
+          className="flex-1 h-12 rounded-lg transition-all duration-200"
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={loading} className="flex-1">
+        <Button 
+          type="submit" 
+          disabled={loading} 
+          className="flex-1 h-12 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all duration-200"
+        >
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               Submitting...
             </>
           ) : (
-            "Submit"
+            "Request to Join"
           )}
         </Button>
       </div>
