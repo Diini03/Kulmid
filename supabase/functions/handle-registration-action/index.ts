@@ -5,7 +5,7 @@ import QRCode from "npm:qrcode@1.5.3";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +18,16 @@ interface ActionRequest {
   rejectionReason?: string;
 }
 
+const escapeHtml = (str: string | null | undefined): string => {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 const generateCheckInToken = (guestId: string, eventId: string): string => {
   return `${guestId}-${eventId}-${crypto.randomUUID()}`;
 };
@@ -28,25 +38,104 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // ============ AUTHENTICATION CHECK ============
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: No authorization header" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Create a client with the user's JWT to verify their identity
+    const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
+    
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error("Authentication failed:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Invalid token" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`Authenticated user: ${user.id}`);
+    // ============ END AUTHENTICATION CHECK ============
+
     const { guestId, action, rejectionReason }: ActionRequest = await req.json();
+    
+    // Input validation
+    if (!guestId || typeof guestId !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Invalid guestId" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
+    if (!action || !['approve', 'reject'].includes(action)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid action" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
     
     console.log(`Processing ${action} for guest:`, guestId);
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Use service role for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get guest and event details
     const { data: guest, error: guestError } = await supabase
       .from("event_guests")
-      .select("*, events!inner(id, title, date, location)")
+      .select("*, events!inner(id, title, date, location, created_by)")
       .eq("id", guestId)
       .single();
 
     if (guestError || !guest) {
-      throw new Error("Guest not found");
+      console.error("Guest not found:", guestError?.message);
+      return new Response(
+        JSON.stringify({ error: "Guest not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
+
+    // ============ AUTHORIZATION CHECK ============
+    // Verify the authenticated user owns this event OR is an admin
+    const { data: userRole } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .single();
+
+    const isAdmin = !!userRole;
+    const isEventOwner = guest.events.created_by === user.id;
+
+    if (!isAdmin && !isEventOwner) {
+      console.error(`User ${user.id} is not authorized to manage registrations for event ${guest.events.id}`);
+      return new Response(
+        JSON.stringify({ error: "Forbidden: You don't have permission to manage this event's registrations" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
+    console.log(`Authorization passed: isAdmin=${isAdmin}, isEventOwner=${isEventOwner}`);
+    // ============ END AUTHORIZATION CHECK ============
 
     let subject = "";
     let htmlContent = "";
+
+    // Escape user-provided content for HTML
+    const safeGuestName = escapeHtml(guest.name);
+    const safeEventTitle = escapeHtml(guest.events.title);
+    const safeEventLocation = escapeHtml(guest.events.location);
+    const safeRejectionReason = escapeHtml(rejectionReason);
 
     if (action === "approve") {
       // Generate check-in token and QR code
@@ -75,7 +164,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       const eventDate = new Date(guest.events.date).toLocaleString();
 
-      subject = `✅ You're confirmed for ${guest.events.title}`;
+      subject = `✅ You're confirmed for ${safeEventTitle}`;
       htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -104,7 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
                         You've got a spot!
                       </h1>
                       <p style="margin: 0; font-size: 18px; color: #6b7280;">
-                        ${guest.events.title}
+                        ${safeEventTitle}
                       </p>
                     </td>
                   </tr>
@@ -120,12 +209,12 @@ const handler = async (req: Request): Promise<Response> => {
                           </tr>
                           <tr>
                             <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">📍 Location:</span> ${guest.events.location}
+                              <span style="font-weight: 600;">📍 Location:</span> ${safeEventLocation}
                             </td>
                           </tr>
                           <tr>
                             <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">👤 Guest:</span> ${guest.name}
+                              <span style="font-weight: 600;">👤 Guest:</span> ${safeGuestName}
                             </td>
                           </tr>
                           <tr>
@@ -190,7 +279,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       const eventDate = new Date(guest.events.date).toLocaleString();
 
-      subject = `❌ Registration Not Approved - ${guest.events.title}`;
+      subject = `❌ Registration Not Approved - ${safeEventTitle}`;
       htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -219,7 +308,7 @@ const handler = async (req: Request): Promise<Response> => {
                         Registration Not Approved
                       </h1>
                       <p style="margin: 0; font-size: 18px; color: #6b7280;">
-                        ${guest.events.title}
+                        ${safeEventTitle}
                       </p>
                     </td>
                   </tr>
@@ -227,16 +316,16 @@ const handler = async (req: Request): Promise<Response> => {
                   <tr>
                     <td style="padding: 0 40px 30px;">
                       <p style="margin: 0 0 20px; font-size: 15px; color: #374151; line-height: 1.6;">
-                        Hi ${guest.name},
+                        Hi ${safeGuestName},
                       </p>
                       <p style="margin: 0 0 20px; font-size: 15px; color: #374151; line-height: 1.6;">
                         Unfortunately, your registration for this event was not approved.
                       </p>
-                      ${rejectionReason ? `
+                      ${safeRejectionReason ? `
                       <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
                         <p style="margin: 0; font-size: 14px; color: #991b1b;">
                           <strong>Reason:</strong><br>
-                          <span style="color: #dc2626;">${rejectionReason}</span>
+                          <span style="color: #dc2626;">${safeRejectionReason}</span>
                         </p>
                       </div>
                       ` : ''}

@@ -10,7 +10,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.handle-registration-action]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-description]
 verify_jwt = true
