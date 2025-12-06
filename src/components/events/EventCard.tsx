@@ -122,7 +122,9 @@ export const EventCard = ({ event }: Props) => {
             </div>
           </div>
           <div className="flex items-center justify-between pt-2 border-t">
-            <div className="text-lg font-bold">${event.price}</div>
+            <div className={`text-lg font-bold ${event.price === 0 ? 'text-green-600' : ''}`}>
+              {event.price === 0 ? 'FREE' : `$${event.price}`}
+            </div>
             <Button 
               size="sm" 
               onClick={handleBookClick}
