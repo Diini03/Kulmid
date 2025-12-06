@@ -196,6 +196,23 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Notification email sent:", emailResponse);
 
+    // Create in-app notification for the event owner
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: event.created_by,
+        type: "registration",
+        title: `${safeName} registered for your event`,
+        message: `New registration for "${event.title}"`,
+        event_id: eventId,
+        actor_name: guestData.name,
+        actor_email: guestData.email,
+      });
+
+    if (notificationError) {
+      console.error("Error creating notification:", notificationError);
+    }
+
     return new Response(JSON.stringify(emailResponse), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },

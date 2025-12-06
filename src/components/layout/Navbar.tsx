@@ -4,9 +4,12 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar, Moon, Sun, Menu, User, LogOut, Monitor, Check, Compass, Search, Bell, Plus, Sparkles, X, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationsContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import kulmidLogo from "@/assets/kulmid-logo.png";
 
 interface NavbarProps {
@@ -16,8 +19,10 @@ interface NavbarProps {
 export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
   const { user, profile, signOut, isAdmin } = useAuth();
+  const { unreadCount } = useNotifications();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
   
   const handleSignOut = async () => {
@@ -93,9 +98,21 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
 
           {/* Notifications - Authenticated Users (Not Admins) */}
           {user && !isAdmin && (
-            <Button variant="ghost" size="icon" aria-label="Notifications">
-              <Bell className="h-4 w-4" />
-            </Button>
+            <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
+                  <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[380px] p-0" align="end">
+                <NotificationsPanel onClose={() => setNotificationsOpen(false)} />
+              </PopoverContent>
+            </Popover>
           )}
 
           {/* Theme Toggle - Desktop */}

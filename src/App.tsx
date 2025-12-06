@@ -7,6 +7,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { lazy, Suspense } from "react";
 
 import Welcome from "./pages/Welcome";
@@ -71,11 +72,12 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <FavoritesProvider>
-            <ThemeProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
+          <NotificationsProvider>
+            <FavoritesProvider>
+              <ThemeProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
                 <Routes>
                   {/* Public Routes - Redirect to /home if logged in */}
                   <Route path="/" element={<PublicRoute><Welcome /></PublicRoute>} />
@@ -126,7 +128,8 @@ const App = () => (
               </TooltipProvider>
             </ThemeProvider>
           </FavoritesProvider>
-        </AuthProvider>
+        </NotificationsProvider>
+      </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </HelmetProvider>
