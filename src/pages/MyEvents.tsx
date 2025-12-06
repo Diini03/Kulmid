@@ -227,10 +227,10 @@ const MyEvents = () => {
                     )}
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
                           <CardTitle className="line-clamp-2">{event.title}</CardTitle>
                           {getPendingCountForEvent(event.id) > 0 && (
-                            <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] h-5 px-1.5 flex items-center gap-1">
+                            <Badge className="mt-2 bg-orange-500 hover:bg-orange-500 text-white text-[10px] h-5 px-1.5 inline-flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {getPendingCountForEvent(event.id)} pending
                             </Badge>
