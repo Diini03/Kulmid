@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mail, UserPlus, QrCode } from "lucide-react";
@@ -18,6 +19,8 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
   const [invitations, setInvitations] = useState<any[]>([]);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const navigate = useNavigate();
+  const { getPendingCountForEvent } = usePendingActions();
+  const pendingCount = getPendingCountForEvent(eventId);
 
   useEffect(() => {
     fetchGuests();
@@ -79,10 +82,17 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="invitations" className="space-y-6">
+      <Tabs defaultValue={pendingCount > 0 ? "registrations" : "invitations"} className="space-y-6">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="invitations">Invitations</TabsTrigger>
-        <TabsTrigger value="registrations">Registrations</TabsTrigger>
+        <TabsTrigger value="registrations" className="relative">
+          Registrations
+          {pendingCount > 0 && (
+            <Badge className="absolute -top-1 -right-1 bg-orange-500 hover:bg-orange-500 text-white text-[9px] h-4 min-w-4 px-1 flex items-center justify-center">
+              {pendingCount}
+            </Badge>
+          )}
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="invitations" className="space-y-6">

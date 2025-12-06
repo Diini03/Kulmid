@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
@@ -12,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EventForm } from "@/components/admin/EventForm";
-import { Calendar, MapPin, Globe, DollarSign, Pencil, Trash2, Plus, AlertCircle, Users } from "lucide-react";
+import { Calendar, MapPin, Globe, DollarSign, Pencil, Trash2, Plus, AlertCircle, Users, Clock } from "lucide-react";
 import { format } from "date-fns";
 
 type EventItem = {
@@ -33,6 +34,7 @@ type EventItem = {
 
 const MyEvents = () => {
   const { user, loading: authLoading } = useAuth();
+  const { getPendingCountForEvent } = usePendingActions();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -225,7 +227,15 @@ const MyEvents = () => {
                     )}
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="line-clamp-2">{event.title}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="line-clamp-2">{event.title}</CardTitle>
+                          {getPendingCountForEvent(event.id) > 0 && (
+                            <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] h-5 px-1.5 flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {getPendingCountForEvent(event.id)} pending
+                            </Badge>
+                          )}
+                        </div>
                         {getStatusBadge(event.status)}
                       </div>
                       <CardDescription className="line-clamp-2">

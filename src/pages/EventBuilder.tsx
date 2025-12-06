@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Save, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import EventBuilderOverview from "@/components/events/EventBuilderOverview";
@@ -16,6 +18,7 @@ const EventBuilder = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { getPendingCountForEvent } = usePendingActions();
   const { toast } = useToast();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -146,7 +149,14 @@ const EventBuilder = () => {
             <TabsList className="grid w-full max-w-md grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="edit">Edit</TabsTrigger>
-              <TabsTrigger value="guests">Guests</TabsTrigger>
+              <TabsTrigger value="guests" className="relative">
+                Guests
+                {id && getPendingCountForEvent(id) > 0 && (
+                  <Badge className="absolute -top-1 -right-1 bg-orange-500 hover:bg-orange-500 text-white text-[9px] h-4 min-w-4 px-1 flex items-center justify-center">
+                    {getPendingCountForEvent(id)}
+                  </Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 

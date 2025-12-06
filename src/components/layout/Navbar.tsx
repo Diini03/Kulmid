@@ -8,8 +8,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar, Moon, Sun, Menu, User, LogOut, Monitor, Check, Compass, Search, Bell, Plus, Sparkles, X, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
+import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
+import { Badge } from "@/components/ui/badge";
 import kulmidLogo from "@/assets/kulmid-logo.png";
 
 interface NavbarProps {
@@ -20,6 +22,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
   const { user, profile, signOut, isAdmin } = useAuth();
   const { unreadCount } = useNotifications();
+  const { totalPendingCount } = usePendingActions();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -151,12 +154,17 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 p-0">
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 p-0 relative">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs">
                       {profile?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
+                  {totalPendingCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-orange-500 text-white text-[10px] font-medium flex items-center justify-center">
+                      {totalPendingCount > 9 ? "9+" : totalPendingCount}
+                    </span>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -172,9 +180,16 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/my-events" className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    My Events
+                  <Link to="/my-events" className="flex items-center gap-2 justify-between w-full">
+                    <span className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      My Events
+                    </span>
+                    {totalPendingCount > 0 && (
+                      <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] h-5 px-1.5">
+                        {totalPendingCount} pending
+                      </Badge>
+                    )}
                   </Link>
                 </DropdownMenuItem>
                 {isAdmin && (
@@ -279,15 +294,22 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                           to="/my-events" 
                           onClick={() => setMobileMenuOpen(false)}
                           className={({ isActive }) => 
-                            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                            `flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
                               isActive 
                                 ? "bg-primary text-primary-foreground" 
                                 : "hover:bg-accent"
                             }`
                           }
                         >
-                          <Calendar className="h-5 w-5" />
-                          <span className="font-medium">My Events</span>
+                          <span className="flex items-center gap-3">
+                            <Calendar className="h-5 w-5" />
+                            <span className="font-medium">My Events</span>
+                          </span>
+                          {totalPendingCount > 0 && (
+                            <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] h-5 px-1.5">
+                              {totalPendingCount}
+                            </Badge>
+                          )}
                         </NavLink>
                         <NavLink 
                           to="/dashboard" 
