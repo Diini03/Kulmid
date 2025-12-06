@@ -122,9 +122,13 @@ export const EventCard = ({ event }: Props) => {
             </div>
           </div>
           <div className="flex items-center justify-between pt-2 border-t">
-            <div className={`text-lg font-bold ${event.price === 0 ? 'text-primary' : ''}`}>
-              {event.price === 0 ? 'FREE' : `$${event.price}`}
-            </div>
+            {event.price === 0 ? (
+              <span className="text-sm font-medium tracking-wide text-primary/90 bg-primary/10 px-2 py-0.5 rounded">
+                Free
+              </span>
+            ) : (
+              <div className="text-lg font-bold">${event.price}</div>
+            )}
             <Button 
               size="sm" 
               onClick={handleBookClick}
