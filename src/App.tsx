@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { PendingActionsProvider } from "@/contexts/PendingActionsContext";
 import { lazy, Suspense } from "react";
 
 import Welcome from "./pages/Welcome";
@@ -73,8 +74,9 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <NotificationsProvider>
-            <FavoritesProvider>
-              <ThemeProvider>
+            <PendingActionsProvider>
+              <FavoritesProvider>
+                <ThemeProvider>
                 <TooltipProvider>
                   <Toaster />
                   <Sonner />
@@ -125,9 +127,10 @@ const App = () => (
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </TooltipProvider>
-            </ThemeProvider>
-          </FavoritesProvider>
+                </TooltipProvider>
+              </ThemeProvider>
+            </FavoritesProvider>
+          </PendingActionsProvider>
         </NotificationsProvider>
       </AuthProvider>
       </BrowserRouter>
