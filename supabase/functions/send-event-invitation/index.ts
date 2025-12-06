@@ -249,6 +249,28 @@ const handler = async (req: Request): Promise<Response> => {
           status: "sent",
         });
 
+        // Create in-app notification for the invited user if they have an account
+        // Look up user by email
+        const { data: invitedUser } = await supabase.auth.admin.getUserByEmail(email);
+        
+        if (invitedUser?.user) {
+          const { error: notificationError } = await supabase
+            .from("notifications")
+            .insert({
+              user_id: invitedUser.user.id,
+              type: "invitation",
+              title: `You're invited to ${event.title}`,
+              message: `${event.host_name || "An organizer"} invited you to their event`,
+              event_id: eventId,
+              actor_name: event.host_name || null,
+              actor_email: event.host_email || null,
+            });
+
+          if (notificationError) {
+            console.error("Error creating notification for invited user:", notificationError);
+          }
+        }
+
         results.push({ email, success: true });
       } catch (error: any) {
         console.error(`Error sending to ${email}:`, error);
