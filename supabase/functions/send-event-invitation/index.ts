@@ -19,6 +19,18 @@ interface InvitationRequest {
   customMessage?: string;
 }
 
+// HTML escape function to prevent HTML injection in email templates
+const escapeHtml = (text: string): string => {
+  const htmlEntities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
+};
+
 const generateCheckInToken = (guestId: string, eventId: string): string => {
   return `${guestId}-${eventId}-${crypto.randomUUID()}`;
 };
@@ -61,6 +73,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const eventDate = new Date(event.date).toLocaleString();
+    // Escape user-provided and database content to prevent HTML injection
+    const safeCustomMessage = customMessage ? escapeHtml(customMessage) : null;
+    const safeDescription = event.description ? escapeHtml(event.description) : null;
+    const safeTitle = escapeHtml(event.title);
+    const safeLocation = escapeHtml(event.location);
+    const safeHostName = event.host_name ? escapeHtml(event.host_name) : null;
+    
     const results = [];
     
     for (const email of emails) {
@@ -106,11 +125,13 @@ const handler = async (req: Request): Promise<Response> => {
           .update({ check_in_token: checkInToken })
           .eq("id", guestData.id);
 
+        const safeGuestName = escapeHtml(email.split("@")[0]);
+
         // Send styled email with "You're Confirmed" styling (same as approved registrations)
         const emailResponse = await resend.emails.send({
           from: "Kulmid Events <onboarding@resend.dev>",
           to: [email],
-          subject: customTitle || `✅ You're confirmed for ${event.title}`,
+          subject: customTitle || `✅ You're confirmed for ${safeTitle}`,
           html: `
             <!DOCTYPE html>
             <html>
@@ -141,17 +162,17 @@ const handler = async (req: Request): Promise<Response> => {
                             You've got a spot!
                           </h1>
                           <p style="margin: 0; font-size: 18px; color: #6b7280;">
-                            ${event.title}
+                            ${safeTitle}
                           </p>
                         </td>
                       </tr>
 
-                      ${customMessage ? `
+                      ${safeCustomMessage ? `
                       <!-- Custom Message -->
                       <tr>
                         <td style="padding: 0 40px 20px;">
                           <div style="background-color: #f0f9ff; border-left: 4px solid #0ea5e9; border-radius: 6px; padding: 20px;">
-                            <p style="margin: 0; font-size: 15px; color: #0c4a6e; line-height: 1.6; white-space: pre-wrap;">${customMessage}</p>
+                            <p style="margin: 0; font-size: 15px; color: #0c4a6e; line-height: 1.6; white-space: pre-wrap;">${safeCustomMessage}</p>
                           </div>
                         </td>
                       </tr>
@@ -169,19 +190,19 @@ const handler = async (req: Request): Promise<Response> => {
                               </tr>
                               <tr>
                                 <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                                  <span style="font-weight: 600;">📍 Location:</span> ${event.location}
+                                  <span style="font-weight: 600;">📍 Location:</span> ${safeLocation}
                                 </td>
                               </tr>
-                              ${event.description ? `
+                              ${safeDescription ? `
                               <tr>
                                 <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                                  <span style="font-weight: 600;">📝 About:</span> ${event.description}
+                                  <span style="font-weight: 600;">📝 About:</span> ${safeDescription}
                                 </td>
                               </tr>
                               ` : ''}
                               <tr>
                                 <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                                  <span style="font-weight: 600;">👤 Guest:</span> ${email.split("@")[0]}
+                                  <span style="font-weight: 600;">👤 Guest:</span> ${safeGuestName}
                                 </td>
                               </tr>
                               <tr>
@@ -223,7 +244,7 @@ const handler = async (req: Request): Promise<Response> => {
                             Powered by <strong style="color: #06b6d4;">Kulmid</strong>
                           </p>
                           <p style="margin: 0; font-size: 12px; color: #9ca3af;">
-                            You received this invitation from ${event.host_name || 'the event organizer'}.
+                            You received this invitation from ${safeHostName || 'the event organizer'}.
                           </p>
                         </td>
                       </tr>
@@ -259,8 +280,8 @@ const handler = async (req: Request): Promise<Response> => {
             .insert({
               user_id: invitedUser.user.id,
               type: "invitation",
-              title: `You're invited to ${event.title}`,
-              message: `${event.host_name || "An organizer"} invited you to their event`,
+              title: `You're invited to ${safeTitle}`,
+              message: `${safeHostName || "An organizer"} invited you to their event`,
               event_id: eventId,
               actor_name: event.host_name || null,
               actor_email: event.host_email || null,

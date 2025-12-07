@@ -27,10 +27,28 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Authenticate user
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const { eventId } = await req.json();
 
@@ -38,14 +56,36 @@ Deno.serve(async (req) => {
       throw new Error('Event ID is required');
     }
 
-    // Fetch event details
+    // Fetch event details - only if user is the event owner or admin
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('*')
+      .select('id, title, price, event_type, date, category, max_attendees, created_by')
       .eq('id', eventId)
       .single();
 
     if (eventError) throw eventError;
+
+    // Check authorization: user must be event owner or admin
+    const isOwner = event.created_by === user.id;
+    
+    // Check if user is admin
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+    
+    const isAdmin = !!roleData;
+
+    if (!isOwner && !isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Not authorized to view predictions for this event' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Generating prediction for event ${eventId} by user ${user.id}`);
 
     // Get registration count
     const { count: registrationCount, error: countError } = await supabase
