@@ -91,6 +91,8 @@ const EventView = () => {
 
   const eventTypeDisplay = getEventTypeDisplay();
 
+  const isPendingOrDraft = ['pending', 'draft'].includes(event.status);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <Seo 
@@ -116,6 +118,25 @@ const EventView = () => {
 
       {/* Main Content Container */}
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        {/* Pending/Draft Banner */}
+        {isPendingOrDraft && (
+          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+            <div className="flex items-start gap-3">
+              <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-amber-600 dark:text-amber-400">⏳</span>
+              </div>
+              <div>
+                <p className="font-medium text-amber-700 dark:text-amber-300">
+                  {event.status === 'pending' ? 'Pending Approval' : 'Draft Event'}
+                </p>
+                <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-1">
+                  This event is awaiting admin approval. Registration will open once approved.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="grid lg:grid-cols-[380px_1fr] gap-8 lg:gap-12">
           
           {/* LEFT SIDEBAR - Sticky */}
@@ -197,15 +218,26 @@ const EventView = () => {
             </Card>
 
             {/* CTA Button */}
-            <Button 
-              asChild 
-              size="lg" 
-              className="w-full text-lg py-6 shadow-lg hover:shadow-xl transition-all hover-lift"
-            >
-              <a href={`${window.location.origin}/events/${event.id}`}>
-                Register on Kulmid
-              </a>
-            </Button>
+            {isPendingOrDraft ? (
+              <Button 
+                disabled
+                size="lg" 
+                className="w-full text-lg py-6"
+                variant="secondary"
+              >
+                Registration Opens After Approval
+              </Button>
+            ) : (
+              <Button 
+                asChild 
+                size="lg" 
+                className="w-full text-lg py-6 shadow-lg hover:shadow-xl transition-all hover-lift"
+              >
+                <a href={`${window.location.origin}/events/${event.id}`}>
+                  Register on Kulmid
+                </a>
+              </Button>
+            )}
 
             {/* Share Section with Link */}
             <Card className="border-2 shadow-md">
