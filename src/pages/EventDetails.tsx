@@ -173,6 +173,10 @@ const EventDetails = () => {
 
   const eventTypeDisplay = getEventTypeDisplay();
 
+  const isCreator = user?.id === event.created_by;
+  const isPendingOrDraft = ['pending', 'draft'].includes(event.status);
+  const canRegister = !isPendingOrDraft || isCreator;
+
   return (
     <Layout>
       <Seo 
@@ -184,6 +188,43 @@ const EventDetails = () => {
       {/* Main Content Container with gradient background */}
       <div className="bg-gradient-to-b from-background to-muted/20 py-8 md:py-12">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* Pending/Draft Banner for Creator */}
+          {isPendingOrDraft && isCreator && (
+            <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-amber-600 dark:text-amber-400">⏳</span>
+                </div>
+                <div>
+                  <p className="font-medium text-amber-700 dark:text-amber-300">
+                    {event.status === 'pending' ? 'Pending Approval' : 'Draft Event'}
+                  </p>
+                  <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-1">
+                    This event is only visible to you until it's approved by an admin. 
+                    You can still share this link with others to preview.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Not Creator viewing pending event */}
+          {isPendingOrDraft && !isCreator && (
+            <div className="mb-6 p-4 bg-muted border border-border rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="h-6 w-6 rounded-full bg-muted-foreground/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span>👀</span>
+                </div>
+                <div>
+                  <p className="font-medium">Preview Mode</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    This event is pending approval. Registration will open once it's approved.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="grid lg:grid-cols-[380px_1fr] gap-8 lg:gap-12">
             
             {/* LEFT SIDEBAR - Sticky */}
@@ -265,7 +306,16 @@ const EventDetails = () => {
               </Card>
 
               {/* CTA Button */}
-              {userRegistrationStatus ? (
+              {!canRegister ? (
+                <Button 
+                  disabled
+                  size="lg" 
+                  className="w-full text-lg py-6"
+                  variant="secondary"
+                >
+                  Registration Opens After Approval
+                </Button>
+              ) : userRegistrationStatus ? (
                 <div className="space-y-2">
                   <Badge 
                     className="w-full justify-center py-3 text-base"

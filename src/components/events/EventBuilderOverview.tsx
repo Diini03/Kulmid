@@ -1,11 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, MapPin, Users, Link as LinkIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, MapPin, Users, Link as LinkIcon, ExternalLink, Copy, Check } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { AttendancePrediction } from "./AttendancePrediction";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
-
+import { Link } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 interface EventBuilderOverviewProps {
   event: any;
   onRefresh: () => void;
@@ -14,6 +16,10 @@ interface EventBuilderOverviewProps {
 const EventBuilderOverview = ({ event }: EventBuilderOverviewProps) => {
   // Fetch registration count
   const [registrationCount, setRegistrationCount] = useState(0);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const shareUrl = `${window.location.origin}/events/${event.id}`;
+  const shortUrl = `${window.location.origin}/e/${event.id}`;
 
   useEffect(() => {
     const fetchRegistrationCount = async () => {
@@ -28,8 +34,56 @@ const EventBuilderOverview = ({ event }: EventBuilderOverviewProps) => {
     fetchRegistrationCount();
   }, [event.id]);
 
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shortUrl);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+    toast({
+      title: "Link copied!",
+      description: "Event link has been copied to clipboard",
+    });
+  };
+
   return (
     <div className="space-y-6">
+      {/* Quick Actions Card */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-semibold">View & Share Your Event</h3>
+              <p className="text-sm text-muted-foreground">
+                Preview your event page and share the link with others
+              </p>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button asChild variant="default" className="flex-1 sm:flex-none">
+                <Link to={`/events/${event.id}`}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Event Page
+                </Link>
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleCopyLink}
+                className="flex-1 sm:flex-none"
+              >
+                {linkCopied ? (
+                  <Check className="h-4 w-4 mr-2 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4 mr-2" />
+                )}
+                {linkCopied ? "Copied!" : "Copy Link"}
+              </Button>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Share URL:</span>
+            <code className="px-2 py-1 bg-muted rounded">{shortUrl}</code>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Event Preview Card */}
         <Card>

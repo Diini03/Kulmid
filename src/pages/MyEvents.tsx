@@ -13,8 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EventForm } from "@/components/admin/EventForm";
-import { Calendar, MapPin, Globe, DollarSign, Pencil, Trash2, Plus, AlertCircle, Users, Clock } from "lucide-react";
+import { Calendar, MapPin, Globe, DollarSign, Pencil, Trash2, Plus, AlertCircle, Users, Clock, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import { Link } from "react-router-dom";
 
 type EventItem = {
   id: string;
@@ -319,6 +320,15 @@ const MyEvents = () => {
                           >
                             <Users className="mr-2 h-4 w-4" />
                             Manage Event & Guests
+                          </Button>
+                          <Button 
+                            asChild
+                            variant="outline" 
+                            size="sm"
+                          >
+                            <Link to={`/events/${event.id}`}>
+                              <ExternalLink className="h-4 w-4" />
+                            </Link>
                           </Button>
                           <Button 
                             variant="outline" 
