@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import kulmidLogo from "@/assets/kulmid-logo-text.png";
-import kulmidLogoIcon from "@/assets/kulmid-logo.png";
 
 export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   const { theme, setTheme } = useTheme();
@@ -24,92 +23,17 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left Panel - Branding (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/80">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          {/* Floating circles */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
-          <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-white/10 rounded-full blur-2xl animate-float" style={{ animationDelay: "4s" }} />
-          
-          {/* Grid pattern overlay */}
-          <div 
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
-              backgroundSize: '50px 50px'
-            }}
-          />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
-          {/* Logo */}
-          <div>
-            <Link to="/" className="inline-block">
-              <img src={kulmidLogoIcon} alt="Kulmid" className="h-12 brightness-0 invert" />
-            </Link>
-          </div>
-
-          {/* Main Content */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h1 className="text-4xl xl:text-5xl font-bold leading-tight">
-                Discover, Create &<br />Manage Events
-              </h1>
-              <p className="text-lg xl:text-xl text-white/80 max-w-md">
-                Join thousands of event organizers and attendees on the platform that makes event management effortless.
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div className="flex gap-12">
-              <div>
-                <div className="text-3xl xl:text-4xl font-bold">10K+</div>
-                <div className="text-sm text-white/70">Active Events</div>
-              </div>
-              <div>
-                <div className="text-3xl xl:text-4xl font-bold">50K+</div>
-                <div className="text-sm text-white/70">Happy Users</div>
-              </div>
-              <div>
-                <div className="text-3xl xl:text-4xl font-bold">99%</div>
-                <div className="text-sm text-white/70">Satisfaction</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Quote */}
-          <div className="space-y-4">
-            <blockquote className="text-lg italic text-white/80">
-              "Kulmid transformed how we manage our community events. Absolutely seamless!"
-            </blockquote>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-sm font-semibold">
-                JD
-              </div>
-              <div>
-                <div className="font-medium">Jane Doe</div>
-                <div className="text-sm text-white/70">Event Organizer</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Panel - Form */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      {/* Left Panel - Form */}
+      <div className="flex-1 flex flex-col min-h-screen lg:w-1/2">
         {/* Header */}
-        <header className="flex items-center justify-between p-4 lg:p-6">
-          <Link to="/" className="lg:hidden">
+        <header className="flex items-center justify-between p-6 lg:px-12">
+          <Link to="/">
             <img src={kulmidLogo} alt="Kulmid" className="h-8" />
           </Link>
-          <div className="lg:hidden" /> {/* Spacer for mobile */}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="ml-auto">
+              <Button variant="ghost" size="icon">
                 {getThemeIcon()}
               </Button>
             </DropdownMenuTrigger>
@@ -127,17 +51,71 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
           </DropdownMenu>
         </header>
 
-        {/* Form Content */}
-        <main className="flex-1 flex items-center justify-center p-4 lg:p-8">
-          <div className="w-full max-w-md">
+        {/* Form Content - Centered with fixed smaller width */}
+        <main className="flex-1 flex items-center justify-center px-6 lg:px-12">
+          <div className="w-full max-w-[380px]">
             {children}
           </div>
         </main>
 
         {/* Footer */}
-        <footer className="p-4 lg:p-6 text-center text-sm text-muted-foreground">
+        <footer className="p-6 lg:px-12 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Kulmid. All rights reserved.
         </footer>
+      </div>
+
+      {/* Right Panel - Mesh Gradient (hidden on mobile) */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        {/* Soft Mesh Gradient Background */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(at 40% 20%, rgba(249, 168, 212, 0.7) 0px, transparent 50%),
+              radial-gradient(at 80% 0%, rgba(196, 181, 253, 0.6) 0px, transparent 50%),
+              radial-gradient(at 0% 50%, rgba(253, 164, 175, 0.6) 0px, transparent 50%),
+              radial-gradient(at 80% 50%, rgba(147, 197, 253, 0.5) 0px, transparent 50%),
+              radial-gradient(at 0% 100%, rgba(253, 186, 116, 0.4) 0px, transparent 50%),
+              radial-gradient(at 80% 100%, rgba(249, 168, 212, 0.5) 0px, transparent 50%),
+              radial-gradient(at 50% 50%, rgba(167, 139, 250, 0.3) 0px, transparent 70%)
+            `,
+            backgroundColor: '#fdf4ff'
+          }}
+        />
+        
+        {/* Animated floating orbs for subtle movement */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div 
+            className="absolute w-[500px] h-[500px] rounded-full blur-3xl opacity-60 animate-pulse"
+            style={{
+              background: 'radial-gradient(circle, rgba(249, 168, 212, 0.6) 0%, transparent 70%)',
+              top: '10%',
+              left: '20%',
+              animationDuration: '8s'
+            }}
+          />
+          <div 
+            className="absolute w-[400px] h-[400px] rounded-full blur-3xl opacity-50 animate-pulse"
+            style={{
+              background: 'radial-gradient(circle, rgba(147, 197, 253, 0.5) 0%, transparent 70%)',
+              bottom: '20%',
+              right: '10%',
+              animationDuration: '10s',
+              animationDelay: '2s'
+            }}
+          />
+          <div 
+            className="absolute w-[350px] h-[350px] rounded-full blur-3xl opacity-40 animate-pulse"
+            style={{
+              background: 'radial-gradient(circle, rgba(196, 181, 253, 0.5) 0%, transparent 70%)',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              animationDuration: '12s',
+              animationDelay: '4s'
+            }}
+          />
+        </div>
       </div>
     </div>
   );
