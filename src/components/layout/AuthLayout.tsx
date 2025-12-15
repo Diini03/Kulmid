@@ -66,20 +66,20 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Right Panel - Mesh Gradient (hidden on mobile) */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        {/* Soft Mesh Gradient Background */}
+        {/* Soft Mesh Gradient Background - Using system teal/cyan colors */}
         <div 
           className="absolute inset-0"
           style={{
             background: `
-              radial-gradient(at 40% 20%, rgba(249, 168, 212, 0.7) 0px, transparent 50%),
-              radial-gradient(at 80% 0%, rgba(196, 181, 253, 0.6) 0px, transparent 50%),
-              radial-gradient(at 0% 50%, rgba(253, 164, 175, 0.6) 0px, transparent 50%),
-              radial-gradient(at 80% 50%, rgba(147, 197, 253, 0.5) 0px, transparent 50%),
-              radial-gradient(at 0% 100%, rgba(253, 186, 116, 0.4) 0px, transparent 50%),
-              radial-gradient(at 80% 100%, rgba(249, 168, 212, 0.5) 0px, transparent 50%),
-              radial-gradient(at 50% 50%, rgba(167, 139, 250, 0.3) 0px, transparent 70%)
+              radial-gradient(at 40% 20%, hsl(189 85% 75% / 0.7) 0px, transparent 50%),
+              radial-gradient(at 80% 0%, hsl(220 70% 70% / 0.6) 0px, transparent 50%),
+              radial-gradient(at 0% 50%, hsl(172 80% 65% / 0.6) 0px, transparent 50%),
+              radial-gradient(at 80% 50%, hsl(189 85% 80% / 0.5) 0px, transparent 50%),
+              radial-gradient(at 0% 100%, hsl(160 60% 65% / 0.4) 0px, transparent 50%),
+              radial-gradient(at 80% 100%, hsl(220 70% 75% / 0.5) 0px, transparent 50%),
+              radial-gradient(at 50% 50%, hsl(189 85% 70% / 0.3) 0px, transparent 70%)
             `,
-            backgroundColor: '#fdf4ff'
+            backgroundColor: 'hsl(189 40% 97%)'
           }}
         />
         
@@ -88,7 +88,7 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
           <div 
             className="absolute w-[500px] h-[500px] rounded-full blur-3xl opacity-60 animate-pulse"
             style={{
-              background: 'radial-gradient(circle, rgba(249, 168, 212, 0.6) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, hsl(189 85% 70% / 0.6) 0%, transparent 70%)',
               top: '10%',
               left: '20%',
               animationDuration: '8s'
@@ -97,7 +97,7 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
           <div 
             className="absolute w-[400px] h-[400px] rounded-full blur-3xl opacity-50 animate-pulse"
             style={{
-              background: 'radial-gradient(circle, rgba(147, 197, 253, 0.5) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, hsl(220 70% 70% / 0.5) 0%, transparent 70%)',
               bottom: '20%',
               right: '10%',
               animationDuration: '10s',
@@ -107,7 +107,7 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
           <div 
             className="absolute w-[350px] h-[350px] rounded-full blur-3xl opacity-40 animate-pulse"
             style={{
-              background: 'radial-gradient(circle, rgba(196, 181, 253, 0.5) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, hsl(172 80% 65% / 0.5) 0%, transparent 70%)',
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
