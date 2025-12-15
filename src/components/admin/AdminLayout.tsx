@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import kulmidLogo from "@/assets/kulmid-logo.png";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -46,12 +47,15 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
       >
         {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
-          {sidebarOpen && (
-            <div>
-              <h2 className="font-bold text-xl">EventEase</h2>
-              <p className="text-xs text-muted-foreground">Admin Panel</p>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <img src={kulmidLogo} alt="Kulmid" className="h-8 w-8" />
+            {sidebarOpen && (
+              <div>
+                <h2 className="font-bold text-xl">Kulmid</h2>
+                <p className="text-xs text-muted-foreground">Admin Panel</p>
+              </div>
+            )}
+          </div>
           <Button
             variant="ghost"
             size="icon"

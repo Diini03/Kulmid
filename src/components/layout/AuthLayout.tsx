@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import kulmidLogo from "@/assets/kulmid-logo-text.png";
+import kulmidLogo from "@/assets/kulmid-logo.png";
 
 export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   const { theme, setTheme } = useTheme();
@@ -27,8 +27,9 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="flex-1 flex flex-col min-h-screen lg:w-1/2">
         {/* Header */}
         <header className="flex items-center justify-between p-6 lg:px-12">
-          <Link to="/">
-            <img src={kulmidLogo} alt="Kulmid" className="h-8" />
+          <Link to="/" className="flex items-center gap-2">
+            <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
+            <span className="font-bold text-xl">Kulmid</span>
           </Link>
           
           <DropdownMenu>
