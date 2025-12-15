@@ -225,7 +225,7 @@ const EventDetails = () => {
               </div>
             </div>
           )}
-          <div className="grid lg:grid-cols-[380px_1fr] gap-8 lg:gap-12">
+          <div className="grid lg:grid-cols-[380px_1fr] gap-8 lg:gap-12 overflow-x-hidden">
             
             {/* LEFT SIDEBAR - Sticky */}
             <aside className="lg:sticky lg:top-24 h-fit space-y-6">
@@ -366,7 +366,7 @@ const EventDetails = () => {
                   {/* Social Share Buttons */}
                   <div className="pt-2">
                     <div className="text-xs text-muted-foreground mb-2">Share on social media</div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                       <Button
                         variant="outline"
                         size="icon"

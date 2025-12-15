@@ -184,13 +184,13 @@ const MyEvents = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
-            <TabsTrigger value="draft">Draft ({counts.draft})</TabsTrigger>
-            <TabsTrigger value="pending">Pending ({counts.pending})</TabsTrigger>
-            <TabsTrigger value="approved">Live ({counts.approved})</TabsTrigger>
-            <TabsTrigger value="rejected">Rejected ({counts.rejected})</TabsTrigger>
-            <TabsTrigger value="past">Past ({counts.past})</TabsTrigger>
+          <TabsList className="w-full flex overflow-x-auto scrollbar-hide">
+            <TabsTrigger value="all" className="flex-shrink-0">All ({counts.all})</TabsTrigger>
+            <TabsTrigger value="draft" className="flex-shrink-0">Draft ({counts.draft})</TabsTrigger>
+            <TabsTrigger value="pending" className="flex-shrink-0">Pending ({counts.pending})</TabsTrigger>
+            <TabsTrigger value="approved" className="flex-shrink-0">Live ({counts.approved})</TabsTrigger>
+            <TabsTrigger value="rejected" className="flex-shrink-0">Rejected ({counts.rejected})</TabsTrigger>
+            <TabsTrigger value="past" className="flex-shrink-0">Past ({counts.past})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="space-y-4">
