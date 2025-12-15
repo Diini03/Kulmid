@@ -58,7 +58,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
 
   return (
     <header className={`sticky top-0 z-50 backdrop-blur-md bg-background/95 border-b transition-all ${scrolled ? "shadow-sm" : ""}`}>
-      <nav className="container flex items-center justify-between gap-4 h-14">
+      <nav className="container max-w-6xl mx-auto flex items-center justify-between gap-4 h-14">
         {/* Left Side - Logo + Navigation */}
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity">
