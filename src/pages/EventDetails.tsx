@@ -74,7 +74,7 @@ const EventDetails = () => {
     return () => {
       mounted = false;
     };
-  }, [id, user]);
+  }, [id, user?.email]);
 
   const handleRegisterClick = () => {
     // Only require authentication for paid events
@@ -332,6 +332,7 @@ const EventDetails = () => {
                 </div>
               ) : (
                 <Button 
+                  type="button"
                   onClick={handleRegisterClick}
                   size="lg" 
                   className="w-full text-lg py-6 shadow-lg hover:shadow-xl transition-all hover-lift"

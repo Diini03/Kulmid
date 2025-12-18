@@ -90,14 +90,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   useEffect(() => {
+    let isInitialLoad = true;
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          setAdminCheckComplete(false);
+          // Only reset adminCheckComplete on initial load, not on subsequent auth events
+          // This prevents the UI flicker when opening pages in new tabs
+          if (isInitialLoad) {
+            setAdminCheckComplete(false);
+          }
           // Defer profile fetch to avoid blocking auth state changes
           setTimeout(() => {
             fetchProfile(session.user.id);
@@ -110,6 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
         
         setLoading(false);
+        isInitialLoad = false;
       }
     );
 
