@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Mail, User, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Mail, User, Loader2, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signUpSchema, type SignUpFormData } from "@/lib/validations";
 import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
@@ -58,9 +58,10 @@ const SignUp = () => {
     <AuthLayout>
       <Seo title="Sign Up" canonical="/signup" />
       <div className="space-y-6 animate-fade-in">
-        <div className="space-y-2">
-          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Create an account</h1>
-          <p className="text-muted-foreground">
+        {/* Header */}
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Create an account</h1>
+          <p className="text-sm text-muted-foreground">
             Join Kulmid and start discovering amazing events
           </p>
         </div>
@@ -75,10 +76,10 @@ const SignUp = () => {
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
+            <span className="w-full border-t border-border/60" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-4 text-muted-foreground">
+            <span className="bg-card px-4 text-muted-foreground">
               or continue with email
             </span>
           </div>
@@ -87,13 +88,13 @@ const SignUp = () => {
         {/* Email Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full name</Label>
+            <Label htmlFor="fullName" className="text-sm font-medium">Full name</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="fullName"
                 placeholder="Enter your full name"
-                className="pl-10 h-12"
+                className="pl-10 h-11 bg-background border-border/60 focus:border-primary transition-colors"
                 {...register("fullName")}
               />
             </div>
@@ -103,14 +104,14 @@ const SignUp = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="email"
                 type="email"
                 placeholder="name@example.com"
-                className="pl-10 h-12"
+                className="pl-10 h-11 bg-background border-border/60 focus:border-primary transition-colors"
                 {...register("email")}
               />
             </div>
@@ -120,13 +121,14 @@ const SignUp = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
             <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Create a strong password"
-                className="pr-10 h-12"
+                className="pl-10 pr-10 h-11 bg-background border-border/60 focus:border-primary transition-colors"
                 {...register("password")}
               />
               <button
@@ -147,7 +149,7 @@ const SignUp = () => {
 
           <Button
             type="submit"
-            className="w-full h-12"
+            className="w-full h-11 font-medium"
             disabled={isSubmitting || loading}
           >
             {isSubmitting ? (
@@ -161,23 +163,26 @@ const SignUp = () => {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link to="/signin" className="text-primary font-medium hover:text-primary/80 transition-colors">
-            Sign in
-          </Link>
-        </p>
+        {/* Footer links */}
+        <div className="space-y-3">
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link to="/signin" className="text-primary font-medium hover:text-primary/80 transition-colors">
+              Sign in
+            </Link>
+          </p>
 
-        <p className="text-center text-xs text-muted-foreground">
-          By continuing, you agree to our{" "}
-          <Link to="/help" className="text-primary hover:underline">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link to="/help" className="text-primary hover:underline">
-            Privacy Policy
-          </Link>
-        </p>
+          <p className="text-center text-xs text-muted-foreground">
+            By continuing, you agree to our{" "}
+            <Link to="/help" className="text-primary hover:underline">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="/help" className="text-primary hover:underline">
+              Privacy Policy
+            </Link>
+          </p>
+        </div>
       </div>
     </AuthLayout>
   );

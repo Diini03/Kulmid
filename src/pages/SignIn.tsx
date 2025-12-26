@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Mail, ArrowLeft, Loader2, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInSchema, resetPasswordSchema, type SignInFormData, type ResetPasswordFormData } from "@/lib/validations";
 import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
@@ -78,7 +78,7 @@ const SignIn = () => {
       <AuthLayout>
         <Seo title="Reset Password" canonical="/signin" />
         <div className="space-y-6 animate-fade-in">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <button
               onClick={() => setShowForgotPassword(false)}
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -86,22 +86,24 @@ const SignIn = () => {
               <ArrowLeft className="h-4 w-4" />
               Back to sign in
             </button>
-            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Reset password</h1>
-            <p className="text-muted-foreground">
-              Enter your email and we'll send you a reset link
-            </p>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight">Reset password</h1>
+              <p className="text-sm text-muted-foreground">
+                Enter your email and we'll send you a reset link
+              </p>
+            </div>
           </div>
 
-          <form onSubmit={resetForm.handleSubmit(onResetPassword)} className="space-y-4">
+          <form onSubmit={resetForm.handleSubmit(onResetPassword)} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="reset-email">Email</Label>
+              <Label htmlFor="reset-email" className="text-sm font-medium">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="reset-email"
                   type="email"
                   placeholder="name@example.com"
-                  className="pl-10 h-12"
+                  className="pl-10 h-11 bg-background border-border/60 focus:border-primary transition-colors"
                   {...resetForm.register("email")}
                 />
               </div>
@@ -112,7 +114,7 @@ const SignIn = () => {
 
             <Button
               type="submit"
-              className="w-full h-12"
+              className="w-full h-11 font-medium"
               disabled={resetForm.formState.isSubmitting || loading}
             >
               {resetForm.formState.isSubmitting ? (
@@ -134,9 +136,10 @@ const SignIn = () => {
     <AuthLayout>
       <Seo title="Sign In" canonical="/signin" />
       <div className="space-y-6 animate-fade-in">
-        <div className="space-y-2">
-          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Welcome back</h1>
-          <p className="text-muted-foreground">Sign in to your account to continue</p>
+        {/* Header */}
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+          <p className="text-sm text-muted-foreground">Sign in to your account to continue</p>
         </div>
 
         {/* Social Login */}
@@ -149,10 +152,10 @@ const SignIn = () => {
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
+            <span className="w-full border-t border-border/60" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-4 text-muted-foreground">
+            <span className="bg-card px-4 text-muted-foreground">
               or continue with email
             </span>
           </div>
@@ -161,14 +164,14 @@ const SignIn = () => {
         {/* Email Form */}
         <form onSubmit={signInForm.handleSubmit(onSignIn)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="email"
                 type="email"
                 placeholder="name@example.com"
-                className="pl-10 h-12"
+                className="pl-10 h-11 bg-background border-border/60 focus:border-primary transition-colors"
                 {...signInForm.register("email")}
               />
             </div>
@@ -179,21 +182,22 @@ const SignIn = () => {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
-                className="text-sm text-primary hover:text-primary/80 transition-colors"
+                className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
               >
                 Forgot password?
               </button>
             </div>
             <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
-                className="pr-10 h-12"
+                className="pl-10 pr-10 h-11 bg-background border-border/60 focus:border-primary transition-colors"
                 {...signInForm.register("password")}
               />
               <button
@@ -211,7 +215,7 @@ const SignIn = () => {
 
           <Button
             type="submit"
-            className="w-full h-12"
+            className="w-full h-11 font-medium"
             disabled={signInForm.formState.isSubmitting || loading}
           >
             {signInForm.formState.isSubmitting ? (
@@ -225,6 +229,7 @@ const SignIn = () => {
           </Button>
         </form>
 
+        {/* Footer link */}
         <p className="text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
           <Link to="/signup" className="text-primary font-medium hover:text-primary/80 transition-colors">
