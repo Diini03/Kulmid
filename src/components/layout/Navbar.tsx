@@ -66,7 +66,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               if (user) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               } else {
-                navigate('/welcome');
+                navigate('/');
               }
             }}
             className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity"
