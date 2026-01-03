@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Plus, ChevronRight, MapPin, Users, AlertTriangle, Clock, Compass, Sparkles } from "lucide-react";
+import { Calendar, Plus, ChevronRight, MapPin, Users, AlertTriangle, Clock, Compass, CalendarPlus } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
 import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
@@ -130,23 +130,23 @@ const Events = () => {
       <Layout>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[70vh] flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto px-4">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
-              <Calendar className="h-10 w-10 text-primary" />
+          <div className="empty-state-glass max-w-md mx-4">
+            <div className="empty-state-icon">
+              <Calendar className="h-10 w-10 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold mb-3">Sign in to manage your events</h1>
             <p className="text-muted-foreground mb-8">
               Create beautiful event pages, invite guests, and track registrations.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg">
+              <Button asChild size="lg" variant="gradient">
                 <Link to="/signin">Sign In</Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link to="/signup">Create Account</Link>
               </Button>
             </div>
-            <div className="mt-8 pt-8 border-t">
+            <div className="mt-8 pt-8 border-t border-border/50">
               <p className="text-sm text-muted-foreground mb-3">
                 Looking to attend events instead?
               </p>
@@ -181,24 +181,24 @@ const Events = () => {
       <Layout>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[70vh] flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto px-4">
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 mb-6">
-              <Sparkles className="h-12 w-12 text-primary" />
+          <div className="empty-state-glass max-w-md mx-4">
+            <div className="empty-state-icon">
+              <CalendarPlus className="h-12 w-12 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold mb-3">Host your next event with Kulmid</h1>
+            <h1 className="text-2xl font-bold mb-3">Create your first event</h1>
             <p className="text-muted-foreground mb-2">
-              Create beautiful event pages in minutes.
+              Host your next event with Kulmid.
             </p>
             <p className="text-muted-foreground mb-8">
-              Invite guests, manage registrations, and track attendance.
+              Create beautiful event pages, invite guests, and track attendance.
             </p>
-            <Button asChild size="lg" className="px-8">
+            <Button asChild size="lg" variant="gradient" className="px-8">
               <Link to="/create" className="gap-2">
                 <Plus className="h-5 w-5" />
                 Create Your Event
               </Link>
             </Button>
-            <div className="mt-10 pt-8 border-t">
+            <div className="mt-10 pt-8 border-t border-border/50">
               <p className="text-sm text-muted-foreground mb-3">
                 or explore events happening around you
               </p>
@@ -215,22 +215,22 @@ const Events = () => {
     );
   }
 
-  // Main events list with timeline layout
+  // Main events list with Lovart-style timeline layout
   return (
     <Layout>
       <Seo title="Events" description="Manage your events on Kulmid" canonical="/events" />
-      <div className="container max-w-3xl mx-auto px-4 py-8">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold">Events</h1>
+        <div className="flex items-center justify-between mb-10">
+          <h1 className="text-3xl font-bold">My Events</h1>
           <div className="flex items-center gap-4">
-            {/* Filter Toggle */}
-            <div className="flex items-center bg-muted rounded-lg p-1">
+            {/* Filter Toggle - Glass Style */}
+            <div className="glass rounded-full p-1 flex">
               <button
                 onClick={() => setFilter("upcoming")}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
                   filter === "upcoming"
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "bg-primary text-primary-foreground shadow-glow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -238,9 +238,9 @@ const Events = () => {
               </button>
               <button
                 onClick={() => setFilter("past")}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
                   filter === "past"
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "bg-primary text-primary-foreground shadow-glow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -252,12 +252,15 @@ const Events = () => {
 
         {/* Empty state for current filter */}
         {filteredEvents.length === 0 && (
-          <div className="text-center py-16">
+          <div className="empty-state-glass">
+            <div className="empty-state-icon mx-auto">
+              <Calendar className="h-10 w-10 text-primary-foreground" />
+            </div>
             <p className="text-muted-foreground mb-4">
               No {filter} events found.
             </p>
             {filter === "upcoming" && (
-              <Button asChild>
+              <Button asChild variant="gradient">
                 <Link to="/create">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Event
@@ -267,32 +270,33 @@ const Events = () => {
           </div>
         )}
 
-        {/* Timeline Events */}
+        {/* Lovart-Style Timeline Events */}
         <div className="space-y-0">
-          {sortedDateKeys.map((dateKey) => {
+          {sortedDateKeys.map((dateKey, dateIndex) => {
             const dateEvents = groupedEvents[dateKey];
             const date = parseISO(dateKey);
             
             return (
-              <div key={dateKey} className="flex gap-4 sm:gap-6 group">
-                {/* Date Column */}
-                <div className="w-20 sm:w-24 flex-shrink-0 pt-4">
-                  <div className="text-sm font-medium text-foreground">
-                    {format(date, "d MMM yyyy")}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {format(date, "EEEE")}
+              <div key={dateKey} className={`flex gap-6 sm:gap-10 animate-slide-up stagger-${Math.min(dateIndex + 1, 6)}`}>
+                {/* Date Column - Stacked Style */}
+                <div className="w-16 sm:w-20 flex-shrink-0 pt-2">
+                  <div className="date-stack sticky top-24">
+                    <div className="date-stack-month">{format(date, "MMM")}</div>
+                    <div className="date-stack-day">{format(date, "d")}</div>
+                    <div className="date-stack-year">{format(date, "yyyy")}</div>
                   </div>
                 </div>
 
-                {/* Timeline Line */}
+                {/* Timeline Line with Glow */}
                 <div className="relative flex flex-col items-center">
-                  <div className="w-2.5 h-2.5 bg-primary rounded-full mt-5 z-10" />
-                  <div className="w-px bg-border flex-1 -mt-0.5" />
+                  <div className="timeline-dot mt-3 z-10" />
+                  <div className="timeline-line flex-1 -mt-1" />
+                  {/* Dotted connector */}
+                  <div className="absolute top-5 left-4 w-6 timeline-connector hidden sm:block" />
                 </div>
 
                 {/* Events Column */}
-                <div className="flex-1 pb-6 space-y-3 min-w-0">
+                <div className="flex-1 pb-8 space-y-4 min-w-0">
                   {dateEvents.map((event) => {
                     const pendingCount = getPendingCountForEvent(event.id);
                     
@@ -300,57 +304,57 @@ const Events = () => {
                       <div
                         key={event.id}
                         onClick={() => navigate(`/events/${event.id}/manage`)}
-                        className="group/card bg-card border border-border rounded-xl p-4 hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer"
+                        className="glass-event-card cursor-pointer"
                       >
-                        <div className="flex items-start gap-3 sm:gap-4">
+                        <div className="flex items-start gap-4">
                           {/* Event Info */}
                           <div className="flex-1 min-w-0">
                             {/* Time & Status */}
-                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mb-1">
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5" />
-                                {format(parseISO(event.date), "HH:mm")}
+                            <div className="flex flex-wrap items-center gap-2 text-sm mb-2">
+                              <span className="flex items-center gap-1.5 text-muted-foreground">
+                                <Clock className="h-4 w-4" />
+                                {format(parseISO(event.date), "h:mm a")}
                               </span>
-                              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusBadge(event.status)}`}>
+                              <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${getStatusBadge(event.status)}`}>
                                 {event.status}
                               </span>
                               {pendingCount > 0 && (
-                                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400">
+                                <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400">
                                   {pendingCount} pending
                                 </span>
                               )}
                             </div>
 
                             {/* Title */}
-                            <h3 className="font-semibold text-foreground mb-2 truncate">
+                            <h3 className="font-bold text-lg text-foreground mb-2 line-clamp-1">
                               {event.title}
                             </h3>
 
                             {/* Location */}
-                            <div className="flex items-center gap-2 text-sm">
+                            <div className="flex items-center gap-2 text-sm mb-3">
                               {event.location ? (
-                                <span className="flex items-center gap-1 text-muted-foreground truncate">
-                                  <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                                <span className="flex items-center gap-1.5 text-muted-foreground">
+                                  <MapPin className="h-4 w-4 text-primary" />
                                   <span className="truncate">{event.location}</span>
                                 </span>
                               ) : (
-                                <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
-                                  <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+                                <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400">
+                                  <AlertTriangle className="h-4 w-4" />
                                   <span>Location missing</span>
                                 </span>
                               )}
                             </div>
 
                             {/* Guest count */}
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground mt-2">
-                              <Users className="h-3.5 w-3.5" />
-                              <span>{guestCounts[event.id] || 0} guests</span>
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <Users className="h-4 w-4" />
+                              <span>{guestCounts[event.id] || 0} guests confirmed</span>
                             </div>
                           </div>
 
-                          {/* Thumbnail */}
+                          {/* Thumbnail - Larger */}
                           {event.image_url && (
-                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-border/50">
                               <img
                                 src={event.image_url}
                                 alt=""
@@ -360,7 +364,7 @@ const Events = () => {
                           )}
 
                           {/* Arrow */}
-                          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover/card:text-primary transition-colors flex-shrink-0 hidden sm:block" />
+                          <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 hidden sm:block mt-2" />
                         </div>
                       </div>
                     );

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPersonalizedEvents } from "@/utils/recommendations";
+import { ArrowRight, Sparkles, Settings } from "lucide-react";
 
 type EventItem = {
   id: string;
@@ -30,6 +31,7 @@ const HomePage = () => {
   const [hasPreferences, setHasPreferences] = useState(false);
   const [isSupplemented, setIsSupplemented] = useState(false);
   const [preferenceMatchCount, setPreferenceMatchCount] = useState(0);
+  const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
     let mounted = true;
@@ -41,6 +43,17 @@ const HomePage = () => {
       }
       
       try {
+        // Fetch user name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (profile?.full_name && mounted) {
+          setUserName(profile.full_name.split(' ')[0]);
+        }
+
         const {
           events: personalizedEvents,
           hasPreferences: prefs,
@@ -94,51 +107,75 @@ const HomePage = () => {
         canonical="/home"
       />
 
-      {/* Minimal Hero */}
-      <section className="border-b bg-gradient-to-b from-muted/30 to-background">
-        <div className="container mx-auto max-w-6xl py-20 md:py-28">
+      {/* Personalized Hero */}
+      <section className="relative overflow-hidden border-b">
+        {/* Background Elements */}
+        <div className="absolute inset-0 bg-dots opacity-30" />
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-[hsl(280_85%_60%)]/10 rounded-full blur-3xl animate-float-delayed" />
+
+        <div className="container mx-auto max-w-6xl py-16 md:py-24 relative">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance">
-              {hasPreferences
-                ? isSupplemented
-                  ? "Events for you"
-                  : "Your personalized events"
-                : "Find your next experience"}
+            {/* Personalized Greeting */}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance animate-slide-up">
+              {userName ? (
+                <>Welcome back, <span className="text-gradient">{userName}</span>!</>
+              ) : hasPreferences ? (
+                <>Your <span className="text-gradient">personalized</span> events</>
+              ) : (
+                <>Find your next <span className="text-gradient">experience</span></>
+              )}
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-slide-up stagger-1">
               {hasPreferences
                 ? isSupplemented
                   ? `We found ${preferenceMatchCount} ${
                       preferenceMatchCount === 1 ? "event" : "events"
-                    } matching your interests, and added more you might enjoy`
+                    } matching your interests, plus more you might enjoy`
                   : "Events curated based on your interests and preferences"
                 : "Discover events that inspire, educate, and connect."}
             </p>
-            {hasPreferences && isSupplemented && (
-              <Button asChild variant="outline" className="mt-4">
-                <Link to="/onboarding">Update my preferences</Link>
-              </Button>
-            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap justify-center gap-4 pt-4 animate-slide-up stagger-2">
+              {hasPreferences && isSupplemented && (
+                <Button asChild variant="outline" className="gap-2">
+                  <Link to="/onboarding">
+                    <Settings className="h-4 w-4" />
+                    Update preferences
+                  </Link>
+                </Button>
+              )}
+              {!hasPreferences && (
+                <Button asChild variant="gradient" size="lg" className="gap-2">
+                  <Link to="/onboarding">
+                    <Sparkles className="h-5 w-5" />
+                    Personalize your experience
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Browse by Category */}
-      <section className="border-b bg-card">
-        <div className="container mx-auto max-w-6xl py-8">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <h2 className="text-lg font-semibold">Browse by category</h2>
-            <div className="flex flex-wrap gap-2">
+      {/* Filter Pills - Horizontal Scrollable */}
+      <section className="border-b bg-card/50 backdrop-blur-sm sticky top-16 z-40">
+        <div className="container mx-auto max-w-6xl py-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">
+              Browse by category
+            </h2>
+            <div className="filter-pills flex-1 sm:flex-none sm:justify-end">
               {categories.map((label) => (
-                <Button
+                <button
                   key={label}
-                  variant={activeFilter === label ? "default" : "outline"}
-                  size="sm"
                   onClick={() => setActiveFilter(label)}
-                  className="transition-all"
+                  className={`filter-pill ${activeFilter === label ? 'active' : ''}`}
                 >
                   {label}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
@@ -161,24 +198,27 @@ const HomePage = () => {
         ) : filtered.length > 0 ? (
           <>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.slice(0, 9).map((ev) => (
-                <EventCard key={ev.id} event={ev} />
+              {filtered.slice(0, 9).map((ev, index) => (
+                <div key={ev.id} className={`animate-slide-up stagger-${(index % 6) + 1}`}>
+                  <EventCard event={ev} />
+                </div>
               ))}
             </div>
             {filtered.length > 9 && (
               <div className="text-center mt-12">
-                <Button asChild variant="outline" size="lg">
-                  <Link to="/events">
+                <Button asChild variant="outline" size="lg" className="gap-2">
+                  <Link to="/discover">
                     View all {events.length} events
+                    <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
               </div>
             )}
           </>
         ) : (
-          <div className="text-center py-20">
+          <div className="empty-state-glass max-w-md mx-auto">
             <div className="text-lg text-muted-foreground mb-4">No events found in this category</div>
-            <Button variant="outline" onClick={() => setActiveFilter("All")}>
+            <Button variant="gradient" onClick={() => setActiveFilter("All")}>
               View all events
             </Button>
           </div>
