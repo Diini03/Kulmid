@@ -61,9 +61,18 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
       <nav className="container max-w-6xl mx-auto flex items-center justify-between gap-4 h-14">
         {/* Left Side - Logo + Navigation */}
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity">
+          <button 
+            onClick={() => {
+              if (user) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                navigate('/welcome');
+              }
+            }}
+            className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity"
+          >
             <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
-          </Link>
+          </button>
 
           {/* Hide user navigation for admins */}
           {!isAdmin && (
