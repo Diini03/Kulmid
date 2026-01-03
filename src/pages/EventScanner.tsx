@@ -62,13 +62,13 @@ export default function EventScanner() {
 
       if (error || !event) {
         toast.error("Event not found");
-        navigate("/my-events");
+        navigate("/events");
         return;
       }
 
       if (event.created_by !== user.id) {
         toast.error("You don't have permission to scan for this event");
-        navigate("/my-events");
+        navigate("/events");
         return;
       }
 
@@ -230,7 +230,7 @@ export default function EventScanner() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => navigate("/my-events")}>
+          <Button variant="outline" size="icon" onClick={() => navigate("/events")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">

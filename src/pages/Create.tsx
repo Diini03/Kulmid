@@ -654,7 +654,7 @@ const Create = () => {
                   <div className="p-4 bg-muted/50 rounded-lg border">
                     <p className="text-sm text-muted-foreground">
                       <strong>Note:</strong> Your event will be reviewed before going live.
-                      Track your submission in <a href="/my-events" className="text-primary hover:underline font-medium">My Events</a>.
+                      Track your submission in <a href="/events" className="text-primary hover:underline font-medium">My Events</a>.
                     </p>
                   </div>
                 )}

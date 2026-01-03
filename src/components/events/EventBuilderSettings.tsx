@@ -36,7 +36,7 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
         description: "Your event has been permanently deleted.",
       });
 
-      navigate("/my-events");
+      navigate("/events");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -66,7 +66,7 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
         description: "Your event has been resubmitted for approval.",
       });
 
-      navigate("/my-events");
+      navigate("/events");
     } catch (error: any) {
       toast({
         title: "Error",
