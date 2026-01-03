@@ -124,16 +124,26 @@ const Discover = () => {
         
         <div className="container max-w-6xl py-20 md:py-28 relative">
           <div className="max-w-2xl mx-auto text-center space-y-6">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance animate-slide-up">
+            {/* Personalized Badge */}
+            {user && hasPreferences && (
+              <div className="animate-slide-up">
+                <span className="personalized-badge">
+                  <Sparkles className="h-4 w-4" />
+                  Personalized for you
+                </span>
+              </div>
+            )}
+
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance animate-slide-up stagger-1">
               <span className="text-gradient">Discover</span> events
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground text-balance animate-slide-up stagger-1">
+            <p className="text-xl md:text-2xl text-muted-foreground text-balance animate-slide-up stagger-2">
               Explore experiences that inspire you
             </p>
 
             {/* Personalization Buttons */}
             {user && hasPreferences && (
-              <div className="pt-6 animate-slide-up stagger-2">
+              <div className="pt-6 animate-slide-up stagger-3">
                 <Button 
                   asChild 
                   size="lg" 
@@ -153,7 +163,7 @@ const Discover = () => {
             )}
             
             {user && !hasPreferences && (
-              <div className="pt-6 animate-slide-up stagger-2">
+              <div className="pt-6 animate-slide-up stagger-3">
                 <Button 
                   asChild 
                   size="lg" 
@@ -171,12 +181,13 @@ const Discover = () => {
         </div>
       </section>
 
-      {/* Browse by Category */}
-      <section className="border-b bg-secondary/30">
+      {/* Browse by Category - Lovart Glass Style */}
+      <section className="border-b">
         <div className="container max-w-6xl py-16">
           <h2 className="text-2xl font-bold mb-8">Browse by category</h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {/* Horizontal Glass Category Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {categories.map((category, index) => {
               const Icon = category.icon;
               const count = eventCounts[category.name] || 0;
@@ -184,13 +195,15 @@ const Discover = () => {
                 <button 
                   key={category.name} 
                   onClick={() => handleCategoryClick(category.name)} 
-                  className={`category-card text-left animate-slide-up stagger-${index + 1}`}
+                  className={`glass-category-card animate-slide-up stagger-${Math.min(index + 1, 6)}`}
                 >
-                  <div className={`icon-wrapper bg-gradient-to-br ${category.color} shadow-lg`}>
-                    <Icon className="h-6 w-6 text-white" />
+                  <div className="icon-circle transition-all duration-300">
+                    <Icon className="h-6 w-6 text-primary-foreground" />
                   </div>
-                  <h3 className="font-bold text-lg mb-1">{category.name}</h3>
-                  <p className="text-sm text-muted-foreground">{count} events</p>
+                  <div className="text-left">
+                    <h3 className="font-bold text-base">{category.name}</h3>
+                    <p className="text-sm text-muted-foreground">{count} events</p>
+                  </div>
                 </button>
               );
             })}
