@@ -22,8 +22,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 5%;
 
-    /* Single accent - neutral violet */
-    --primary: 250 60% 50%;
+    /* Single accent - teal/cyan */
+    --primary: 175 70% 42%;
     --primary-foreground: 0 0% 100%;
 
     /* Neutrals */
@@ -42,19 +42,19 @@
     /* Borders - subtle */
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 250 60% 50%;
+    --ring: 175 70% 42%;
 
     --radius: 0.75rem;
 
     /* Sidebar */
     --sidebar-background: 0 0% 99%;
     --sidebar-foreground: 0 0% 25%;
-    --sidebar-primary: 250 60% 50%;
+    --sidebar-primary: 175 70% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 96%;
     --sidebar-accent-foreground: 0 0% 5%;
     --sidebar-border: 0 0% 92%;
-    --sidebar-ring: 250 60% 50%;
+    --sidebar-ring: 175 70% 42%;
 
     /* Shadows - minimal */
     --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.03);
@@ -63,7 +63,7 @@
     --shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.06);
 
     /* Chart colors */
-    --chart-1: 250 60% 50%;
+    --chart-1: 175 70% 42%;
     --chart-2: 0 0% 40%;
     --chart-3: 0 0% 60%;
     --chart-4: 0 0% 25%;
@@ -86,8 +86,8 @@
     --popover: 0 0% 7%;
     --popover-foreground: 0 0% 96%;
 
-    /* Single accent - slightly brighter in dark */
-    --primary: 250 60% 60%;
+    /* Single accent - teal/cyan brighter for dark mode */
+    --primary: 175 70% 50%;
     --primary-foreground: 0 0% 5%;
 
     /* Neutrals */
@@ -106,17 +106,17 @@
     /* Borders */
     --border: 0 0% 16%;
     --input: 0 0% 16%;
-    --ring: 250 60% 60%;
+    --ring: 175 70% 50%;
 
     /* Sidebar */
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 75%;
-    --sidebar-primary: 250 60% 60%;
+    --sidebar-primary: 175 70% 50%;
     --sidebar-primary-foreground: 0 0% 5%;
     --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 0 0% 14%;
-    --sidebar-ring: 250 60% 60%;
+    --sidebar-ring: 175 70% 50%;
 
     /* Shadows - deeper */
     --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.15);
@@ -125,7 +125,7 @@
     --shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.3);
 
     /* Chart colors */
-    --chart-1: 250 60% 60%;
+    --chart-1: 175 70% 50%;
     --chart-2: 0 0% 50%;
     --chart-3: 0 0% 65%;
     --chart-4: 0 0% 35%;
