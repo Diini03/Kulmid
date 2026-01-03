@@ -107,23 +107,18 @@ const HomePage = () => {
         canonical="/home"
       />
 
-      {/* Personalized Hero */}
-      <section className="relative overflow-hidden border-b">
-        {/* Background Elements */}
-        <div className="absolute inset-0 bg-dots opacity-30" />
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-[hsl(280_85%_60%)]/10 rounded-full blur-3xl animate-float-delayed" />
-
-        <div className="container mx-auto max-w-6xl py-16 md:py-24 relative">
+      {/* Hero */}
+      <section className="border-b">
+        <div className="container mx-auto max-w-6xl py-16 md:py-24">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            {/* Personalized Greeting */}
+            {/* Greeting */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance animate-slide-up">
               {userName ? (
-                <>Welcome back, <span className="text-gradient">{userName}</span>!</>
+                <>Welcome back, {userName}!</>
               ) : hasPreferences ? (
-                <>Your <span className="text-gradient">personalized</span> events</>
+                <>Your personalized events</>
               ) : (
-                <>Find your next <span className="text-gradient">experience</span></>
+                <>Find your next experience</>
               )}
             </h1>
             
@@ -148,7 +143,7 @@ const HomePage = () => {
                 </Button>
               )}
               {!hasPreferences && (
-                <Button asChild variant="gradient" size="lg" className="gap-2">
+                <Button asChild variant="default" size="lg" className="gap-2">
                   <Link to="/onboarding">
                     <Sparkles className="h-5 w-5" />
                     Personalize your experience
@@ -160,8 +155,8 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Filter Pills - Horizontal Scrollable */}
-      <section className="border-b bg-card/50 backdrop-blur-sm sticky top-16 z-40">
+      {/* Filter Pills */}
+      <section className="border-b bg-card sticky top-16 z-40">
         <div className="container mx-auto max-w-6xl py-4">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">
@@ -188,7 +183,7 @@ const HomePage = () => {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-3">
-                <Skeleton className="h-56 w-full rounded-xl" />
+                <Skeleton className="h-48 w-full rounded-xl" />
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-2/3" />
@@ -216,9 +211,9 @@ const HomePage = () => {
             )}
           </>
         ) : (
-          <div className="empty-state-glass max-w-md mx-auto">
+          <div className="empty-state-card max-w-md mx-auto">
             <div className="text-lg text-muted-foreground mb-4">No events found in this category</div>
-            <Button variant="gradient" onClick={() => setActiveFilter("All")}>
+            <Button variant="default" onClick={() => setActiveFilter("All")}>
               View all events
             </Button>
           </div>

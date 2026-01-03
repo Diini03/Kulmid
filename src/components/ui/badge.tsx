@@ -4,28 +4,23 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground shadow-sm hover:shadow-md",
+          "border-transparent bg-foreground text-background",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border-transparent bg-secondary text-secondary-foreground",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+          "border-transparent bg-destructive text-destructive-foreground",
         outline: "text-foreground border-border",
-        // Premium variants
-        gradient:
-          "border-transparent bg-gradient-to-r from-primary to-[hsl(280_85%_58%)] text-white shadow-sm",
-        glass:
-          "bg-background/50 backdrop-blur-md border-border/50 text-foreground",
-        glow:
-          "border-transparent bg-primary text-primary-foreground shadow-[0_0_10px_hsl(var(--primary)/0.4)]",
+        primary:
+          "border-transparent bg-primary text-primary-foreground",
         success:
-          "border-transparent bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+          "border-transparent bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
         warning:
-          "border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400",
+          "border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
       },
     },
     defaultVariants: {

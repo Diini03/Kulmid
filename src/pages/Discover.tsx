@@ -116,13 +116,8 @@ const Discover = () => {
       />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden border-b">
-        {/* Background Elements */}
-        <div className="absolute inset-0 bg-dots opacity-30" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-[hsl(280_85%_60%)]/10 rounded-full blur-3xl animate-float-delayed" />
-        
-        <div className="container max-w-6xl py-20 md:py-28 relative">
+      <section className="border-b">
+        <div className="container max-w-6xl py-20 md:py-28">
           <div className="max-w-2xl mx-auto text-center space-y-6">
             {/* Personalized Badge */}
             {user && hasPreferences && (
@@ -135,7 +130,7 @@ const Discover = () => {
             )}
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance animate-slide-up stagger-1">
-              <span className="text-gradient">Discover</span> events
+              Discover events
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground text-balance animate-slide-up stagger-2">
               Explore experiences that inspire you
@@ -147,7 +142,7 @@ const Discover = () => {
                 <Button 
                   asChild 
                   size="lg" 
-                  variant="gradient"
+                  variant="default"
                   className="gap-2"
                 >
                   <Link to="/home">
@@ -167,7 +162,7 @@ const Discover = () => {
                 <Button 
                   asChild 
                   size="lg" 
-                  variant="glass"
+                  variant="outline"
                   className="gap-2"
                 >
                   <Link to="/onboarding">
@@ -181,12 +176,12 @@ const Discover = () => {
         </div>
       </section>
 
-      {/* Browse by Category - Lovart Glass Style */}
+      {/* Browse by Category */}
       <section className="border-b">
         <div className="container max-w-6xl py-16">
           <h2 className="text-2xl font-bold mb-8">Browse by category</h2>
           
-          {/* Horizontal Glass Category Cards */}
+          {/* Category Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {categories.map((category, index) => {
               const Icon = category.icon;
@@ -195,13 +190,13 @@ const Discover = () => {
                 <button 
                   key={category.name} 
                   onClick={() => handleCategoryClick(category.name)} 
-                  className={`glass-category-card animate-slide-up stagger-${Math.min(index + 1, 6)}`}
+                  className={`category-card animate-slide-up stagger-${Math.min(index + 1, 6)}`}
                 >
-                  <div className="icon-circle transition-all duration-300">
-                    <Icon className="h-6 w-6 text-primary-foreground" />
+                  <div className="icon-wrapper">
+                    <Icon className="h-5 w-5" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-bold text-base">{category.name}</h3>
+                    <h3 className="font-semibold text-base">{category.name}</h3>
                     <p className="text-sm text-muted-foreground">{count} events</p>
                   </div>
                 </button>
@@ -225,7 +220,7 @@ const Discover = () => {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-4 animate-pulse">
-                <div className="h-52 w-full rounded-2xl bg-secondary" />
+                <div className="h-48 w-full rounded-xl bg-secondary" />
                 <div className="h-6 w-3/4 rounded-lg bg-secondary" />
                 <div className="space-y-2">
                   <div className="h-4 w-full rounded bg-secondary" />

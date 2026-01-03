@@ -77,7 +77,7 @@ export const EventCard = ({ event }: Props) => {
         action={authAction}
       />
       <Card 
-        className="group overflow-hidden card-interactive border-border/50 bg-card hover:border-primary/20"
+        className="overflow-hidden border bg-card cursor-pointer"
         onClick={handleCardClick}
       >
         {/* Image Container */}
@@ -86,14 +86,12 @@ export const EventCard = ({ event }: Props) => {
             src={event.image_url || '/placeholder.svg'}
             alt={`${event.title} event image`}
             loading="lazy"
-            className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-48 w-full object-cover"
           />
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           {/* Category Badge */}
-          <div className="absolute left-4 top-4">
-            <Badge variant="glass" className="backdrop-blur-md bg-background/80 border-border/50">
+          <div className="absolute left-3 top-3">
+            <Badge variant="secondary" className="bg-background/90 text-foreground text-xs">
               {event.category}
             </Badge>
           </div>
@@ -101,50 +99,46 @@ export const EventCard = ({ event }: Props) => {
           {/* Favorite Button */}
           <button
             onClick={toggleFavorite}
-            className="absolute right-4 top-4 p-2.5 rounded-full bg-background/80 backdrop-blur-md border border-border/50 hover:bg-background hover:scale-110 transition-all duration-300 group/fav"
+            className="absolute right-3 top-3 p-2 rounded-full bg-background/90 border cursor-pointer"
             aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart 
-              className={`h-4 w-4 transition-all duration-300 ${
+              className={`h-4 w-4 ${
                 isLiked 
-                  ? 'fill-rose-500 text-rose-500 scale-110' 
-                  : 'text-muted-foreground group-hover/fav:text-rose-500'
+                  ? 'fill-rose-500 text-rose-500' 
+                  : 'text-muted-foreground'
               }`} 
             />
           </button>
 
           {/* Price Tag */}
-          <div className="absolute bottom-4 right-4">
+          <div className="absolute bottom-3 right-3">
             {event.price === 0 ? (
-              <Badge variant="gradient" className="text-sm px-4 py-1.5 shadow-lg">
+              <Badge className="bg-foreground text-background text-xs px-3 py-1">
                 Free
               </Badge>
             ) : (
-              <Badge variant="default" className="text-sm px-4 py-1.5 bg-background text-foreground shadow-lg">
+              <Badge variant="secondary" className="bg-background text-foreground text-xs px-3 py-1">
                 ${event.price}
               </Badge>
             )}
           </div>
         </div>
 
-        <CardContent className="p-5 space-y-4">
+        <CardContent className="p-4 space-y-3">
           {/* Title */}
-          <h3 className="text-lg font-bold leading-tight line-clamp-2 min-h-[3.5rem] group-hover:text-primary transition-colors duration-300">
+          <h3 className="text-base font-semibold leading-tight line-clamp-2 min-h-[2.5rem]">
             {event.title}
           </h3>
 
           {/* Meta Info */}
-          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <CalendarDays className="h-4 w-4 text-primary" />
-              </div>
+              <CalendarDays className="h-4 w-4 text-primary" />
               <span className="truncate">{formattedDate}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MapPin className="h-4 w-4 text-primary" />
-              </div>
+              <MapPin className="h-4 w-4 text-primary" />
               <span className="truncate">{event.location}</span>
             </div>
           </div>
@@ -152,11 +146,11 @@ export const EventCard = ({ event }: Props) => {
           {/* CTA */}
           <Button 
             size="default"
-            variant="gradient"
+            variant="default"
             onClick={handleBookClick}
             className="w-full mt-2"
           >
-            Register Now
+            Register
           </Button>
         </CardContent>
       </Card>
