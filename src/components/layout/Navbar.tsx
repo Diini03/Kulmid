@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar, Moon, Sun, Menu, User, LogOut, Monitor, Check, Compass, Search, Bell, Plus, Sparkles, X, Settings } from "lucide-react";
+import { Calendar, Moon, Sun, Menu, User, LogOut, Monitor, Check, Compass, Search, Bell, Plus, Sparkles, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { usePendingActions } from "@/contexts/PendingActionsContext";
@@ -48,7 +48,11 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   }, []);
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-2 ${isActive ? "text-foreground font-medium" : "text-muted-foreground"} transition-colors hover:text-foreground`;
+    `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+      isActive 
+        ? "bg-primary/10 text-primary" 
+        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+    }`;
 
   const getThemeIcon = () => {
     if (theme === "system") return <Monitor className="h-4 w-4" />;
@@ -57,10 +61,14 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   };
 
   return (
-    <header className={`sticky top-0 z-50 backdrop-blur-md bg-background/95 border-b transition-all ${scrolled ? "shadow-sm" : ""}`}>
-      <nav className="container max-w-6xl mx-auto flex items-center justify-between gap-4 h-14">
+    <header className={`sticky top-0 z-50 transition-all duration-300 ${
+      scrolled 
+        ? "bg-background/80 backdrop-blur-xl border-b shadow-sm" 
+        : "bg-background/50 backdrop-blur-md"
+    }`}>
+      <nav className="container max-w-6xl mx-auto flex items-center justify-between gap-4 h-16">
         {/* Left Side - Logo + Navigation */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2">
           <button 
             onClick={() => {
               if (user) {
@@ -69,14 +77,13 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 navigate('/');
               }
             }}
-            className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity p-1"
           >
-            <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
+            <img src={kulmidLogo} alt="Kulmid" className="h-9 w-9" />
           </button>
 
-          {/* Hide user navigation for admins */}
           {!isAdmin && (
-            <div className="hidden md:flex items-center gap-6 text-sm">
+            <div className="hidden md:flex items-center ml-4">
               <NavLink to="/events" className={linkCls}>
                 <Calendar className="h-4 w-4" />
                 Events
@@ -90,71 +97,71 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
         </div>
 
         {/* Right Side - Actions */}
-        <div className="flex items-center gap-3">
-          {/* Time Display - Desktop Only */}
-          <div className="hidden lg:block text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          {/* Time Display */}
+          <div className="hidden lg:flex items-center px-3 py-1.5 rounded-lg bg-secondary/50 text-sm text-muted-foreground">
             {currentTime}
           </div>
 
-          {/* Create Event Button - Authenticated Users (Not Admins) */}
+          {/* Create Event Button */}
           {user && !isAdmin && (
-            <Button asChild size="sm" className="hidden md:flex">
+            <Button asChild size="sm" variant="gradient" className="hidden md:flex">
               <Link to="/create">Create Event</Link>
             </Button>
           )}
 
           {/* Search Button */}
-          <Button variant="ghost" size="icon" onClick={onOpenSearch} aria-label="Search">
+          <Button variant="ghost" size="icon" onClick={onOpenSearch} aria-label="Search" className="rounded-xl">
             <Search className="h-4 w-4" />
           </Button>
 
-          {/* Notifications - Authenticated Users (Not Admins) */}
+          {/* Notifications */}
           {user && !isAdmin && (
             <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
+                <Button variant="ghost" size="icon" aria-label="Notifications" className="relative rounded-xl">
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium flex items-center justify-center">
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center animate-pulse-glow">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[380px] p-0" align="end">
+              <PopoverContent className="w-[380px] p-0 rounded-2xl shadow-xl" align="end">
                 <NotificationsPanel onClose={() => setNotificationsOpen(false)} />
               </PopoverContent>
             </Popover>
           )}
 
-          {/* Theme Toggle - Desktop */}
+          {/* Theme Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="hidden md:flex" aria-label="Toggle theme">
+              <Button variant="ghost" size="icon" className="hidden md:flex rounded-xl" aria-label="Toggle theme">
                 {getThemeIcon()}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center justify-between">
+            <DropdownMenuContent align="end" className="rounded-xl">
+              <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center justify-between rounded-lg">
                 <div className="flex items-center gap-2">
                   <Monitor className="h-4 w-4" />
                   System
                 </div>
-                {theme === "system" && <Check className="h-4 w-4" />}
+                {theme === "system" && <Check className="h-4 w-4 text-primary" />}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("light")} className="flex items-center justify-between">
+              <DropdownMenuItem onClick={() => setTheme("light")} className="flex items-center justify-between rounded-lg">
                 <div className="flex items-center gap-2">
                   <Sun className="h-4 w-4" />
                   Light
                 </div>
-                {theme === "light" && <Check className="h-4 w-4" />}
+                {theme === "light" && <Check className="h-4 w-4 text-primary" />}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")} className="flex items-center justify-between">
+              <DropdownMenuItem onClick={() => setTheme("dark")} className="flex items-center justify-between rounded-lg">
                 <div className="flex items-center gap-2">
                   <Moon className="h-4 w-4" />
                   Dark
                 </div>
-                {theme === "dark" && <Check className="h-4 w-4" />}
+                {theme === "dark" && <Check className="h-4 w-4 text-primary" />}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -163,60 +170,60 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 p-0 relative">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 p-0 relative">
+                  <Avatar className="h-9 w-9 border-2 border-primary/20">
+                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-bold text-sm">
                       {profile?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   {totalPendingCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-orange-500 text-white text-[10px] font-medium flex items-center justify-center">
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">
                       {totalPendingCount > 9 ? "9+" : totalPendingCount}
                     </span>
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5 text-sm">
-                  <div className="font-medium">{profile?.full_name || 'User'}</div>
+              <DropdownMenuContent align="end" className="w-60 rounded-2xl p-2">
+                <div className="px-3 py-2">
+                  <div className="font-bold">{profile?.full_name || 'User'}</div>
                   <div className="text-xs text-muted-foreground">{user.email}</div>
                 </div>
-                <div className="my-1 h-px bg-border" />
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard" className="flex items-center gap-2">
+                <div className="my-2 h-px bg-border" />
+                <DropdownMenuItem asChild className="rounded-xl">
+                  <Link to="/dashboard" className="flex items-center gap-3">
                     <User className="h-4 w-4" />
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/events" className="flex items-center gap-2 justify-between w-full">
-                    <span className="flex items-center gap-2">
+                <DropdownMenuItem asChild className="rounded-xl">
+                  <Link to="/events" className="flex items-center gap-3 justify-between w-full">
+                    <span className="flex items-center gap-3">
                       <Calendar className="h-4 w-4" />
                       My Events
                     </span>
                     {totalPendingCount > 0 && (
-                      <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] h-5 px-1.5">
-                        {totalPendingCount} pending
+                      <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-[10px] h-5 px-2">
+                        {totalPendingCount}
                       </Badge>
                     )}
                   </Link>
                 </DropdownMenuItem>
                 {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin" className="flex items-center gap-2">
+                  <DropdownMenuItem asChild className="rounded-xl">
+                    <Link to="/admin" className="flex items-center gap-3">
                       <Sparkles className="h-4 w-4" />
                       Admin
                     </Link>
                   </DropdownMenuItem>
                 )}
-                <div className="my-1 h-px bg-border" />
-                <DropdownMenuItem asChild>
-                  <Link to="/settings" className="flex items-center gap-2">
+                <div className="my-2 h-px bg-border" />
+                <DropdownMenuItem asChild className="rounded-xl">
+                  <Link to="/settings" className="flex items-center gap-3">
                     <Settings className="h-4 w-4" />
                     Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
+                <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-3 rounded-xl text-destructive focus:text-destructive">
                   <LogOut className="h-4 w-4" />
                   Sign Out
                 </DropdownMenuItem>
@@ -224,10 +231,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             </DropdownMenu>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm" className="hidden md:flex">
+              <Button asChild variant="ghost" size="sm" className="hidden md:flex rounded-xl">
                 <Link to="/signin">Sign In</Link>
               </Button>
-              <Button asChild size="sm" className="hidden md:flex">
+              <Button asChild size="sm" variant="gradient" className="hidden md:flex">
                 <Link to="/signup">Sign Up</Link>
               </Button>
             </>
@@ -237,7 +244,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           <div className="md:hidden">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Menu">
+                <Button variant="ghost" size="icon" aria-label="Menu" className="rounded-xl">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -255,10 +262,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                       to="/events" 
                       onClick={() => setMobileMenuOpen(false)}
                       className={({ isActive }) => 
-                        `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                        `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                           isActive 
                             ? "bg-primary text-primary-foreground" 
-                            : "hover:bg-accent"
+                            : "hover:bg-secondary"
                         }`
                       }
                     >
@@ -269,10 +276,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                       to="/discover" 
                       onClick={() => setMobileMenuOpen(false)}
                       className={({ isActive }) => 
-                        `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                        `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                           isActive 
                             ? "bg-primary text-primary-foreground" 
-                            : "hover:bg-accent"
+                            : "hover:bg-secondary"
                         }`
                       }
                     >
@@ -289,10 +296,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                           to="/create" 
                           onClick={() => setMobileMenuOpen(false)}
                           className={({ isActive }) => 
-                            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                               isActive 
                                 ? "bg-primary text-primary-foreground" 
-                                : "hover:bg-accent"
+                                : "hover:bg-secondary"
                             }`
                           }
                         >
@@ -303,10 +310,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                           to="/events" 
                           onClick={() => setMobileMenuOpen(false)}
                           className={({ isActive }) => 
-                            `flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
+                            `flex items-center justify-between px-4 py-3 rounded-xl transition-all ${
                               isActive 
                                 ? "bg-primary text-primary-foreground" 
-                                : "hover:bg-accent"
+                                : "hover:bg-secondary"
                             }`
                           }
                         >
@@ -315,7 +322,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                             <span className="font-medium">My Events</span>
                           </span>
                           {totalPendingCount > 0 && (
-                            <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] h-5 px-1.5">
+                            <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-[10px] h-5 px-2">
                               {totalPendingCount}
                             </Badge>
                           )}
@@ -324,10 +331,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                           to="/dashboard" 
                           onClick={() => setMobileMenuOpen(false)}
                           className={({ isActive }) => 
-                            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                               isActive 
                                 ? "bg-primary text-primary-foreground" 
-                                : "hover:bg-accent"
+                                : "hover:bg-secondary"
                             }`
                           }
                         >
@@ -339,10 +346,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                             to="/admin" 
                             onClick={() => setMobileMenuOpen(false)}
                             className={({ isActive }) => 
-                              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                                 isActive 
                                   ? "bg-primary text-primary-foreground" 
-                                  : "hover:bg-accent"
+                                  : "hover:bg-secondary"
                               }`
                             }
                           >
@@ -358,7 +365,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                             handleSignOut();
                             setMobileMenuOpen(false);
                           }}
-                          className="w-full justify-start gap-3 px-4 py-3 h-auto"
+                          className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                           <LogOut className="h-5 w-5" />
                           <span className="font-medium">Sign Out</span>
@@ -370,7 +377,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                       <Button 
                         asChild 
                         variant="outline" 
-                        className="w-full justify-start gap-3 px-4 py-3 h-auto"
+                        className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <Link to="/signin">
@@ -380,7 +387,8 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                       </Button>
                       <Button 
                         asChild 
-                        className="w-full justify-start gap-3 px-4 py-3 h-auto"
+                        variant="gradient"
+                        className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <Link to="/signup">
@@ -393,34 +401,31 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
 
                   {/* Theme Toggle */}
                   <div className="border-t pt-4">
-                    <div className="px-4 mb-2 text-sm text-muted-foreground">Theme</div>
-                    <div className="flex gap-2">
+                    <div className="px-4 mb-2 text-sm text-muted-foreground font-medium">Theme</div>
+                    <div className="flex gap-2 px-4">
+                      <Button
+                        variant={theme === "system" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTheme("system")}
+                        className="flex-1 rounded-xl"
+                      >
+                        <Monitor className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant={theme === "light" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setTheme("light")}
-                        className="flex-1"
+                        className="flex-1 rounded-xl"
                       >
-                        <Sun className="h-4 w-4 mr-2" />
-                        Light
+                        <Sun className="h-4 w-4" />
                       </Button>
                       <Button
                         variant={theme === "dark" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setTheme("dark")}
-                        className="flex-1"
+                        className="flex-1 rounded-xl"
                       >
-                        <Moon className="h-4 w-4 mr-2" />
-                        Dark
-                      </Button>
-                      <Button
-                        variant={theme === "system" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setTheme("system")}
-                        className="flex-1"
-                      >
-                        <Monitor className="h-4 w-4 mr-2" />
-                        Auto
+                        <Moon className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>

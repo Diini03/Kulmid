@@ -23,8 +23,8 @@ export const NewsletterModal = ({ open, onOpenChange }: Props) => {
           <DialogDescription>Get event updates and exclusive offers.</DialogDescription>
         </DialogHeader>
         <div className="flex gap-2">
-          <input type="email" placeholder="you@example.com" className="flex-1 h-10 rounded-md border bg-background px-3" aria-label="Email" />
-          <Button variant="hero">Subscribe</Button>
+          <input type="email" placeholder="you@example.com" className="flex-1 h-10 rounded-xl border bg-background px-3" aria-label="Email" />
+          <Button variant="gradient">Subscribe</Button>
         </div>
         <p className="text-xs text-muted-foreground">We respect your privacy. Unsubscribe anytime.</p>
       </DialogContent>

@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { categories } from "@/constants/categories";
 import { Sparkles, Settings, ArrowRight } from "lucide-react";
+
 type EventItem = {
   id: string;
   title: string;
@@ -20,6 +21,7 @@ type EventItem = {
   description: string | null;
   status: string;
 };
+
 const Discover = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
@@ -27,33 +29,25 @@ const Discover = () => {
   
   const [hasPreferences, setHasPreferences] = useState(false);
   const [preferenceCount, setPreferenceCount] = useState(0);
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchData = async () => {
       await supabase.rpc('update_event_status');
       
-      // Fetch all events for smart shuffle
       const { data: allEvents } = await supabase
         .from('events')
         .select('*')
         .in('status', ['approved', 'upcoming', 'ongoing']);
       
       if (allEvents) {
-        // Fetch registration counts
         const eventIds = allEvents.map(e => e.id);
         const registrationCounts = await fetchRegistrationCounts(supabase, eventIds);
-        
-        // Smart shuffle with popularity weighting
         const shuffled = smartShuffleEvents(allEvents, registrationCounts);
-        
-        // Take top 6 for featured section
         setEvents(shuffled.slice(0, 6));
       }
 
-      // Fetch all events to count by category
       const { data: categoryEvents } = await supabase
         .from('events')
         .select('category')
@@ -89,7 +83,6 @@ const Discover = () => {
       if (data?.event_categories && data.event_categories.length > 0) {
         setHasPreferences(true);
         
-        // Count matching events
         const { data: matchingEvents } = await supabase
           .from('events')
           .select('id')
@@ -105,6 +98,7 @@ const Discover = () => {
     
     checkPreferences();
   }, [user]);
+
   const handleViewAll = () => {
     navigate("/events");
   };
@@ -112,52 +106,62 @@ const Discover = () => {
   const handleCategoryClick = (categoryName: string) => {
     navigate(`/events?category=${categoryName}`);
   };
-  return <Layout>
-      <Seo title="Discover Events" description="Explore popular events near you, browse by category, or check out some of the great community calendars" canonical="/discover" />
+
+  return (
+    <Layout>
+      <Seo 
+        title="Discover Events" 
+        description="Explore popular events near you, browse by category, or check out some of the great community calendars" 
+        canonical="/discover" 
+      />
 
       {/* Hero Section */}
-      <section className="border-b bg-gradient-to-b from-muted/30 to-background">
-        <div className="container max-w-6xl py-16 md:py-20">
-          <div className="max-w-2xl mx-auto text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
-              Discover events
+      <section className="relative overflow-hidden border-b">
+        {/* Background Elements */}
+        <div className="absolute inset-0 bg-dots opacity-30" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-[hsl(280_85%_60%)]/10 rounded-full blur-3xl animate-float-delayed" />
+        
+        <div className="container max-w-6xl py-20 md:py-28 relative">
+          <div className="max-w-2xl mx-auto text-center space-y-6">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance animate-slide-up">
+              <span className="text-gradient">Discover</span> events
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground text-balance">
+            <p className="text-xl md:text-2xl text-muted-foreground text-balance animate-slide-up stagger-1">
               Explore experiences that inspire you
             </p>
 
-            {/* Personalization Button */}
+            {/* Personalization Buttons */}
             {user && hasPreferences && (
-              <div className="pt-4">
+              <div className="pt-6 animate-slide-up stagger-2">
                 <Button 
                   asChild 
                   size="lg" 
-                  variant="default"
+                  variant="gradient"
                   className="gap-2"
                 >
                   <Link to="/home">
-                    <Sparkles className="h-4 w-4" />
+                    <Sparkles className="h-5 w-5" />
                     {preferenceCount > 0 
-                      ? `View ${preferenceCount} events matched to your interests`
+                      ? `View ${preferenceCount} matched events`
                       : "View personalized recommendations"
                     }
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
               </div>
             )}
             
-            {/* Show onboarding prompt if no preferences */}
             {user && !hasPreferences && (
-              <div className="pt-4">
+              <div className="pt-6 animate-slide-up stagger-2">
                 <Button 
                   asChild 
                   size="lg" 
-                  variant="outline"
+                  variant="glass"
                   className="gap-2"
                 >
                   <Link to="/onboarding">
-                    <Settings className="h-4 w-4" />
+                    <Settings className="h-5 w-5" />
                     Set your preferences for personalized events
                   </Link>
                 </Button>
@@ -168,24 +172,24 @@ const Discover = () => {
       </section>
 
       {/* Browse by Category */}
-      <section className="border-b">
-        <div className="container max-w-6xl py-12">
-          <h2 className="text-xl font-semibold mb-6">Browse by category</h2>
+      <section className="border-b bg-secondary/30">
+        <div className="container max-w-6xl py-16">
+          <h2 className="text-2xl font-bold mb-8">Browse by category</h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map(category => {
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {categories.map((category, index) => {
               const Icon = category.icon;
               const count = eventCounts[category.name] || 0;
               return (
                 <button 
                   key={category.name} 
                   onClick={() => handleCategoryClick(category.name)} 
-                  className="group p-5 rounded-xl border bg-card hover-lift text-left"
+                  className={`category-card text-left animate-slide-up stagger-${index + 1}`}
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center mb-4 group-hover:scale-105 transition-transform`}>
+                  <div className={`icon-wrapper bg-gradient-to-br ${category.color} shadow-lg`}>
                     <Icon className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold mb-1">{category.name}</h3>
+                  <h3 className="font-bold text-lg mb-1">{category.name}</h3>
                   <p className="text-sm text-muted-foreground">{count} events</p>
                 </button>
               );
@@ -195,29 +199,46 @@ const Discover = () => {
       </section>
 
       {/* Featured Events */}
-      <section className="container max-w-6xl py-12 md:py-16">
-        <h2 className="text-xl font-semibold mb-8">Featured events</h2>
+      <section className="container max-w-6xl py-16 md:py-20">
+        <div className="flex items-center justify-between mb-10">
+          <h2 className="text-2xl font-bold">Featured events</h2>
+          <Button onClick={handleViewAll} variant="ghost" className="gap-2">
+            View all
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
 
-        {loading ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {loading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="space-y-3">
-                <div className="h-56 w-full rounded-xl bg-muted animate-pulse" />
-                <div className="h-6 w-3/4 rounded bg-muted animate-pulse" />
-                <div className="h-4 w-full rounded bg-muted animate-pulse" />
+              <div key={i} className="space-y-4 animate-pulse">
+                <div className="h-52 w-full rounded-2xl bg-secondary" />
+                <div className="h-6 w-3/4 rounded-lg bg-secondary" />
+                <div className="space-y-2">
+                  <div className="h-4 w-full rounded bg-secondary" />
+                  <div className="h-4 w-2/3 rounded bg-secondary" />
+                </div>
               </div>
             ))}
-          </div> : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map(event => <EventCard key={event.id} event={event} />)}
-          </div>}
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {events.map((event, index) => (
+              <div key={event.id} className={`animate-slide-up stagger-${(index % 6) + 1}`}>
+                <EventCard event={event} />
+              </div>
+            ))}
+          </div>
+        )}
 
-        <div className="text-center mt-12">
-          <Button onClick={handleViewAll} size="lg" variant="outline" className="px-8">
+        <div className="text-center mt-14">
+          <Button onClick={handleViewAll} size="lg" variant="outline" className="px-10">
             View all events
           </Button>
         </div>
       </section>
-
-      
-    </Layout>;
+    </Layout>
+  );
 };
+
 export default Discover;
