@@ -23,9 +23,15 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Ambient background effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] animate-float" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[hsl(280_85%_60%)]/5 rounded-full blur-[100px] animate-float-delayed" />
+      </div>
+      
       <Navbar onOpenSearch={() => setSearchOpen(true)} />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 relative">{children}</main>
       <Footer />
       <BackToTop />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
