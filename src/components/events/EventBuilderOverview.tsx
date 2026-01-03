@@ -1,173 +1,328 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Users, Link as LinkIcon, ExternalLink, Copy, Check } from "lucide-react";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { AttendancePrediction } from "./AttendancePrediction";
-import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Calendar, MapPin, Users, Clock, CheckCircle, AlertTriangle, UserPlus, Eye, Globe, Video } from "lucide-react";
+import { format, parseISO, isPast } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import InviteGuestsDialog from "./InviteGuestsDialog";
+
 interface EventBuilderOverviewProps {
   event: any;
   onRefresh: () => void;
 }
 
-const EventBuilderOverview = ({ event }: EventBuilderOverviewProps) => {
-  // Fetch registration count
-  const [registrationCount, setRegistrationCount] = useState(0);
-  const [linkCopied, setLinkCopied] = useState(false);
+interface GuestStats {
+  total: number;
+  confirmed: number;
+  pending: number;
+  checkedIn: number;
+}
 
-  const shareUrl = `${window.location.origin}/events/${event.id}`;
-  const shortUrl = `${window.location.origin}/e/${event.id}`;
+interface RecentGuest {
+  id: string;
+  name: string | null;
+  email: string;
+  status: string;
+  created_at: string;
+}
+
+const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) => {
+  const [guestStats, setGuestStats] = useState<GuestStats>({ total: 0, confirmed: 0, pending: 0, checkedIn: 0 });
+  const [recentGuests, setRecentGuests] = useState<RecentGuest[]>([]);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRegistrationCount = async () => {
-      const { count } = await supabase
-        .from('event_guests')
-        .select('*', { count: 'exact', head: true })
-        .eq('event_id', event.id);
-      
-      setRegistrationCount(count || 0);
-    };
+    if (event?.id) {
+      fetchGuestData();
+    }
+  }, [event?.id]);
 
-    fetchRegistrationCount();
-  }, [event.id]);
+  const fetchGuestData = async () => {
+    try {
+      // Fetch all guests for stats
+      const { data: guests, error } = await supabase
+        .from("event_guests")
+        .select("id, name, email, status, checked_in, created_at")
+        .eq("event_id", event.id)
+        .order("created_at", { ascending: false });
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shortUrl);
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
-    toast({
-      title: "Link copied!",
-      description: "Event link has been copied to clipboard",
-    });
+      if (error) throw error;
+
+      if (guests) {
+        setGuestStats({
+          total: guests.length,
+          confirmed: guests.filter(g => g.status === "confirmed").length,
+          pending: guests.filter(g => g.status === "pending").length,
+          checkedIn: guests.filter(g => g.checked_in).length,
+        });
+        setRecentGuests(guests.slice(0, 5));
+      }
+    } catch (error) {
+      console.error("Error fetching guests:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const eventDate = parseISO(event.date);
+  const isEventPast = isPast(eventDate);
+  const hasLocation = event.location && event.location.trim() !== "";
+  const hasMeetingLink = event.meeting_link && event.meeting_link.trim() !== "";
+
+  const getEventTypeLabel = () => {
+    if (event.event_type === "online") return "Online Event";
+    if (event.event_type === "hybrid") return "Hybrid Event";
+    return "In-Person Event";
   };
 
   return (
     <div className="space-y-6">
-      {/* Quick Actions Card */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Event Status Banner */}
+      {isEventPast && (
+        <div className="bg-muted/50 border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <CheckCircle className="h-4 w-4" />
+            <span className="text-sm font-medium">This event has ended</span>
+          </div>
+        </div>
+      )}
+
+      {event.status === "pending" && (
+        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+            <Clock className="h-4 w-4" />
+            <span className="text-sm font-medium">Pending approval from admin</span>
+          </div>
+        </div>
+      )}
+
+      {event.status === "rejected" && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <div className="flex items-start gap-2 text-destructive">
+            <AlertTriangle className="h-4 w-4 mt-0.5" />
             <div>
-              <h3 className="font-semibold">View & Share Your Event</h3>
-              <p className="text-sm text-muted-foreground">
-                Preview your event page and share the link with others
-              </p>
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Button asChild variant="default" className="flex-1 sm:flex-none">
-                <Link to={`/events/${event.id}`}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Event Page
-                </Link>
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleCopyLink}
-                className="flex-1 sm:flex-none"
-              >
-                {linkCopied ? (
-                  <Check className="h-4 w-4 mr-2 text-green-500" />
-                ) : (
-                  <Copy className="h-4 w-4 mr-2" />
-                )}
-                {linkCopied ? "Copied!" : "Copy Link"}
-              </Button>
-            </div>
-          </div>
-          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-            <span>Share URL:</span>
-            <code className="px-2 py-1 bg-muted rounded">{shortUrl}</code>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Event Preview Card */}
-        <Card>
-        <CardHeader>
-          <CardTitle>Event Preview</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {event.image_url && (
-            <img
-              src={event.image_url}
-              alt={event.title}
-              className="w-full h-64 object-cover rounded-lg"
-            />
-          )}
-          
-          <div>
-            <h2 className="text-2xl font-bold mb-2">{event.title}</h2>
-            <Badge variant="secondary">{event.category}</Badge>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex items-start gap-2">
-              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Date & Time</p>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(event.date), "PPP 'at' p")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2">
-              {event.event_type === "online" || event.event_type === "hybrid" ? (
-                <LinkIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
-              ) : (
-                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <span className="text-sm font-medium">Event was rejected</span>
+              {event.rejection_reason && (
+                <p className="text-sm mt-1 opacity-80">{event.rejection_reason}</p>
               )}
-              <div>
-                <p className="text-sm font-medium">Location</p>
-                <p className="text-sm text-muted-foreground">
-                  {event.location || event.meeting_link || "Not specified"}
-                </p>
-              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Event Recap Section */}
+      <div className="border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 bg-muted/30 border-b border-border">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Event Details</h3>
+        </div>
+        <div className="p-4 space-y-4">
+          {/* Date & Time */}
+          <div className="flex items-start gap-3">
+            <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <div>
+              <div className="font-medium">{format(eventDate, "EEEE, MMMM d, yyyy")}</div>
+              <div className="text-sm text-muted-foreground">{format(eventDate, "h:mm a")}</div>
             </div>
           </div>
 
-          {event.description && (
+          {/* Location */}
+          <div className="flex items-start gap-3">
+            {event.event_type === "online" ? (
+              <Video className="h-4 w-4 text-muted-foreground mt-0.5" />
+            ) : (
+              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+            )}
             <div>
-              <p className="text-sm font-medium mb-2">Description</p>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {event.description}
-              </p>
-            </div>
-          )}
-
-          <div className="pt-4 border-t">
-            <p className="text-sm font-medium mb-2">Event Details</p>
-            <div className="grid gap-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Type:</span>
-                <span className="capitalize">{event.event_type || "In-person"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Price:</span>
-                <span>{event.price === 0 ? "Free" : `$${event.price}`}</span>
-              </div>
-              {event.host_name && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Host:</span>
-                  <span>{event.host_name}</span>
+              {hasLocation ? (
+                <>
+                  <div className="font-medium">{event.location}</div>
+                  <div className="text-sm text-muted-foreground">{getEventTypeLabel()}</div>
+                </>
+              ) : hasMeetingLink ? (
+                <>
+                  <div className="font-medium">Online</div>
+                  <a 
+                    href={event.meeting_link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Join meeting
+                  </a>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span className="text-sm">Location not set</span>
                 </div>
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-        {/* Attendance Prediction Card */}
-        <AttendancePrediction 
-          eventId={event.id}
-          registrationCount={registrationCount}
-          event={event}
-        />
+          {/* Event Type */}
+          <div className="flex items-start gap-3">
+            <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <div>
+              <div className="font-medium capitalize">{event.category}</div>
+              <div className="text-sm text-muted-foreground">
+                {event.price === 0 ? "Free event" : `$${event.price}`}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Guests Section */}
+      <div className="border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center justify-between">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Guests</h3>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-7 text-xs"
+            onClick={() => setInviteDialogOpen(true)}
+          >
+            <UserPlus className="h-3.5 w-3.5 mr-1" />
+            Invite
+          </Button>
+        </div>
+        <div className="p-4">
+          {loading ? (
+            <div className="text-sm text-muted-foreground">Loading...</div>
+          ) : (
+            <div className="space-y-4">
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{guestStats.confirmed}</div>
+                  <div className="text-xs text-muted-foreground">Confirmed</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{guestStats.pending}</div>
+                  <div className="text-xs text-muted-foreground">Pending</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{guestStats.checkedIn}</div>
+                  <div className="text-xs text-muted-foreground">Checked In</div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              {event.max_attendees && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Capacity</span>
+                    <span>{guestStats.confirmed} / {event.max_attendees}</span>
+                  </div>
+                  <Progress 
+                    value={(guestStats.confirmed / event.max_attendees) * 100} 
+                    className="h-2"
+                  />
+                </div>
+              )}
+
+              {/* Recent Registrations */}
+              {recentGuests.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide">Recent Registrations</div>
+                  <div className="space-y-2">
+                    {recentGuests.map((guest) => (
+                      <div key={guest.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm truncate">{guest.name || guest.email}</div>
+                          {guest.name && (
+                            <div className="text-xs text-muted-foreground truncate">{guest.email}</div>
+                          )}
+                        </div>
+                        <Badge 
+                          variant={guest.status === "confirmed" ? "default" : "secondary"}
+                          className="text-xs flex-shrink-0"
+                        >
+                          {guest.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {guestStats.total === 0 && (
+                <div className="text-center py-4">
+                  <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground mb-3">No guests yet</p>
+                  <Button 
+                    size="sm"
+                    onClick={() => setInviteDialogOpen(true)}
+                  >
+                    <UserPlus className="h-3.5 w-3.5 mr-2" />
+                    Invite Guests
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Visibility Section */}
+      <div className="border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 bg-muted/30 border-b border-border">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Visibility</h3>
+        </div>
+        <div className="p-4">
+          <div className="flex items-center gap-3">
+            <Eye className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="font-medium">
+                {event.status === "approved" || event.status === "upcoming" || event.status === "ongoing" 
+                  ? "Public" 
+                  : "Not Published"}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {event.status === "approved" || event.status === "upcoming" || event.status === "ongoing" 
+                  ? "Anyone can find and register for this event"
+                  : event.status === "pending"
+                    ? "Will be public once approved"
+                    : "This event is not visible to the public"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hosts Section */}
+      {event.host_name && (
+        <div className="border border-border rounded-lg overflow-hidden">
+          <div className="px-4 py-3 bg-muted/30 border-b border-border">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Hosts</h3>
+          </div>
+          <div className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-medium text-primary">
+                  {event.host_name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <div className="font-medium">{event.host_name}</div>
+                {event.host_email && (
+                  <div className="text-sm text-muted-foreground">{event.host_email}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Dialog */}
+      <InviteGuestsDialog 
+        open={inviteDialogOpen} 
+        onOpenChange={setInviteDialogOpen}
+        eventId={event.id}
+        onSuccess={fetchGuestData}
+      />
     </div>
   );
 };
