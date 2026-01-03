@@ -115,6 +115,7 @@ const App = () => (
                   <Route path="/calendar" element={<ProtectedRoute><UserOnlyRoute><CalendarView /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/create" element={<ProtectedRoute><UserOnlyRoute><Create /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
+                  <Route path="/events/:id/manage" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
                   <Route path="/event/:eventId/scanner" element={<ProtectedRoute><EventScanner /></ProtectedRoute>} />
                   {/* /my-events removed in v2.0 - redirects to /events */}
                   <Route path="/my-events" element={<Navigate to="/events" replace />} />
