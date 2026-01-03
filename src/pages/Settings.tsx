@@ -69,7 +69,7 @@ const Settings = () => {
     <Layout>
       <Seo title="Settings" description="Manage your account settings" canonical="/settings" />
       
-      <div className="container max-w-3xl py-12">
+      <div className="container max-w-5xl px-4 py-12">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Settings</h1>
           <p className="text-muted-foreground">

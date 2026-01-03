@@ -112,7 +112,7 @@ const EventDetails = () => {
     return (
       <Layout>
         <Seo title="Loading..." />
-        <div className="max-w-3xl mx-auto px-4 py-20 text-center text-muted-foreground">
+        <div className="max-w-5xl mx-auto px-4 py-20 text-center text-muted-foreground">
           Loading event...
         </div>
       </Layout>
@@ -123,7 +123,7 @@ const EventDetails = () => {
     return (
       <Layout>
         <Seo title="Event Not Found" />
-        <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <div className="max-w-5xl mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold mb-2">Event not found</h1>
           <Button asChild variant="link">
             <Link to="/discover">Browse events</Link>
@@ -168,7 +168,7 @@ const EventDetails = () => {
         canonical={`/events/${event.id}`} 
       />
 
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
         
         {/* Pending/Draft Banner */}
         {isPendingOrDraft && (

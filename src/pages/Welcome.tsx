@@ -26,7 +26,7 @@ const Welcome = () => {
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
         </div>
         
-        <div className="container mx-auto max-w-6xl relative z-10">
+        <div className="container mx-auto max-w-5xl px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center py-20">
             {/* Left side - Content */}
             <div className="space-y-8 text-center lg:text-left">

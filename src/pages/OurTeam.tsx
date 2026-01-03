@@ -71,7 +71,7 @@ const OurTeam = () => {
 
   const renderTeamSection = (title: string, members: TeamMember[]) => (
     <section className="py-16">
-      <div className="container">
+      <div className="container max-w-5xl px-4">
         <h2 className="text-3xl font-bold text-center mb-12">{title}</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {members.map((member, index) => (
@@ -142,7 +142,7 @@ const OurTeam = () => {
       
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-r from-primary/10 to-primary/5">
-        <div className="container text-center">
+        <div className="container max-w-5xl px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Meet the Team Behind Kulmid</h1>
           <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
             A group of engineers passionate about technology, collaboration, and community impact. 
@@ -153,7 +153,7 @@ const OurTeam = () => {
 
       {/* Team Stats */}
       <section className="py-16 bg-muted/50">
-        <div className="container">
+        <div className="container max-w-5xl px-4">
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-3xl font-bold text-primary mb-2">5</div>
@@ -184,7 +184,7 @@ const OurTeam = () => {
 
       {/* Culture & Values */}
       <section className="py-20 bg-muted/50">
-        <div className="container">
+        <div className="container max-w-5xl px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Our Culture</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="text-center p-6">

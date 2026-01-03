@@ -243,7 +243,7 @@ const Create = () => {
     <PageLayout>
       <Seo title="Create Event" description="Create and publish your event" canonical="/create" />
       
-      <div className="container max-w-6xl py-8 md:py-12">
+      <div className="container max-w-5xl px-4 py-8 md:py-12">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Create New Event</h1>
           <p className="text-muted-foreground">
