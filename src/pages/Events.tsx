@@ -113,13 +113,13 @@ const Events = () => {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      draft: "bg-muted text-muted-foreground",
-      pending: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-      approved: "bg-green-500/10 text-green-600 dark:text-green-400",
-      upcoming: "bg-green-500/10 text-green-600 dark:text-green-400",
-      ongoing: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-      past: "bg-muted text-muted-foreground",
-      rejected: "bg-destructive/10 text-destructive",
+      draft: "bg-secondary text-muted-foreground",
+      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+      approved: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+      upcoming: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+      ongoing: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+      past: "bg-secondary text-muted-foreground",
+      rejected: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
     };
     return styles[status] || styles.draft;
   };
@@ -130,23 +130,23 @@ const Events = () => {
       <Layout>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[70vh] flex items-center justify-center">
-          <div className="empty-state-glass max-w-md mx-4">
+          <div className="empty-state-card max-w-md mx-4">
             <div className="empty-state-icon">
-              <Calendar className="h-10 w-10 text-primary-foreground" />
+              <Calendar className="h-8 w-8" />
             </div>
             <h1 className="text-2xl font-bold mb-3">Sign in to manage your events</h1>
             <p className="text-muted-foreground mb-8">
               Create beautiful event pages, invite guests, and track registrations.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg" variant="gradient">
+              <Button asChild size="lg" variant="default">
                 <Link to="/signin">Sign In</Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link to="/signup">Create Account</Link>
               </Button>
             </div>
-            <div className="mt-8 pt-8 border-t border-border/50">
+            <div className="mt-8 pt-8 border-t">
               <p className="text-sm text-muted-foreground mb-3">
                 Looking to attend events instead?
               </p>
@@ -181,9 +181,9 @@ const Events = () => {
       <Layout>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[70vh] flex items-center justify-center">
-          <div className="empty-state-glass max-w-md mx-4">
+          <div className="empty-state-card max-w-md mx-4">
             <div className="empty-state-icon">
-              <CalendarPlus className="h-12 w-12 text-primary-foreground" />
+              <CalendarPlus className="h-10 w-10" />
             </div>
             <h1 className="text-2xl font-bold mb-3">Create your first event</h1>
             <p className="text-muted-foreground mb-2">
@@ -192,13 +192,13 @@ const Events = () => {
             <p className="text-muted-foreground mb-8">
               Create beautiful event pages, invite guests, and track attendance.
             </p>
-            <Button asChild size="lg" variant="gradient" className="px-8">
+            <Button asChild size="lg" variant="default" className="px-8">
               <Link to="/create" className="gap-2">
                 <Plus className="h-5 w-5" />
                 Create Your Event
               </Link>
             </Button>
-            <div className="mt-10 pt-8 border-t border-border/50">
+            <div className="mt-10 pt-8 border-t">
               <p className="text-sm text-muted-foreground mb-3">
                 or explore events happening around you
               </p>
@@ -215,7 +215,7 @@ const Events = () => {
     );
   }
 
-  // Main events list with Lovart-style timeline layout
+  // Main events list with timeline layout
   return (
     <Layout>
       <Seo title="Events" description="Manage your events on Kulmid" canonical="/events" />
@@ -224,24 +224,24 @@ const Events = () => {
         <div className="flex items-center justify-between mb-10">
           <h1 className="text-3xl font-bold">My Events</h1>
           <div className="flex items-center gap-4">
-            {/* Filter Toggle - Glass Style */}
-            <div className="glass rounded-full p-1 flex">
+            {/* Filter Toggle */}
+            <div className="flex rounded-full border p-1">
               <button
                 onClick={() => setFilter("upcoming")}
-                className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
+                className={`px-5 py-2 text-sm font-medium rounded-full transition-colors ${
                   filter === "upcoming"
-                    ? "bg-primary text-primary-foreground shadow-glow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground"
                 }`}
               >
                 Upcoming
               </button>
               <button
                 onClick={() => setFilter("past")}
-                className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
+                className={`px-5 py-2 text-sm font-medium rounded-full transition-colors ${
                   filter === "past"
-                    ? "bg-primary text-primary-foreground shadow-glow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground"
                 }`}
               >
                 Past
@@ -252,15 +252,15 @@ const Events = () => {
 
         {/* Empty state for current filter */}
         {filteredEvents.length === 0 && (
-          <div className="empty-state-glass">
+          <div className="empty-state-card">
             <div className="empty-state-icon mx-auto">
-              <Calendar className="h-10 w-10 text-primary-foreground" />
+              <Calendar className="h-8 w-8" />
             </div>
             <p className="text-muted-foreground mb-4">
               No {filter} events found.
             </p>
             {filter === "upcoming" && (
-              <Button asChild variant="gradient">
+              <Button asChild variant="default">
                 <Link to="/create">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Event
@@ -270,7 +270,7 @@ const Events = () => {
           </div>
         )}
 
-        {/* Lovart-Style Timeline Events */}
+        {/* Timeline Events */}
         <div className="space-y-0">
           {sortedDateKeys.map((dateKey, dateIndex) => {
             const dateEvents = groupedEvents[dateKey];
@@ -278,8 +278,8 @@ const Events = () => {
             
             return (
               <div key={dateKey} className={`flex gap-6 sm:gap-10 animate-slide-up stagger-${Math.min(dateIndex + 1, 6)}`}>
-                {/* Date Column - Stacked Style */}
-                <div className="w-16 sm:w-20 flex-shrink-0 pt-2">
+                {/* Date Column */}
+                <div className="w-14 sm:w-16 flex-shrink-0 pt-2">
                   <div className="date-stack sticky top-24">
                     <div className="date-stack-month">{format(date, "MMM")}</div>
                     <div className="date-stack-day">{format(date, "d")}</div>
@@ -287,12 +287,10 @@ const Events = () => {
                   </div>
                 </div>
 
-                {/* Timeline Line with Glow */}
+                {/* Timeline Line */}
                 <div className="relative flex flex-col items-center">
                   <div className="timeline-dot mt-3 z-10" />
                   <div className="timeline-line flex-1 -mt-1" />
-                  {/* Dotted connector */}
-                  <div className="absolute top-5 left-4 w-6 timeline-connector hidden sm:block" />
                 </div>
 
                 {/* Events Column */}
@@ -304,7 +302,7 @@ const Events = () => {
                       <div
                         key={event.id}
                         onClick={() => navigate(`/events/${event.id}/manage`)}
-                        className="glass-event-card cursor-pointer"
+                        className="event-card-timeline"
                       >
                         <div className="flex items-start gap-4">
                           {/* Event Info */}
@@ -319,7 +317,7 @@ const Events = () => {
                                 {event.status}
                               </span>
                               {pendingCount > 0 && (
-                                <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400">
+                                <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
                                   {pendingCount} pending
                                 </span>
                               )}
@@ -352,9 +350,9 @@ const Events = () => {
                             </div>
                           </div>
 
-                          {/* Thumbnail - Larger */}
+                          {/* Thumbnail */}
                           {event.image_url && (
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-border/50">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 border">
                               <img
                                 src={event.image_url}
                                 alt=""

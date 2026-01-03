@@ -105,7 +105,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
 
           {/* Create Event Button */}
           {user && !isAdmin && (
-            <Button asChild size="sm" variant="gradient" className="hidden md:flex">
+            <Button asChild size="sm" variant="default" className="hidden md:flex">
               <Link to="/create">Create Event</Link>
             </Button>
           )}
@@ -234,7 +234,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <Button asChild variant="ghost" size="sm" className="hidden md:flex rounded-xl">
                 <Link to="/signin">Sign In</Link>
               </Button>
-              <Button asChild size="sm" variant="gradient" className="hidden md:flex">
+              <Button asChild size="sm" variant="default" className="hidden md:flex">
                 <Link to="/signup">Sign Up</Link>
               </Button>
             </>
@@ -387,7 +387,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                       </Button>
                       <Button 
                         asChild 
-                        variant="gradient"
+                        variant="default"
                         className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl"
                         onClick={() => setMobileMenuOpen(false)}
                       >

@@ -15,9 +15,9 @@ export const BackToTop = () => {
   return (
     <Button
       aria-label="Back to top"
-      variant="glow"
+      variant="default"
       size="icon"
-      className="fixed bottom-6 right-6 hover-lift animate-scale-in rounded-full"
+      className="fixed bottom-6 right-6 rounded-full"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
     >
       <ArrowUp className="h-5 w-5" />
