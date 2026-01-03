@@ -26,7 +26,7 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Left Panel - Form */}
       <div className="flex-1 flex flex-col min-h-screen lg:w-1/2">
         {/* Header - matching Navbar width */}
-        <header className="flex items-center justify-between p-6 lg:px-12 max-w-6xl mx-auto w-full">
+        <header className="flex items-center justify-between p-6 lg:px-12 max-w-5xl mx-auto w-full">
           <Link to="/" className="flex items-center gap-2">
             <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
             <span className="font-bold text-xl">Kulmid</span>
@@ -60,7 +60,7 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
         </main>
 
         {/* Footer */}
-        <footer className="p-6 lg:px-12 text-center text-sm text-muted-foreground max-w-6xl mx-auto w-full">
+        <footer className="p-6 lg:px-12 text-center text-sm text-muted-foreground max-w-5xl mx-auto w-full">
           © {new Date().getFullYear()} Kulmid. All rights reserved.
         </footer>
       </div>

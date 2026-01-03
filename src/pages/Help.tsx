@@ -202,7 +202,7 @@ export default function Help() {
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
         {/* Hero Section */}
         <section className="py-16 px-4">
-          <div className="container mx-auto max-w-4xl text-center">
+          <div className="container mx-auto max-w-5xl px-4 text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
               <MessageCircle className="w-10 h-10 text-primary" />
             </div>
@@ -217,7 +217,7 @@ export default function Help() {
 
         {/* AI Chat Section */}
         <section className="py-8 px-4">
-          <div className="container mx-auto max-w-4xl">
+          <div className="container mx-auto max-w-5xl px-4">
             <div className="bg-background border rounded-2xl shadow-xl p-6">
               <div className="flex items-center gap-2 mb-6">
                 <MessageCircle className="w-5 h-5 text-primary" />
@@ -260,7 +260,7 @@ export default function Help() {
 
         {/* Popular Topics */}
         <section className="py-12 px-4">
-          <div className="container mx-auto max-w-4xl">
+          <div className="container mx-auto max-w-5xl px-4">
             <h2 className="text-2xl font-bold mb-6">Popular Topics</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {POPULAR_TOPICS.map((topic, idx) => {
@@ -283,7 +283,7 @@ export default function Help() {
 
         {/* FAQ Section */}
         <section className="py-12 px-4 pb-24">
-          <div className="container mx-auto max-w-4xl">
+          <div className="container mx-auto max-w-5xl px-4">
             <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
             <Accordion type="single" collapsible className="space-y-4">
               {FAQ_ITEMS.map((item, idx) => (

@@ -18,7 +18,7 @@ const OurStory = () => {
           alt="Kulmid story" 
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="relative z-10 container text-center text-white">
+        <div className="relative z-10 container max-w-5xl px-4 text-center text-white">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Our Story</h1>
           <p className="text-xl max-w-2xl mx-auto">
             Kulmid started from the value of Isku-Kalsooni — trust among people. This is the story of how we're building bridges between communities.
@@ -28,7 +28,7 @@ const OurStory = () => {
 
       {/* The Beginning */}
       <section className="py-20">
-        <div className="container">
+        <div className="container max-w-5xl px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold mb-8 text-center">The Beginning</h2>
             <div className="prose prose-lg max-w-none">
@@ -53,7 +53,7 @@ const OurStory = () => {
 
       {/* The Journey */}
       <section className="py-20 bg-muted/50">
-        <div className="container">
+        <div className="container max-w-5xl px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold mb-12 text-center">The Journey</h2>
             <div className="space-y-12">
@@ -105,7 +105,7 @@ const OurStory = () => {
 
       {/* Our Philosophy */}
       <section className="py-20">
-        <div className="container">
+        <div className="container max-w-5xl px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-8">Our Philosophy</h2>
             <blockquote className="text-2xl italic text-primary mb-8">
@@ -127,7 +127,7 @@ const OurStory = () => {
 
       {/* Looking Forward */}
       <section className="py-20 bg-muted/50">
-        <div className="container">
+        <div className="container max-w-5xl px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-8">Looking Forward</h2>
             <p className="text-lg mb-6">

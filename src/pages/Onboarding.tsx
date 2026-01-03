@@ -133,7 +133,7 @@ const Onboarding = () => {
       <Seo title="Welcome Survey" canonical="/onboarding" />
       
       <div className="flex-1 flex items-center justify-center p-4 py-12">
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-lg px-4">
           {/* Skip Button */}
           <div className="flex justify-end mb-4">
             <Button

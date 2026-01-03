@@ -74,7 +74,7 @@ const EventBuilder = () => {
     <Layout>
       <Seo title={`Manage: ${event.title}`} description={`Manage ${event.title} on Kulmid`} />
       
-      <div className="container max-w-3xl mx-auto px-4 py-6">
+      <div className="container max-w-5xl mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
           <Link 

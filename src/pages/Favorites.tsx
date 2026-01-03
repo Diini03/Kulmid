@@ -12,7 +12,7 @@ const Favorites = () => {
     <Layout>
       <Seo title="My Favorites" description="Your favorite events in one place" canonical="/favorites" />
       
-      <section className="container max-w-6xl py-16">
+      <section className="container max-w-5xl px-4 py-16">
         <div className="text-center space-y-3 mb-16">
           <div className="inline-flex items-center gap-3 text-primary mb-2">
             <Heart className="h-7 w-7 fill-current" />

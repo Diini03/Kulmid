@@ -109,7 +109,7 @@ const HomePage = () => {
 
       {/* Hero */}
       <section className="border-b">
-        <div className="container mx-auto max-w-6xl py-16 md:py-24">
+        <div className="container mx-auto max-w-5xl px-4 py-16 md:py-24">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             {/* Greeting */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance animate-slide-up">
@@ -157,7 +157,7 @@ const HomePage = () => {
 
       {/* Filter Pills */}
       <section className="border-b bg-card sticky top-16 z-40">
-        <div className="container mx-auto max-w-6xl py-4">
+        <div className="container mx-auto max-w-5xl px-4 py-4">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">
               Browse by category
@@ -178,7 +178,7 @@ const HomePage = () => {
       </section>
 
       {/* Events Grid */}
-      <section className="container mx-auto max-w-6xl py-12 md:py-16">
+      <section className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
         {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (

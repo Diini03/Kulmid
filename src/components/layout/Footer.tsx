@@ -5,7 +5,7 @@ import kulmidLogoText from "@/assets/kulmid-logo-text.png";
 export const Footer = () => {
   return (
     <footer className="bg-card border-t mt-24">
-      <div className="container mx-auto max-w-6xl py-16 px-4">
+      <div className="container mx-auto max-w-5xl py-16 px-4">
         <div className="flex flex-col items-center gap-10">
           {/* Logo */}
           <Link 

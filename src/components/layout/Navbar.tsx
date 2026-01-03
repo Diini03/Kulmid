@@ -66,7 +66,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
         ? "bg-background/80 backdrop-blur-xl border-b shadow-sm" 
         : "bg-background/50 backdrop-blur-md"
     }`}>
-      <nav className="container max-w-6xl mx-auto flex items-center justify-between gap-4 h-16">
+      <nav className="container max-w-5xl mx-auto px-4 flex items-center justify-between gap-4 h-16">
         {/* Left Side - Logo + Navigation */}
         <div className="flex items-center gap-2">
           <button 

@@ -101,7 +101,7 @@ const EventView = () => {
 
       {/* Minimal Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/95 border-b">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <a 
             href={window.location.origin} 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -120,7 +120,7 @@ const EventView = () => {
       </header>
 
       {/* Main Content - Centered Single Column */}
-      <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         
         {/* Pending/Draft Banner */}
         {isPendingOrDraft && (

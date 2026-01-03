@@ -11,7 +11,7 @@ const CalendarView = () => {
   return (
     <Layout>
       <Seo title="Event Calendar" canonical="/calendar" />
-      <section className="container max-w-6xl py-16">
+      <section className="container max-w-5xl px-4 py-16">
         <div className="text-center space-y-3 mb-16">
           <div className="inline-flex items-center gap-3 text-primary mb-2">
             <CalendarIcon className="h-7 w-7" />
