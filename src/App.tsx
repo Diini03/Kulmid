@@ -36,7 +36,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminSettings from "./pages/AdminSettings";
 import CalendarView from "./pages/CalendarView";
 import Create from "./pages/Create";
-import MyEvents from "./pages/MyEvents";
+// MyEvents removed - merged into Events page (v2.0)
 import AdminAnalytics from "./pages/AdminAnalytics";
 import EventBuilder from "./pages/EventBuilder";
 import EventScanner from "./pages/EventScanner";
@@ -116,7 +116,8 @@ const App = () => (
                   <Route path="/create" element={<ProtectedRoute><UserOnlyRoute><Create /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
                   <Route path="/event/:eventId/scanner" element={<ProtectedRoute><EventScanner /></ProtectedRoute>} />
-                  <Route path="/my-events" element={<ProtectedRoute><UserOnlyRoute><MyEvents /></UserOnlyRoute></ProtectedRoute>} />
+                  {/* /my-events removed in v2.0 - redirects to /events */}
+                  <Route path="/my-events" element={<Navigate to="/events" replace />} />
                   <Route path="/settings" element={<ProtectedRoute><UserOnlyRoute><Settings /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute><OrganizerDashboard /></ProtectedRoute>} />
                   <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics /></ProtectedRoute>} />

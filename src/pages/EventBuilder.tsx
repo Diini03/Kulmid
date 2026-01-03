@@ -47,7 +47,7 @@ const EventBuilder = () => {
         description: "Event not found.",
         variant: "destructive",
       });
-      navigate("/my-events");
+      navigate("/events");
       return;
     }
 
@@ -58,7 +58,7 @@ const EventBuilder = () => {
         description: "You don't have permission to manage this event.",
         variant: "destructive",
       });
-      navigate("/my-events");
+      navigate("/events");
       return;
     }
 
@@ -89,7 +89,7 @@ const EventBuilder = () => {
       description: "Your event has been submitted and is pending admin approval.",
     });
 
-    navigate("/my-events");
+    navigate("/events");
   };
 
   if (loading) {
@@ -118,7 +118,7 @@ const EventBuilder = () => {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Link to="/my-events">
+                <Link to="/events">
                   <Button variant="ghost" size="icon">
                     <ArrowLeft className="h-5 w-5" />
                   </Button>

@@ -180,7 +180,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/my-events" className="flex items-center gap-2 justify-between w-full">
+                  <Link to="/events" className="flex items-center gap-2 justify-between w-full">
                     <span className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       My Events
@@ -291,7 +291,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                           <span className="font-medium">Create Event</span>
                         </NavLink>
                         <NavLink 
-                          to="/my-events" 
+                          to="/events" 
                           onClick={() => setMobileMenuOpen(false)}
                           className={({ isActive }) => 
                             `flex items-center justify-between px-4 py-3 rounded-lg transition-all ${

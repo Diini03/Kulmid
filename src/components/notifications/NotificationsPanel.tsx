@@ -149,7 +149,7 @@ export const NotificationsPanel = ({ onClose }: NotificationsPanelProps) => {
           size="sm"
           className="w-full text-xs"
           onClick={() => {
-            navigate("/my-events");
+            navigate("/events");
             onClose();
           }}
         >
