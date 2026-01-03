@@ -84,7 +84,12 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-				sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"],
+				sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+			},
+			boxShadow: {
+				'glow': 'var(--shadow-glow)',
+				'glow-sm': '0 0 10px hsl(var(--primary) / 0.15)',
+				'elevated': '0 10px 40px hsl(var(--primary) / 0.1), 0 4px 16px hsl(0 0% 0% / 0.1)',
 			},
 			keyframes: {
 				'accordion-down': {
