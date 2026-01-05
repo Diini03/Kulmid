@@ -24,6 +24,8 @@ type EventItem = {
 
 const Discover = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [allEvents, setAllEvents] = useState<EventItem[]>([]);
+  const [showAll, setShowAll] = useState(false);
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   
@@ -36,15 +38,16 @@ const Discover = () => {
     const fetchData = async () => {
       await supabase.rpc('update_event_status');
       
-      const { data: allEvents } = await supabase
+      const { data: fetchedEvents } = await supabase
         .from('events')
         .select('*')
         .in('status', ['approved', 'upcoming', 'ongoing']);
       
-      if (allEvents) {
-        const eventIds = allEvents.map(e => e.id);
+      if (fetchedEvents) {
+        const eventIds = fetchedEvents.map(e => e.id);
         const registrationCounts = await fetchRegistrationCounts(supabase, eventIds);
-        const shuffled = smartShuffleEvents(allEvents, registrationCounts);
+        const shuffled = smartShuffleEvents(fetchedEvents, registrationCounts);
+        setAllEvents(shuffled);
         setEvents(shuffled.slice(0, 6));
       }
 
@@ -100,7 +103,8 @@ const Discover = () => {
   }, [user]);
 
   const handleViewAll = () => {
-    navigate("/events");
+    setShowAll(true);
+    setEvents(allEvents);
   };
   
   const handleCategoryClick = (categoryName: string) => {
@@ -209,11 +213,13 @@ const Discover = () => {
       {/* Featured Events */}
       <section className="container max-w-5xl px-4 py-16 md:py-20">
         <div className="flex items-center justify-between mb-10">
-          <h2 className="text-2xl font-bold">Featured events</h2>
-          <Button onClick={handleViewAll} variant="ghost" className="gap-2">
-            View all
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          <h2 className="text-2xl font-bold">{showAll ? "All events" : "Featured events"}</h2>
+          {!showAll && allEvents.length > 6 && (
+            <Button onClick={handleViewAll} variant="ghost" className="gap-2">
+              View all
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {loading ? (
@@ -239,11 +245,13 @@ const Discover = () => {
           </div>
         )}
 
-        <div className="text-center mt-14">
-          <Button onClick={handleViewAll} size="lg" variant="outline" className="px-10">
-            View all events
-          </Button>
-        </div>
+        {!showAll && allEvents.length > 6 && (
+          <div className="text-center mt-14">
+            <Button onClick={handleViewAll} size="lg" variant="outline" className="px-10">
+              View all {allEvents.length} events
+            </Button>
+          </div>
+        )}
       </section>
     </Layout>
   );
