@@ -36,22 +36,8 @@ const SignUp = () => {
   };
 
   const handleGoogleSignUp = async () => {
-    setGoogleLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/onboarding`,
-        },
-      });
-      if (error) {
-        toast.error(error.message);
-      }
-    } catch (error) {
-      toast.error("Failed to sign up with Google");
-    } finally {
-      setGoogleLoading(false);
-    }
+    // Temporarily disabled - will be enabled later
+    toast.info("Google sign-up coming soon!");
   };
 
   return (
