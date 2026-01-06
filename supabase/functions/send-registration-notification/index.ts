@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { Resend } from "npm:resend@2.0.0";
 
-const brevoApiKey = Deno.env.get("BREVO_API_KEY");
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -37,30 +38,21 @@ interface NotificationRequest {
   };
 }
 
-// Send email using Brevo API
-const sendEmailWithBrevo = async (to: string, subject: string, htmlContent: string) => {
-  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "accept": "application/json",
-      "api-key": brevoApiKey!,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      sender: { name: "Kulmid Events", email: "noreply@kulmid.com" },
-      to: [{ email: to }],
-      subject: subject,
-      htmlContent: htmlContent,
-    }),
+// Send email using Resend API
+const sendEmailWithResend = async (to: string, subject: string, htmlContent: string) => {
+  const { data, error } = await resend.emails.send({
+    from: "Kulmid Events <noreply@hiberindustry.com>",
+    to: [to],
+    subject: subject,
+    html: htmlContent,
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Brevo API error:", errorText);
-    throw new Error(`Failed to send email: ${errorText}`);
+  if (error) {
+    console.error("Resend API error:", error);
+    throw new Error(`Failed to send email: ${error.message}`);
   }
 
-  return await response.json();
+  return data;
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -212,7 +204,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    const emailResponse = await sendEmailWithBrevo(
+    const emailResponse = await sendEmailWithResend(
       organizerEmail,
       `📬 New Registration: ${safeName} for ${safeEventTitle}`,
       htmlContent
