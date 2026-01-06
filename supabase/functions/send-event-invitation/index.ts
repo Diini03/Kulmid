@@ -58,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Get user from auth header using anon key client for auth verification
+    // Get user from auth header
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -67,24 +67,25 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const supabaseAnon = createClient(
+    // Create client with user's auth header for authentication
+    const supabaseAuth = createClient(
       supabaseUrl,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseAnon.auth.getClaims(token);
+    // Use getUser() which validates the token properly
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
     
-    if (claimsError || !claimsData?.claims) {
-      console.error("Auth error:", claimsError);
+    if (userError || !user) {
+      console.error("Auth error:", userError);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
     
     // Use service role client for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
