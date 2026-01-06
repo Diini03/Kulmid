@@ -58,20 +58,36 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Get user from auth header
+    // Get user from auth header using anon key client for auth verification
     const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
+    const supabaseAnon = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const { data: claimsData, error: claimsError } = await supabaseAnon.auth.getClaims(token);
     
-    if (userError || !user) {
-      throw new Error("Unauthorized");
+    if (claimsError || !claimsData?.claims) {
+      console.error("Auth error:", claimsError);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
+
+    const userId = claimsData.claims.sub as string;
+    
+    // Use service role client for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { eventId, emails, customTitle, customMessage }: InvitationRequest = await req.json();
 
@@ -82,7 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from("events")
       .select("*")
       .eq("id", eventId)
-      .eq("created_by", user.id)
+      .eq("created_by", userId)
       .single();
 
     if (eventError || !event) {
@@ -281,7 +297,7 @@ const handler = async (req: Request): Promise<Response> => {
           email: email,
           custom_title: customTitle,
           custom_message: customMessage,
-          created_by: user.id,
+          created_by: userId,
           status: "sent",
         });
 
