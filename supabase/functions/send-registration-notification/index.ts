@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const brevoApiKey = Deno.env.get("Brevo");
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -37,6 +36,32 @@ interface NotificationRequest {
     questions?: string;
   };
 }
+
+// Send email using Brevo API
+const sendEmailWithBrevo = async (to: string, subject: string, htmlContent: string) => {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "api-key": brevoApiKey!,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: "Kulmid Events", email: "noreply@kulmid.com" },
+      to: [{ email: to }],
+      subject: subject,
+      htmlContent: htmlContent,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Brevo API error:", errorText);
+    throw new Error(`Failed to send email: ${errorText}`);
+  }
+
+  return await response.json();
+};
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -183,16 +208,15 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Log in to your dashboard to approve or manage this registration.</p>
         </div>
 
-        <p style="margin-top: 30px; color: #6b7280;">EventEase Notifications</p>
+        <p style="margin-top: 30px; color: #6b7280;">Kulmid Notifications</p>
       </div>
     `;
 
-    const emailResponse = await resend.emails.send({
-      from: "EventEase <onboarding@resend.dev>",
-      to: [organizerEmail],
-      subject: `📬 New Registration: ${safeName} for ${safeEventTitle}`,
-      html: htmlContent,
-    });
+    const emailResponse = await sendEmailWithBrevo(
+      organizerEmail,
+      `📬 New Registration: ${safeName} for ${safeEventTitle}`,
+      htmlContent
+    );
 
     console.log("Notification email sent:", emailResponse);
 

@@ -1,9 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { Resend } from "npm:resend@2.0.0";
 import QRCode from "npm:qrcode@1.5.3";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const brevoApiKey = Deno.env.get("Brevo");
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -30,6 +29,32 @@ const escapeHtml = (str: string | null | undefined): string => {
 
 const generateCheckInToken = (guestId: string, eventId: string): string => {
   return `${guestId}-${eventId}-${crypto.randomUUID()}`;
+};
+
+// Send email using Brevo API
+const sendEmailWithBrevo = async (to: string, subject: string, htmlContent: string) => {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "api-key": brevoApiKey!,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: "Kulmid Events", email: "noreply@kulmid.com" },
+      to: [{ email: to }],
+      subject: subject,
+      htmlContent: htmlContent,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Brevo API error:", errorText);
+    throw new Error(`Failed to send email: ${errorText}`);
+  }
+
+  return await response.json();
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -352,12 +377,7 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    await resend.emails.send({
-      from: "Kulmid Events <onboarding@resend.dev>",
-      to: [guest.email],
-      subject,
-      html: htmlContent,
-    });
+    await sendEmailWithBrevo(guest.email, subject, htmlContent);
 
     console.log(`${action} processed successfully for guest:`, guestId);
 
