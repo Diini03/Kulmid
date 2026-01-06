@@ -126,10 +126,20 @@ const Events = () => {
     return <Layout>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[70vh] flex items-center justify-center">
-          <div className="empty-state-card max-w-md mx-4 animate-fade-in">
-            <div className="empty-state-icon animate-scale-in">
-              <CalendarPlus className="h-10 w-10" />
+          <div className="max-w-md mx-4 text-center animate-fade-in">
+            {/* Animated floating icon */}
+            <div className="relative mx-auto mb-8 w-32 h-32">
+              {/* Glowing orb behind */}
+              <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse" />
+              
+              {/* Icon container */}
+              <div className="relative w-full h-full flex items-center justify-center animate-float">
+                <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                  <CalendarPlus className="h-10 w-10" />
+                </div>
+              </div>
             </div>
+
             <h1 className="text-2xl font-bold mb-3">Create your first event</h1>
             <p className="text-muted-foreground mb-2">
               Host your next event with Kulmid.
@@ -145,7 +155,7 @@ const Events = () => {
               <Plus className="h-5 w-5" />
               Create Your First Event
             </Button>
-            <div className="mt-10 pt-8 border-t">
+            <div className="mt-10 pt-8">
               <p className="text-sm text-muted-foreground mb-3">
                 or explore events happening around you
               </p>
