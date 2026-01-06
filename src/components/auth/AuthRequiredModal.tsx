@@ -28,15 +28,8 @@ export const AuthRequiredModal = ({
   };
 
   const handleGoogleSignIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
-    });
-    if (!error) {
-      onClose();
-    }
+    // Temporarily disabled - will be enabled later
+    console.log("Google sign-in coming soon!");
   };
 
   return (
