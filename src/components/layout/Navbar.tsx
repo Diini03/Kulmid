@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
+import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -26,7 +27,14 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
+
+  const openAuthModal = (mode: "signin" | "signup") => {
+    setAuthModalMode(mode);
+    setAuthModalOpen(true);
+  };
   
   const handleSignOut = async () => {
     await signOut();
@@ -231,11 +239,11 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             </DropdownMenu>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm" className="hidden md:flex rounded-xl">
-                <Link to="/signin">Sign In</Link>
+              <Button variant="ghost" size="sm" className="hidden md:flex rounded-xl" onClick={() => openAuthModal("signin")}>
+                Sign In
               </Button>
-              <Button asChild size="sm" variant="default" className="hidden md:flex">
-                <Link to="/signup">Sign Up</Link>
+              <Button size="sm" variant="default" className="hidden md:flex" onClick={() => openAuthModal("signup")}>
+                Sign Up
               </Button>
             </>
           )}
@@ -375,26 +383,26 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                   ) : (
                     <div className="border-t pt-4 space-y-2">
                       <Button 
-                        asChild 
                         variant="outline" 
                         className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl"
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          openAuthModal("signin");
+                        }}
                       >
-                        <Link to="/signin">
-                          <User className="h-5 w-5" />
-                          <span className="font-medium">Sign In</span>
-                        </Link>
+                        <User className="h-5 w-5" />
+                        <span className="font-medium">Sign In</span>
                       </Button>
                       <Button 
-                        asChild 
                         variant="default"
                         className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl"
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          openAuthModal("signup");
+                        }}
                       >
-                        <Link to="/signup">
-                          <Plus className="h-5 w-5" />
-                          <span className="font-medium">Sign Up</span>
-                        </Link>
+                        <Plus className="h-5 w-5" />
+                        <span className="font-medium">Sign Up</span>
                       </Button>
                     </div>
                   )}
@@ -435,6 +443,13 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           </div>
         </div>
       </nav>
+
+      {/* Auth Modal */}
+      <AuthRequiredModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+        mode={authModalMode}
+      />
     </header>
   );
 };
