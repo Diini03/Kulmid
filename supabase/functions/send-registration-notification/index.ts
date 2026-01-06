@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -38,21 +36,34 @@ interface NotificationRequest {
   };
 }
 
-// Send email using Resend API
-const sendEmailWithResend = async (to: string, subject: string, htmlContent: string) => {
-  const { data, error } = await resend.emails.send({
-    from: "Kulmid Events <noreply@hiberindustry.com>",
-    to: [to],
-    subject: subject,
-    html: htmlContent,
+// Send email using Mailjet API
+const sendEmailWithMailjet = async (to: string, subject: string, htmlContent: string) => {
+  const apiKey = Deno.env.get("MAILJET_API_KEY")!;
+  const secretKey = Deno.env.get("MAILJET_SECRET_KEY")!;
+
+  const response = await fetch("https://api.mailjet.com/v3.1/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Basic " + btoa(`${apiKey}:${secretKey}`),
+    },
+    body: JSON.stringify({
+      Messages: [{
+        From: { Email: "noreply@hiberindustry.com", Name: "Kulmid Events" },
+        To: [{ Email: to }],
+        Subject: subject,
+        HTMLPart: htmlContent,
+      }],
+    }),
   });
 
-  if (error) {
-    console.error("Resend API error:", error);
-    throw new Error(`Failed to send email: ${error.message}`);
+  if (!response.ok) {
+    const error = await response.json();
+    console.error("Mailjet API error:", error);
+    throw new Error(`Failed to send email: ${JSON.stringify(error)}`);
   }
 
-  return data;
+  return await response.json();
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -204,7 +215,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    const emailResponse = await sendEmailWithResend(
+    const emailResponse = await sendEmailWithMailjet(
       organizerEmail,
       `📬 New Registration: ${safeName} for ${safeEventTitle}`,
       htmlContent
