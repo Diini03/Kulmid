@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Mail, User, ArrowLeft, Loader2 } from "lucide-react";
+import { Eye, EyeOff, User, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signUpSchema, type SignUpFormData } from "@/lib/validations";
+import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const emailSchema = z.object({
@@ -21,6 +23,7 @@ type EmailFormData = z.infer<typeof emailSchema>;
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<'email' | 'details'>('email');
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { signUp, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -33,6 +36,7 @@ const SignUp = () => {
     handleSubmit,
     setValue,
     getValues,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -50,35 +54,55 @@ const SignUp = () => {
     }
   };
 
-  const handleBack = () => {
+  const handleGoogleSignUp = async () => {
+    toast.info("Google sign-up coming soon!");
+  };
+
+  const handleEditEmail = () => {
     setStep('email');
+    reset();
   };
 
   return (
     <AuthLayout>
       <Seo title="Sign Up" canonical="/signup" />
       <div className="space-y-6 animate-fade-in">
+        <div className="space-y-2">
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Create an account</h1>
+        </div>
+
         {step === 'email' ? (
           <>
-            <div className="space-y-2">
-              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Create an account</h1>
-              <p className="text-muted-foreground">Enter your email to get started</p>
+            {/* Social Login */}
+            <SocialLoginButton
+              provider="google"
+              onClick={handleGoogleSignUp}
+              loading={googleLoading}
+            />
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-4 text-muted-foreground">
+                  OR
+                </span>
+              </div>
             </div>
 
             <form onSubmit={emailForm.handleSubmit(onEmailContinue)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    className="pl-10 h-12"
-                    autoFocus
-                    {...emailForm.register("email")}
-                  />
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  className="h-12"
+                  autoFocus
+                  {...emailForm.register("email")}
+                />
                 {emailForm.formState.errors.email && (
                   <p className="text-sm text-destructive">{emailForm.formState.errors.email.message}</p>
                 )}
@@ -95,26 +119,48 @@ const SignUp = () => {
 
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/signin" className="text-primary font-medium hover:text-primary/80 transition-colors">
+              <Link to="/signin" className="text-primary font-medium hover:text-primary/80 transition-colors underline">
                 Sign in
               </Link>
             </p>
           </>
         ) : (
           <>
-            <div className="space-y-2">
-              <button
-                onClick={handleBack}
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </button>
-              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Complete your account</h1>
-              <p className="text-muted-foreground">{getValues("email")}</p>
+            {/* Social Login */}
+            <SocialLoginButton
+              provider="google"
+              onClick={handleGoogleSignUp}
+              loading={googleLoading}
+            />
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-4 text-muted-foreground">
+                  OR
+                </span>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {/* Email display with Edit */}
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <div className="flex items-center justify-between h-12 px-3 rounded-md border border-border bg-muted/30">
+                  <span className="text-foreground">{getValues("email")}</span>
+                  <button
+                    type="button"
+                    onClick={handleEditEmail}
+                    className="text-sm text-primary font-medium hover:text-primary/80 transition-colors"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+
               <input type="hidden" {...register("email")} />
 
               <div className="space-y-2">
