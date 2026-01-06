@@ -10,7 +10,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInSchema, resetPasswordSchema, type SignInFormData, type ResetPasswordFormData } from "@/lib/validations";
+import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const emailSchema = z.object({
@@ -23,6 +25,7 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [step, setStep] = useState<'email' | 'password'>('email');
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { signIn, resetPassword, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -68,7 +71,11 @@ const SignIn = () => {
     }
   };
 
-  const handleBack = () => {
+  const handleGoogleSignIn = async () => {
+    toast.info("Google sign-in coming soon!");
+  };
+
+  const handleEditEmail = () => {
     setStep('email');
     signInForm.reset();
   };
@@ -134,27 +141,42 @@ const SignIn = () => {
     <AuthLayout>
       <Seo title="Sign In" canonical="/signin" />
       <div className="space-y-6 animate-fade-in">
+        <div className="space-y-2">
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Log in</h1>
+        </div>
+
         {step === 'email' ? (
           <>
-            <div className="space-y-2">
-              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Welcome back</h1>
-              <p className="text-muted-foreground">Enter your email to continue</p>
+            {/* Social Login */}
+            <SocialLoginButton
+              provider="google"
+              onClick={handleGoogleSignIn}
+              loading={googleLoading}
+            />
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-4 text-muted-foreground">
+                  OR
+                </span>
+              </div>
             </div>
 
             <form onSubmit={emailForm.handleSubmit(onEmailContinue)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    className="pl-10 h-12"
-                    autoFocus
-                    {...emailForm.register("email")}
-                  />
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  className="h-12"
+                  autoFocus
+                  {...emailForm.register("email")}
+                />
                 {emailForm.formState.errors.email && (
                   <p className="text-sm text-destructive">{emailForm.formState.errors.email.message}</p>
                 )}
@@ -171,26 +193,48 @@ const SignIn = () => {
 
             <p className="text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary font-medium hover:text-primary/80 transition-colors">
-                Create one
+              <Link to="/signup" className="text-primary font-medium hover:text-primary/80 transition-colors underline">
+                Create your account
               </Link>
             </p>
           </>
         ) : (
           <>
-            <div className="space-y-2">
-              <button
-                onClick={handleBack}
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </button>
-              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Enter your password</h1>
-              <p className="text-muted-foreground">{signInForm.getValues("email")}</p>
+            {/* Social Login */}
+            <SocialLoginButton
+              provider="google"
+              onClick={handleGoogleSignIn}
+              loading={googleLoading}
+            />
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-4 text-muted-foreground">
+                  OR
+                </span>
+              </div>
             </div>
 
             <form onSubmit={signInForm.handleSubmit(onSignIn)} className="space-y-4">
+              {/* Email display with Edit */}
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <div className="flex items-center justify-between h-12 px-3 rounded-md border border-border bg-muted/30">
+                  <span className="text-foreground">{signInForm.getValues("email")}</span>
+                  <button
+                    type="button"
+                    onClick={handleEditEmail}
+                    className="text-sm text-primary font-medium hover:text-primary/80 transition-colors"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+
               <input type="hidden" {...signInForm.register("email")} />
               
               <div className="space-y-2">
@@ -208,7 +252,7 @@ const SignIn = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder="Password"
                     className="pr-10 h-12"
                     autoFocus
                     {...signInForm.register("password")}
@@ -234,13 +278,20 @@ const SignIn = () => {
                 {signInForm.formState.isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    Logging in...
                   </>
                 ) : (
-                  "Sign in"
+                  "Log in"
                 )}
               </Button>
             </form>
+
+            <p className="text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary font-medium hover:text-primary/80 transition-colors underline">
+                Create your account
+              </Link>
+            </p>
           </>
         )}
       </div>
