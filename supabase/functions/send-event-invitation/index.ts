@@ -1,9 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { Resend } from "npm:resend@2.0.0";
 import QRCode from "npm:qrcode@1.5.3";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const brevoApiKey = Deno.env.get("Brevo");
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -33,6 +32,32 @@ const escapeHtml = (text: string): string => {
 
 const generateCheckInToken = (guestId: string, eventId: string): string => {
   return `${guestId}-${eventId}-${crypto.randomUUID()}`;
+};
+
+// Send email using Brevo API
+const sendEmailWithBrevo = async (to: string, subject: string, htmlContent: string) => {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "api-key": brevoApiKey!,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: "Kulmid Events", email: "noreply@kulmid.com" },
+      to: [{ email: to }],
+      subject: subject,
+      htmlContent: htmlContent,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Brevo API error:", errorText);
+    throw new Error(`Failed to send email: ${errorText}`);
+  }
+
+  return await response.json();
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -127,136 +152,134 @@ const handler = async (req: Request): Promise<Response> => {
 
         const safeGuestName = escapeHtml(email.split("@")[0]);
 
-        // Send styled email with "You're Confirmed" styling (same as approved registrations)
-        const emailResponse = await resend.emails.send({
-          from: "Kulmid Events <onboarding@resend.dev>",
-          to: [email],
-          subject: customTitle || `✅ You're confirmed for ${safeTitle}`,
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 20px;">
-                <tr>
-                  <td align="center">
-                    <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                      
-                      <!-- Header with Logo -->
-                      <tr>
-                        <td style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); padding: 30px 40px; text-align: center;">
-                          <img src="${supabaseUrl}/storage/v1/object/public/event-images/kulmid-logo-text.png" alt="Kulmid" style="height: 40px; margin-bottom: 10px;">
-                        </td>
-                      </tr>
+        const emailSubject = customTitle || `✅ You're confirmed for ${safeTitle}`;
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 20px;">
+              <tr>
+                <td align="center">
+                  <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header with Logo -->
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); padding: 30px 40px; text-align: center;">
+                        <img src="${supabaseUrl}/storage/v1/object/public/event-images/kulmid-logo-text.png" alt="Kulmid" style="height: 40px; margin-bottom: 10px;">
+                      </td>
+                    </tr>
 
-                      <!-- Success Badge -->
-                      <tr>
-                        <td style="padding: 40px 40px 20px; text-align: center;">
-                          <div style="display: inline-block; background-color: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px;">
-                            ✓ Confirmed
-                          </div>
-                          <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #111827; line-height: 1.3;">
-                            You've got a spot!
-                          </h1>
-                          <p style="margin: 0; font-size: 18px; color: #6b7280;">
-                            ${safeTitle}
-                          </p>
-                        </td>
-                      </tr>
+                    <!-- Success Badge -->
+                    <tr>
+                      <td style="padding: 40px 40px 20px; text-align: center;">
+                        <div style="display: inline-block; background-color: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px;">
+                          ✓ Confirmed
+                        </div>
+                        <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #111827; line-height: 1.3;">
+                          You've got a spot!
+                        </h1>
+                        <p style="margin: 0; font-size: 18px; color: #6b7280;">
+                          ${safeTitle}
+                        </p>
+                      </td>
+                    </tr>
 
-                      ${safeCustomMessage ? `
-                      <!-- Custom Message -->
-                      <tr>
-                        <td style="padding: 0 40px 20px;">
-                          <div style="background-color: #f0f9ff; border-left: 4px solid #0ea5e9; border-radius: 6px; padding: 20px;">
-                            <p style="margin: 0; font-size: 15px; color: #0c4a6e; line-height: 1.6; white-space: pre-wrap;">${safeCustomMessage}</p>
-                          </div>
-                        </td>
-                      </tr>
-                      ` : ''}
+                    ${safeCustomMessage ? `
+                    <!-- Custom Message -->
+                    <tr>
+                      <td style="padding: 0 40px 20px;">
+                        <div style="background-color: #f0f9ff; border-left: 4px solid #0ea5e9; border-radius: 6px; padding: 20px;">
+                          <p style="margin: 0; font-size: 15px; color: #0c4a6e; line-height: 1.6; white-space: pre-wrap;">${safeCustomMessage}</p>
+                        </div>
+                      </td>
+                    </tr>
+                    ` : ''}
 
-                      <!-- Event Details -->
-                      <tr>
-                        <td style="padding: 0 40px 30px;">
-                          <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
-                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
-                              <tr>
-                                <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                                  <span style="font-weight: 600;">📅 Date:</span> ${eventDate}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                                  <span style="font-weight: 600;">📍 Location:</span> ${safeLocation}
-                                </td>
-                              </tr>
-                              ${safeDescription ? `
-                              <tr>
-                                <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                                  <span style="font-weight: 600;">📝 About:</span> ${safeDescription}
-                                </td>
-                              </tr>
-                              ` : ''}
-                              <tr>
-                                <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                                  <span style="font-weight: 600;">👤 Guest:</span> ${safeGuestName}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                                  <span style="font-weight: 600;">🎟️ Ticket:</span> 1× Standard
-                                </td>
-                              </tr>
-                            </table>
-                          </div>
-                        </td>
-                      </tr>
+                    <!-- Event Details -->
+                    <tr>
+                      <td style="padding: 0 40px 30px;">
+                        <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+                          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                              <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                                <span style="font-weight: 600;">📅 Date:</span> ${eventDate}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                                <span style="font-weight: 600;">📍 Location:</span> ${safeLocation}
+                              </td>
+                            </tr>
+                            ${safeDescription ? `
+                            <tr>
+                              <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                                <span style="font-weight: 600;">📝 About:</span> ${safeDescription}
+                              </td>
+                            </tr>
+                            ` : ''}
+                            <tr>
+                              <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                                <span style="font-weight: 600;">👤 Guest:</span> ${safeGuestName}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding: 8px 0; font-size: 15px; color: #374151;">
+                                <span style="font-weight: 600;">🎟️ Ticket:</span> 1× Standard
+                              </td>
+                            </tr>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
 
-                      <!-- QR Code -->
-                      <tr>
-                        <td style="padding: 0 40px 30px; text-align: center;">
-                          <p style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #111827;">Your Check-In Code</p>
-                          <div style="background-color: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; display: inline-block;">
-                            <img src="${qrCodeDataUrl}" alt="Check-in QR Code" style="display: block; width: 250px; height: 250px;">
-                          </div>
-                          <p style="margin: 15px 0 0; font-size: 13px; color: #6b7280;">
-                            Show this QR code at the event entrance
-                          </p>
-                        </td>
-                      </tr>
+                    <!-- QR Code -->
+                    <tr>
+                      <td style="padding: 0 40px 30px; text-align: center;">
+                        <p style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #111827;">Your Check-In Code</p>
+                        <div style="background-color: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; display: inline-block;">
+                          <img src="${qrCodeDataUrl}" alt="Check-in QR Code" style="display: block; width: 250px; height: 250px;">
+                        </div>
+                        <p style="margin: 15px 0 0; font-size: 13px; color: #6b7280;">
+                          Show this QR code at the event entrance
+                        </p>
+                      </td>
+                    </tr>
 
-                      <!-- CTA Buttons -->
-                      <tr>
-                        <td style="padding: 0 40px 40px; text-align: center;">
-                          <a href="${supabaseUrl}" style="display: inline-block; background-color: #06b6d4; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 0 8px 12px;">
-                            View Event Details
-                          </a>
-                        </td>
-                      </tr>
+                    <!-- CTA Buttons -->
+                    <tr>
+                      <td style="padding: 0 40px 40px; text-align: center;">
+                        <a href="${supabaseUrl}" style="display: inline-block; background-color: #06b6d4; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 0 8px 12px;">
+                          View Event Details
+                        </a>
+                      </td>
+                    </tr>
 
-                      <!-- Footer -->
-                      <tr>
-                        <td style="background-color: #f9fafb; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
-                          <p style="margin: 0 0 10px; font-size: 13px; color: #6b7280;">
-                            Powered by <strong style="color: #06b6d4;">Kulmid</strong>
-                          </p>
-                          <p style="margin: 0; font-size: 12px; color: #9ca3af;">
-                            You received this invitation from ${safeHostName || 'the event organizer'}.
-                          </p>
-                        </td>
-                      </tr>
+                    <!-- Footer -->
+                    <tr>
+                      <td style="background-color: #f9fafb; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                        <p style="margin: 0 0 10px; font-size: 13px; color: #6b7280;">
+                          Powered by <strong style="color: #06b6d4;">Kulmid</strong>
+                        </p>
+                        <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                          You received this invitation from ${safeHostName || 'the event organizer'}.
+                        </p>
+                      </td>
+                    </tr>
 
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </body>
-            </html>
-          `,
-        });
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `;
+
+        // Send styled email with Brevo
+        const emailResponse = await sendEmailWithBrevo(email, emailSubject, htmlContent);
 
         console.log("Email sent to:", email, emailResponse);
 
