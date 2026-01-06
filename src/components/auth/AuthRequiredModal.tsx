@@ -24,7 +24,7 @@ export const AuthRequiredModal = ({
 
   const handleContinueWithEmail = () => {
     onClose();
-    navigate(mode === "signup" ? "/signup" : "/signin");
+    navigate("/signin");
   };
 
   const handleGoogleSignIn = async () => {
