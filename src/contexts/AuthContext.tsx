@@ -22,6 +22,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  refreshSession: () => Promise<Session | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -89,10 +90,45 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const refreshSession = async (): Promise<Session | null> => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error) {
+        console.error('Session refresh failed:', error);
+        // If refresh fails, sign out the user
+        await signOut();
+        return null;
+      }
+      return data.session;
+    } catch (error) {
+      console.error('Session refresh error:', error);
+      await signOut();
+      return null;
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        console.log('Auth event:', event);
+        
+        // Handle token refresh
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed successfully');
+        }
+        
+        // Handle sign out or session expiry
+        if (event === 'SIGNED_OUT' || !session) {
+          setUser(null);
+          setSession(null);
+          setProfile(null);
+          setIsAdmin(false);
+          setAdminCheckComplete(true);
+          setLoading(false);
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -103,10 +139,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             fetchProfile(session.user.id);
             checkAdminRole(session.user.id);
           }, 0);
-        } else {
-          setProfile(null);
-          setIsAdmin(false);
-          setAdminCheckComplete(true);
         }
         
         setLoading(false);
@@ -368,7 +400,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     signUp,
     signIn,
     signOut,
-    resetPassword
+    resetPassword,
+    refreshSession
   };
 
   return (

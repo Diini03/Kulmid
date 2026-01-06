@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Footer } from "@/components/layout/Footer";
 
 const Onboarding = () => {
-  const { user } = useAuth();
+  const { user, refreshSession } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -67,7 +67,7 @@ const Onboarding = () => {
     }
   };
 
-  const handleSkip = async () => {
+  const handleSkip = async (isRetry = false) => {
     if (!user) return;
     
     setLoading(true);
@@ -84,15 +84,28 @@ const Onboarding = () => {
 
       toast.success("Welcome to EventEase");
       navigate("/discover");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error skipping onboarding:", error);
+      
+      // Check if JWT expired and retry once
+      if (!isRetry && (error?.code === 'PGRST301' || error?.message?.includes('JWT expired'))) {
+        const newSession = await refreshSession();
+        if (newSession) {
+          return handleSkip(true);
+        } else {
+          toast.error("Your session has expired. Please sign in again.");
+          navigate('/signin');
+          return;
+        }
+      }
+      
       toast.error("Failed to complete onboarding. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (isRetry = false) => {
     if (!user) return;
     
     setLoading(true);
@@ -113,8 +126,21 @@ const Onboarding = () => {
 
       toast.success("Preferences saved! Welcome to EventEase");
       navigate("/discover");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving preferences:", error);
+      
+      // Check if JWT expired and retry once
+      if (!isRetry && (error?.code === 'PGRST301' || error?.message?.includes('JWT expired'))) {
+        const newSession = await refreshSession();
+        if (newSession) {
+          return handleSubmit(true);
+        } else {
+          toast.error("Your session has expired. Please sign in again.");
+          navigate('/signin');
+          return;
+        }
+      }
+      
       toast.error("Failed to save preferences. Please try again.");
     } finally {
       setLoading(false);
@@ -139,7 +165,7 @@ const Onboarding = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleSkip}
+              onClick={() => handleSkip()}
               disabled={loading}
               className="text-muted-foreground hover:text-foreground"
             >
