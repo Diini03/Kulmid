@@ -8,6 +8,7 @@ import { Calendar, Plus, ChevronRight, MapPin, Users, AlertTriangle, Clock, Comp
 import { format, parseISO, isPast } from "date-fns";
 import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
+import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
 interface Event {
   id: string;
   title: string;
@@ -31,6 +32,7 @@ const Events = () => {
   const [guestCounts, setGuestCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
+  const [showAuthModal, setShowAuthModal] = useState(false);
   useEffect(() => {
     if (!authLoading && user) {
       fetchUserEvents();
@@ -124,35 +126,45 @@ const Events = () => {
     return <Layout>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[70vh] flex items-center justify-center">
-          <div className="empty-state-card max-w-md mx-4 my-[5px]">
-            <div className="empty-state-icon">
-              <Calendar className="h-8 w-8" />
+          <div className="empty-state-card max-w-md mx-4 animate-fade-in">
+            <div className="empty-state-icon animate-scale-in">
+              <CalendarPlus className="h-10 w-10" />
             </div>
-            <h1 className="text-2xl font-bold mb-3">Sign in to manage your events</h1>
-            <p className="text-muted-foreground mb-8">
-              Create beautiful event pages, invite guests, and track registrations.
+            <h1 className="text-2xl font-bold mb-3">Create your first event</h1>
+            <p className="text-muted-foreground mb-2">
+              Host your next event with Kulmid.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg" variant="default">
-                <Link to="/signin">Sign In</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link to="/signup">Create Account</Link>
-              </Button>
-            </div>
-            <div className="mt-8 pt-8 border-t">
+            <p className="text-muted-foreground mb-8">
+              Create beautiful event pages, invite guests, and track attendance.
+            </p>
+            <Button 
+              onClick={() => setShowAuthModal(true)} 
+              size="lg" 
+              className="px-8 gap-2"
+            >
+              <Plus className="h-5 w-5" />
+              Create Your First Event
+            </Button>
+            <div className="mt-10 pt-8 border-t">
               <p className="text-sm text-muted-foreground mb-3">
-                Looking to attend events instead?
+                or explore events happening around you
               </p>
               <Button asChild variant="ghost">
                 <Link to="/discover" className="gap-2">
                   <Compass className="h-4 w-4" />
-                  Browse Events on Discover
+                  Discover Events
                 </Link>
               </Button>
             </div>
           </div>
         </div>
+        
+        <AuthRequiredModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)}
+          message="Sign in or create an account to start creating events."
+          mode="signup"
+        />
       </Layout>;
   }
 
