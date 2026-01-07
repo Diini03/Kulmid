@@ -49,7 +49,7 @@ const sendEmailWithMailjet = async (to: string, subject: string, htmlContent: st
     },
     body: JSON.stringify({
       Messages: [{
-        From: { Email: "noreply@hiberindustry.com", Name: "Kulmid Events" },
+        From: { Email: "asadcade401@gmail.com", Name: "Kulmid Events" },
         To: [{ Email: to }],
         Subject: subject,
         HTMLPart: htmlContent,
