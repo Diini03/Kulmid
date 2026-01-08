@@ -7,8 +7,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle2, XCircle, Clock, User, Mail, Phone, Building2, GraduationCap, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, User, Mail, Phone, Building2, ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { sendRegistrationEmail, generateCheckInToken, isEmailJSConfigured } from "@/lib/emailjs";
 
 interface RegistrationsTabProps {
   eventId: string;
@@ -77,49 +78,112 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
   };
 
   const handleApprove = async (ids: string[]) => {
-    const { error } = await supabase.functions.invoke("handle-registration-action", {
-      body: { guestId: ids[0], action: "approve" },
-    });
+    try {
+      for (const id of ids) {
+        // Get guest and event details
+        const { data: guest } = await supabase
+          .from("event_guests")
+          .select("*, events:event_id(title, date, location)")
+          .eq("id", id)
+          .single();
 
-    if (error) {
+        if (!guest) continue;
+
+        // Generate check-in token
+        const checkInToken = generateCheckInToken();
+
+        // Update guest status and token
+        const { error } = await supabase
+          .from("event_guests")
+          .update({
+            status: "registered",
+            check_in_token: checkInToken,
+            rsvp_at: new Date().toISOString(),
+          })
+          .eq("id", id);
+
+        if (error) throw error;
+
+        // Send approval email via EmailJS
+        if (isEmailJSConfigured() && guest.email) {
+          const event = guest.events as any;
+          await sendRegistrationEmail({
+            toEmail: guest.email,
+            toName: guest.name || "Guest",
+            eventTitle: event?.title || "",
+            eventDate: event?.date ? new Date(event.date).toLocaleString() : "",
+            eventLocation: event?.location || "",
+            status: "registered",
+            eventId: guest.event_id,
+          });
+        }
+      }
+
+      toast({
+        title: "✅ Approved",
+        description: `${ids.length} registration(s) approved successfully`,
+      });
+
+      fetchRegistrations();
+      setSelectedIds(new Set());
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to approve registration",
+        description: error.message || "Failed to approve registration",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "✅ Approved",
-      description: `${ids.length} registration(s) approved successfully`,
-    });
-
-    fetchRegistrations();
-    setSelectedIds(new Set());
   };
 
   const handleReject = async (ids: string[]) => {
-    const { error } = await supabase.functions.invoke("handle-registration-action", {
-      body: { guestId: ids[0], action: "reject" },
-    });
+    try {
+      for (const id of ids) {
+        // Get guest and event details
+        const { data: guest } = await supabase
+          .from("event_guests")
+          .select("*, events:event_id(title, date, location)")
+          .eq("id", id)
+          .single();
 
-    if (error) {
+        if (!guest) continue;
+
+        // Update guest status
+        const { error } = await supabase
+          .from("event_guests")
+          .update({ status: "rejected" })
+          .eq("id", id);
+
+        if (error) throw error;
+
+        // Send rejection email via EmailJS
+        if (isEmailJSConfigured() && guest.email) {
+          const event = guest.events as any;
+          await sendRegistrationEmail({
+            toEmail: guest.email,
+            toName: guest.name || "Guest",
+            eventTitle: event?.title || "",
+            eventDate: event?.date ? new Date(event.date).toLocaleString() : "",
+            eventLocation: event?.location || "",
+            status: "rejected",
+            eventId: guest.event_id,
+          });
+        }
+      }
+
+      toast({
+        title: "Registration Rejected",
+        description: `${ids.length} registration(s) rejected`,
+      });
+
+      fetchRegistrations();
+      setSelectedIds(new Set());
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to reject registration",
+        description: error.message || "Failed to reject registration",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Registration Rejected",
-      description: `${ids.length} registration(s) rejected`,
-    });
-
-    fetchRegistrations();
-    setSelectedIds(new Set());
   };
 
   const handleBulkAction = async (action: "approve" | "reject") => {

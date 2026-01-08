@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { SimpleRegistrationForm } from "./registration/SimpleRegistrationForm";
+import { sendRegistrationEmail, sendOrganizerNotification, generateCheckInToken, isEmailJSConfigured } from "@/lib/emailjs";
 
 interface EventRegistrationDialogProps {
   open: boolean;
@@ -82,38 +83,44 @@ const EventRegistrationDialog = ({
       // Get event details for email
       const { data: event } = await supabase
         .from("events")
-        .select("date, location")
+        .select("date, location, created_by, host_email")
         .eq("id", eventId)
         .single();
 
-      // Get guest ID
-      const { data: guestData } = await supabase
-        .from("event_guests")
-        .select("id")
-        .eq("event_id", eventId)
-        .eq("email", email)
-        .single();
+      // Generate and store check-in token for approved registrations
+      if (autoApprove) {
+        const checkInToken = generateCheckInToken();
+        await supabase
+          .from("event_guests")
+          .update({ check_in_token: checkInToken })
+          .eq("event_id", eventId)
+          .eq("email", email);
+      }
 
-      // Send confirmation email
-      await supabase.functions.invoke("send-registration-confirmation", {
-        body: {
-          email: email,
-          name: formData.name,
+      // Send confirmation email via EmailJS
+      if (isEmailJSConfigured()) {
+        await sendRegistrationEmail({
+          toEmail: email,
+          toName: formData.name,
           eventTitle,
           eventDate: event?.date ? new Date(event.date).toLocaleString() : "",
           eventLocation: event?.location || "",
           status: autoApprove ? "registered" : "pending",
-          guestId: guestData?.id,
-        },
-      });
-
-      // Send notification to organizer
-      await supabase.functions.invoke("send-registration-notification", {
-        body: {
           eventId,
-          guestData: formData,
-        },
-      });
+        });
+
+        // Send notification to organizer
+        if (event?.host_email) {
+          await sendOrganizerNotification({
+            organizerEmail: event.host_email,
+            guestName: formData.name,
+            guestEmail: email,
+            eventTitle,
+          });
+        }
+      } else {
+        console.warn("EmailJS not configured - skipping email notifications");
+      }
 
       const description = autoApprove
         ? "You're all set! Check your email for details."
