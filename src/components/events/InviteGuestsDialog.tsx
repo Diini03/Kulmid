@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { sendEventInvitation, isEmailJSConfigured } from "@/lib/emailjs";
 
 interface InviteGuestsDialogProps {
   eventId: string;
@@ -71,32 +72,61 @@ const InviteGuestsDialog = ({ eventId, open, onOpenChange, onSuccess }: InviteGu
       return;
     }
 
+    if (!isEmailJSConfigured()) {
+      toast({
+        title: "Email Not Configured",
+        description: "Please configure EmailJS in src/lib/emailjs.ts",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSending(true);
 
     try {
-      // Ensure we send the auth token so the edge function can authenticate the organizer
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("You must be signed in to send invitations");
+      // Get event details
+      const { data: event, error: eventError } = await supabase
+        .from("events")
+        .select("title, date, location")
+        .eq("id", eventId)
+        .single();
+
+      if (eventError || !event) {
+        throw new Error("Failed to fetch event details");
       }
 
-      const { data, error } = await supabase.functions.invoke("send-event-invitation", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: {
-          eventId,
-          emails,
-          customTitle: customTitle || undefined,
-          customMessage: customMessage || undefined,
-        },
-      });
+      // Send invitations via EmailJS
+      const results = await Promise.all(
+        emails.map(async (email) => {
+          const success = await sendEventInvitation({
+            toEmail: email,
+            eventTitle: event.title,
+            eventDate: event.date ? new Date(event.date).toLocaleString() : "",
+            eventLocation: event.location || "",
+            customTitle: customTitle || undefined,
+            customMessage: customMessage || undefined,
+            eventId,
+          });
 
-      if (error) throw error;
+          // Store invitation record in database
+          if (success) {
+            const { data: { user } } = await supabase.auth.getUser();
+            await supabase.from("event_invitations").insert({
+              event_id: eventId,
+              email,
+              custom_title: customTitle || null,
+              custom_message: customMessage || null,
+              created_by: user?.id,
+              status: "sent",
+            });
+          }
 
-      const results = data?.results || [];
-      const successCount = results.filter((r: any) => r.success).length;
-      const failCount = results.filter((r: any) => !r.success).length;
+          return { email, success };
+        })
+      );
+
+      const successCount = results.filter((r) => r.success).length;
+      const failCount = results.filter((r) => !r.success).length;
 
       toast({
         title: "Invitations Sent",
