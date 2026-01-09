@@ -7,12 +7,14 @@ import { CalendarDays, MapPin, DollarSign, ExternalLink, Globe, Users, Video, Co
 import { useState, useEffect } from "react";
 import { categories } from "@/constants/categories";
 import { toast } from "@/hooks/use-toast";
+import EventRegistrationDialog from "@/components/events/EventRegistrationDialog";
 
 const EventView = () => {
   const { id } = useParams();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -122,20 +124,19 @@ const EventView = () => {
       {/* Main Content - Centered Single Column */}
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         
-        {/* Pending/Draft Banner */}
-        {isPendingOrDraft && (
-          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-            <div className="flex items-start gap-3">
-              <span className="text-amber-600 dark:text-amber-400">⏳</span>
-              <div>
-                <p className="font-medium text-amber-700 dark:text-amber-300">
-                  {event.status === 'pending' ? 'Pending Approval' : 'Draft Event'}
-                </p>
-                <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-1">
-                  This event is awaiting admin approval. Registration will open once approved.
-                </p>
-              </div>
-            </div>
+        {/* Event Status Banner */}
+        {event.status === 'approved' ? (
+          <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Globe className="h-4 w-4 text-primary" />
+              This event is publicly listed on Kulmid
+            </p>
+          </div>
+        ) : isPendingOrDraft && (
+          <div className="p-3 bg-muted/50 border rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              This event is not yet publicly listed on Kulmid. You can still register and share the event link.
+            </p>
           </div>
         )}
 
@@ -216,26 +217,13 @@ const EventView = () => {
         </div>
 
         {/* CTA Button */}
-        {isPendingOrDraft ? (
-          <Button 
-            disabled
-            size="lg" 
-            className="w-full"
-            variant="secondary"
-          >
-            Registration Opens After Approval
-          </Button>
-        ) : (
-          <Button 
-            asChild 
-            size="lg" 
-            className="w-full"
-          >
-            <a href={`${window.location.origin}/events/${event.id}`}>
-              Register for Event
-            </a>
-          </Button>
-        )}
+        <Button 
+          onClick={() => setRegistrationOpen(true)}
+          size="lg" 
+          className="w-full"
+        >
+          Register for Event
+        </Button>
 
         {/* About Section */}
         <section className="space-y-3">
@@ -369,6 +357,15 @@ const EventView = () => {
         {/* Bottom Spacer */}
         <div className="h-8" />
       </main>
+
+      <EventRegistrationDialog
+        open={registrationOpen}
+        onOpenChange={setRegistrationOpen}
+        eventId={id!}
+        eventTitle={event.title}
+        price={event.price}
+        autoApprove={event.auto_approve_registrations || false}
+      />
     </div>
   );
 };
