@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,6 +67,7 @@ const Create = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [initialAuthChecked, setInitialAuthChecked] = useState(false);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -87,6 +88,34 @@ const Create = () => {
   });
 
   const eventType = form.watch("event_type");
+
+  // Persist form data to sessionStorage on every change
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      sessionStorage.setItem('event-draft', JSON.stringify(values));
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Restore form data from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem('event-draft');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        form.reset(parsed);
+      } catch (e) {
+        console.error('Failed to restore form data:', e);
+      }
+    }
+  }, []);
+
+  // Track when initial auth check is complete
+  useEffect(() => {
+    if (!authLoading) {
+      setInitialAuthChecked(true);
+    }
+  }, [authLoading]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -196,6 +225,9 @@ const Create = () => {
 
       if (error) throw error;
       
+      // Clear saved draft on successful submission
+      sessionStorage.removeItem('event-draft');
+      
       // Different messages and redirects for admin vs regular user
       if (isAdmin) {
         toast({
@@ -221,7 +253,8 @@ const Create = () => {
     }
   };
 
-  if (authLoading) {
+  // Only show loading on initial auth check, not on subsequent token refreshes
+  if (!initialAuthChecked && authLoading) {
     const LoadingLayout = isAdmin ? AdminLayout : Layout;
     return (
       <LoadingLayout>
@@ -232,7 +265,7 @@ const Create = () => {
     );
   }
 
-  if (!user) {
+  if (!user && initialAuthChecked) {
     navigate("/signin");
     return null;
   }
