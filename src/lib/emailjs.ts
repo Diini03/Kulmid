@@ -10,14 +10,15 @@ import emailjs from "@emailjs/browser";
 // 3. Template IDs: Email Templates → Each template's ID
 
 export const EMAILJS_CONFIG = {
-  PUBLIC_KEY: "YOUR_PUBLIC_KEY", // Replace with your EmailJS public key
-  SERVICE_ID: "YOUR_SERVICE_ID", // Replace with your EmailJS service ID
+  PUBLIC_KEY: "IQug-xDFX_vKkhdzU",
+  SERVICE_ID: "service_70j49nh",
   TEMPLATES: {
-    EVENT_INVITATION: "YOUR_INVITATION_TEMPLATE_ID",
-    REGISTRATION_CONFIRMED: "YOUR_CONFIRMED_TEMPLATE_ID",
-    REGISTRATION_PENDING: "YOUR_PENDING_TEMPLATE_ID",
-    REGISTRATION_REJECTED: "YOUR_REJECTED_TEMPLATE_ID",
-    ORGANIZER_NOTIFICATION: "YOUR_ORGANIZER_TEMPLATE_ID",
+    EVENT_INVITATION: "template_mpuq27g",
+    REGISTRATION_CONFIRMED: "template_ckt9y2f",
+    // Free plan limit: Only 2 templates available
+    REGISTRATION_PENDING: null as string | null,
+    REGISTRATION_REJECTED: null as string | null,
+    ORGANIZER_NOTIFICATION: null as string | null,
   },
 };
 
@@ -99,30 +100,32 @@ export const sendRegistrationEmail = async (params: SendRegistrationEmailParams)
   initEmailJS();
   
   try {
-    let templateId: string;
-    let templateParams: Record<string, string> = {
-      to_email: params.toEmail,
-      to_name: params.toName,
-      event_title: params.eventTitle,
-      event_date: params.eventDate,
-      event_location: params.eventLocation,
-    };
-
+    // Only send email for confirmed registrations (2 template limit on free plan)
     if (params.status === "registered") {
-      templateId = EMAILJS_CONFIG.TEMPLATES.REGISTRATION_CONFIRMED;
+      const templateId = EMAILJS_CONFIG.TEMPLATES.REGISTRATION_CONFIRMED;
+      if (!templateId) {
+        console.log("Registration confirmed template not configured");
+        return true;
+      }
+      
       // Generate QR code for confirmed registrations
       const checkInToken = generateCheckInToken();
       const qrCodeUrl = generateQRCodeUrl(`${window.location.origin}/check-in/${params.eventId}/${checkInToken}`);
-      templateParams.qr_code_url = qrCodeUrl;
-      templateParams.check_in_token = checkInToken;
-    } else if (params.status === "rejected") {
-      templateId = EMAILJS_CONFIG.TEMPLATES.REGISTRATION_REJECTED;
-      templateParams.rejection_reason = params.rejectionReason || "Unfortunately, we cannot accommodate your registration at this time.";
-    } else {
-      templateId = EMAILJS_CONFIG.TEMPLATES.REGISTRATION_PENDING;
+      
+      await emailjs.send(EMAILJS_CONFIG.SERVICE_ID, templateId, {
+        to_email: params.toEmail,
+        to_name: params.toName,
+        event_title: params.eventTitle,
+        event_date: params.eventDate,
+        event_location: params.eventLocation,
+        qr_code_url: qrCodeUrl,
+        check_in_token: checkInToken,
+      });
+      return true;
     }
-
-    await emailjs.send(EMAILJS_CONFIG.SERVICE_ID, templateId, templateParams);
+    
+    // For pending/rejected: skip email (handled by UI toast)
+    console.log(`Skipping email for status "${params.status}" - no template available`);
     return true;
   } catch (error) {
     console.error("Failed to send registration email:", error);
@@ -138,24 +141,10 @@ interface SendOrganizerNotificationParams {
 }
 
 export const sendOrganizerNotification = async (params: SendOrganizerNotificationParams): Promise<boolean> => {
-  initEmailJS();
-  
-  try {
-    await emailjs.send(
-      EMAILJS_CONFIG.SERVICE_ID,
-      EMAILJS_CONFIG.TEMPLATES.ORGANIZER_NOTIFICATION,
-      {
-        to_email: params.organizerEmail,
-        guest_name: params.guestName,
-        guest_email: params.guestEmail,
-        event_title: params.eventTitle,
-      }
-    );
-    return true;
-  } catch (error) {
-    console.error("Failed to send organizer notification:", error);
-    return false;
-  }
+  // Skip organizer notification - no template available on free plan
+  // Organizers can see registrations in their dashboard
+  console.log(`Organizer notification skipped for ${params.eventTitle} - organizer will see in dashboard`);
+  return true;
 };
 
 // Check if EmailJS is configured
