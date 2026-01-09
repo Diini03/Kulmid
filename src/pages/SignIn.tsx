@@ -58,7 +58,7 @@ const SignIn = () => {
       if (roleData?.role === "admin") {
         navigate("/admin");
       } else {
-        navigate("/discover");
+        navigate("/events");
       }
     }
   };

@@ -80,7 +80,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           <button 
             onClick={() => {
               if (user) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                navigate('/events');
               } else {
                 navigate('/');
               }

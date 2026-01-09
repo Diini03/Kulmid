@@ -84,6 +84,7 @@ const App = () => (
                   {/* Public Routes - Redirect to /home if logged in */}
                   <Route path="/" element={<PublicRoute><Welcome /></PublicRoute>} />
                   <Route path="/discover" element={<Discover />} />
+                  <Route path="/discover/:id" element={<EventDetails />} />
                   <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                   <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
                   <Route path="/reset-password" element={<ResetPassword />} />

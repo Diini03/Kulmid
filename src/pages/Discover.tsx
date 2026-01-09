@@ -239,7 +239,7 @@ const Discover = () => {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {events.map((event, index) => (
               <div key={event.id} className={`animate-slide-up stagger-${(index % 6) + 1}`}>
-                <EventCard event={event} />
+                <EventCard event={event} basePath="/discover" />
               </div>
             ))}
           </div>
