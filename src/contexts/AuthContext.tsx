@@ -172,7 +172,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => subscription.unsubscribe();
-  }, [initialLoadComplete]);
+  }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
