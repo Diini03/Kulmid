@@ -20,9 +20,10 @@ type EventItem = {
 
 interface Props {
   event: EventItem;
+  basePath?: string;
 }
 
-export const EventCard = ({ event }: Props) => {
+export const EventCard = ({ event, basePath = "/events" }: Props) => {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ export const EventCard = ({ event }: Props) => {
   };
 
   const handleCardClick = () => {
-    navigate(`/events/${event.id}`);
+    navigate(`${basePath}/${event.id}`);
   };
 
   const handleBookClick = (e: React.MouseEvent) => {
@@ -58,7 +59,7 @@ export const EventCard = ({ event }: Props) => {
       setAuthAction("register for this event");
       setShowAuthModal(true);
     } else {
-      navigate(`/events/${event.id}`);
+      navigate(`${basePath}/${event.id}`);
     }
   };
 
