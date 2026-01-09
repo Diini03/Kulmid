@@ -123,22 +123,6 @@ const EventView = () => {
 
       {/* Main Content - Centered Single Column */}
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        
-        {/* Event Status Banner */}
-        {event.status === 'approved' ? (
-          <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <Globe className="h-4 w-4 text-primary" />
-              This event is publicly listed on Kulmid
-            </p>
-          </div>
-        ) : isPendingOrDraft && (
-          <div className="p-3 bg-muted/50 border rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              This event is not yet publicly listed on Kulmid. You can still register and share the event link.
-            </p>
-          </div>
-        )}
 
         {/* Event Image */}
         <div className="rounded-xl overflow-hidden border">
