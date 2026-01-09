@@ -217,7 +217,7 @@ const Events = () => {
             <Button asChild size="lg" variant="default" className="px-8">
               <Link to="/create" className="gap-2">
                 <Plus className="h-5 w-5" />
-                Create Your Event
+                Create Your First Event
               </Link>
             </Button>
             <div className="mt-10 pt-8">
