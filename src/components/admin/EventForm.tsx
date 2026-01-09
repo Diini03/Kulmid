@@ -202,7 +202,8 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
         });
       } else {
         // Generate unique ID for new event
-        const id = `ev-${Date.now()}`;
+        const { generateEventId } = await import('@/lib/utils');
+        const id = generateEventId();
         const { error } = await supabase
           .from('events')
           .insert([{ ...eventData, id }]);

@@ -200,8 +200,9 @@ const Create = () => {
       // Admin events get 'approved' status, user events get 'draft'
       const eventStatus = isAdmin ? 'approved' : 'pending';
 
+      const eventId = (await import('@/lib/utils')).generateEventId();
       const eventData = {
-        id: `ev-${Date.now()}`,
+        id: eventId,
         title: data.title,
         description: data.description,
         date: new Date(data.date).toISOString(),
