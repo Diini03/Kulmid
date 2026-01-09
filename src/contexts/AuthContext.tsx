@@ -40,6 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminCheckComplete, setAdminCheckComplete] = useState(false);
   const { toast } = useToast();
@@ -113,9 +114,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       (event, session) => {
         console.log('Auth event:', event);
         
-        // Handle token refresh
+        // Handle token refresh - update session silently without triggering loading state
         if (event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed successfully');
+          setSession(session);
+          return; // Don't trigger loading or re-render the entire app
         }
         
         // Handle sign out or session expiry
@@ -125,7 +128,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setProfile(null);
           setIsAdmin(false);
           setAdminCheckComplete(true);
-          setLoading(false);
+          if (!initialLoadComplete) {
+            setLoading(false);
+            setInitialLoadComplete(true);
+          }
           return;
         }
         
@@ -141,7 +147,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }, 0);
         }
         
-        setLoading(false);
+        // Only set loading to false on initial load
+        if (!initialLoadComplete) {
+          setLoading(false);
+          setInitialLoadComplete(true);
+        }
       }
     );
 
@@ -158,10 +168,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       setLoading(false);
+      setInitialLoadComplete(true);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [initialLoadComplete]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
