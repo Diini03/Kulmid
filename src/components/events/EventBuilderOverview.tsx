@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, MapPin, Users, Clock, CheckCircle, AlertTriangle, UserPlus, Eye, Globe, Video } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, CheckCircle, AlertTriangle, UserPlus, Eye, Globe, Video, Link, Copy, ExternalLink } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
 import InviteGuestsDialog from "./InviteGuestsDialog";
-
 interface EventBuilderOverviewProps {
   event: any;
   onRefresh: () => void;
@@ -32,6 +32,19 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
   const [recentGuests, setRecentGuests] = useState<RecentGuest[]>([]);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const eventLink = `${window.location.origin}/event/${event.id}`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(eventLink);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+    toast({
+      title: "✅ Link copied!",
+      description: "Event link has been copied to clipboard",
+    });
+  };
 
   useEffect(() => {
     if (event?.id) {
@@ -90,10 +103,13 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
       )}
 
       {event.status === "pending" && (
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
-            <Clock className="h-4 w-4" />
-            <span className="text-sm font-medium">Pending approval from admin</span>
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+          <div className="flex items-start gap-2 text-muted-foreground">
+            <Clock className="h-4 w-4 mt-0.5 text-primary" />
+            <div>
+              <span className="text-sm font-medium">Your event is not yet publicly listed on Kulmid</span>
+              <p className="text-sm mt-1">You can still manage registrations and share your event link with guests.</p>
+            </div>
           </div>
         </div>
       )}
@@ -111,6 +127,41 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
           </div>
         </div>
       )}
+
+      {/* Event Link Section */}
+      <div className="border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 bg-muted/30 border-b border-border">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Event Link</h3>
+        </div>
+        <div className="p-4 space-y-3">
+          <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg border">
+            <Link className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <span className="text-sm font-mono truncate flex-1">{eventLink}</span>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleCopyLink}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              {linkCopied ? "Copied!" : "Copy Link"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              asChild
+            >
+              <a href={eventLink} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View Event Page
+              </a>
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Event Recap Section */}
       <div className="border border-border rounded-lg overflow-hidden">
@@ -277,15 +328,15 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
             <div>
               <div className="font-medium">
                 {event.status === "approved" || event.status === "upcoming" || event.status === "ongoing" 
-                  ? "Public" 
-                  : "Not Published"}
+                  ? "Publicly Listed" 
+                  : "Not Publicly Listed"}
               </div>
               <div className="text-sm text-muted-foreground">
                 {event.status === "approved" || event.status === "upcoming" || event.status === "ongoing" 
-                  ? "Anyone can find and register for this event"
+                  ? "Your event is publicly listed on Kulmid. Anyone can find it on the Discover page."
                   : event.status === "pending"
-                    ? "Will be public once approved"
-                    : "This event is not visible to the public"}
+                    ? "Your event will be publicly listed once approved by admin."
+                    : "This event is not visible on the Discover page."}
               </div>
             </div>
           </div>
