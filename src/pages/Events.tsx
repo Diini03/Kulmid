@@ -257,20 +257,52 @@ const Events = () => {
         </div>
 
         {/* Empty state for current filter */}
-        {filteredEvents.length === 0 && <div className="empty-state-card">
-            <div className="empty-state-icon mx-auto">
-              <Calendar className="h-8 w-8" />
+        {filteredEvents.length === 0 && (
+          <div className="min-h-[50vh] flex items-center justify-center">
+            <div className="max-w-md mx-4 text-center animate-fade-in">
+              {/* Animated floating icon */}
+              <div className="relative mx-auto mb-8 w-32 h-32">
+                {/* Glowing orb behind */}
+                <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse" />
+                
+                {/* Icon container */}
+                <div className="relative w-full h-full flex items-center justify-center animate-float">
+                  <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                    <CalendarPlus className="h-10 w-10" />
+                  </div>
+                </div>
+              </div>
+
+              <h1 className="text-2xl font-bold mb-3">
+                {filter === "upcoming" ? "No upcoming events" : "No past events"}
+              </h1>
+              <p className="text-muted-foreground mb-8">
+                {filter === "upcoming" 
+                  ? "Create your next event and start inviting guests." 
+                  : "Your past events will appear here once completed."}
+              </p>
+              {filter === "upcoming" && (
+                <Button asChild size="lg" variant="default" className="px-8">
+                  <Link to="/create" className="gap-2">
+                    <Plus className="h-5 w-5" />
+                    Create Your First Event
+                  </Link>
+                </Button>
+              )}
+              <div className="mt-10 pt-8">
+                <p className="text-sm text-muted-foreground mb-3">
+                  or explore events happening around you
+                </p>
+                <Button asChild variant="ghost">
+                  <Link to="/discover" className="gap-2">
+                    <Compass className="h-4 w-4" />
+                    Discover Events
+                  </Link>
+                </Button>
+              </div>
             </div>
-            <p className="text-muted-foreground mb-4">
-              No {filter} events found.
-            </p>
-            {filter === "upcoming" && <Button asChild variant="default">
-                <Link to="/create">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Event
-                </Link>
-              </Button>}
-          </div>}
+          </div>
+        )}
 
         {/* Timeline Events */}
         <div className="space-y-0">
