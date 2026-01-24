@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,9 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, X } from "lucide-react";
+import { Mail, X, FileSpreadsheet, Upload, Download, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { sendEventInvitation, isEmailJSConfigured } from "@/lib/emailjs";
+import { parseEmailsFromCSV, generateCSVTemplate } from "@/lib/csvParser";
 
 interface InviteGuestsDialogProps {
   eventId: string;
@@ -24,6 +25,9 @@ const InviteGuestsDialog = ({ eventId, open, onOpenChange, onSuccess }: InviteGu
   const [customTitle, setCustomTitle] = useState("");
   const [customMessage, setCustomMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessingCSV, setIsProcessingCSV] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addEmail = () => {
     const email = emailInput.trim().toLowerCase();
@@ -59,6 +63,85 @@ const InviteGuestsDialog = ({ eventId, open, onOpenChange, onSuccess }: InviteGu
     if (e.key === "Enter") {
       e.preventDefault();
       addEmail();
+    }
+  };
+
+  const processCSVFile = useCallback(async (file: File) => {
+    setIsProcessingCSV(true);
+    
+    try {
+      const result = await parseEmailsFromCSV(file);
+      
+      if (result.error) {
+        toast({
+          title: "Import Error",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Filter out emails that already exist in the list
+      const newEmails = result.emails.filter((email) => !emails.includes(email));
+      const duplicateCount = result.emails.length - newEmails.length;
+
+      if (newEmails.length === 0) {
+        toast({
+          title: "No New Emails",
+          description: duplicateCount > 0 
+            ? "All emails from the CSV are already in your list" 
+            : "No valid emails found in the CSV",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setEmails([...emails, ...newEmails]);
+
+      let description = `Added ${newEmails.length} email${newEmails.length !== 1 ? 's' : ''}`;
+      if (result.skippedCount > 0) {
+        description += `, skipped ${result.skippedCount} invalid`;
+      }
+      if (duplicateCount > 0) {
+        description += `, ${duplicateCount} duplicate${duplicateCount !== 1 ? 's' : ''} ignored`;
+      }
+
+      toast({
+        title: "CSV Imported",
+        description,
+      });
+    } finally {
+      setIsProcessingCSV(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [emails, toast]);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      processCSVFile(files[0]);
+    }
+  }, [processCSVFile]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      processCSVFile(files[0]);
     }
   };
 
@@ -154,7 +237,7 @@ const InviteGuestsDialog = ({ eventId, open, onOpenChange, onSuccess }: InviteGu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Invite Guests</DialogTitle>
           <DialogDescription>
@@ -198,6 +281,65 @@ const InviteGuestsDialog = ({ eventId, open, onOpenChange, onSuccess }: InviteGu
               ))}
             </div>
           )}
+
+          {/* CSV Import Section */}
+          <div className="space-y-2">
+            <Label>Import from CSV</Label>
+            <div
+              className={`
+                relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
+                transition-colors duration-200
+                ${isDragging 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/50'
+                }
+                ${isProcessingCSV ? 'pointer-events-none opacity-60' : ''}
+              `}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              
+              {isProcessingCSV ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                  <p className="text-sm text-muted-foreground">Processing CSV...</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="p-3 bg-muted rounded-full">
+                    <FileSpreadsheet className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Import CSV File</p>
+                    <p className="text-xs text-muted-foreground">
+                      Drop file here or click to browse
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                generateCSVTemplate();
+              }}
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              <Download className="h-3 w-3" />
+              Download CSV Template
+            </button>
+          </div>
 
           <div>
             <Label htmlFor="customTitle">Custom Email Title (Optional)</Label>
