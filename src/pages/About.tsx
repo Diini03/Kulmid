@@ -1,136 +1,101 @@
 import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import heroImg from "@/assets/hero-eventease.jpg";
 
 const About = () => {
+  const milestones = [
+    { year: "2024", title: "Platform Launch", desc: "Kulmid officially launched to serve our community." },
+    { year: "2024", title: "Growing Together", desc: "Events hosted across multiple cities." },
+    { year: "2025", title: "Expanding Reach", desc: "Continuing to grow and serve more communities." },
+  ];
+
+  const values = [
+    { title: "Trust (Isku-Kalsooni)", desc: "Trust and unity are at the heart of everything we build." },
+    { title: "Accessibility", desc: "Great experiences should be available to everyone." },
+    { title: "Community", desc: "Communities thrive when people gather together." },
+  ];
+
   return (
     <Layout>
-      <Seo title="About" description="Learn about Kulmid's mission to connect communities through trust and meaningful events." canonical="/about" />
+      <Seo 
+        title="About" 
+        description="Learn about Kulmid's mission to connect communities through trust and meaningful events." 
+        canonical="/about" 
+      />
       
-      {/* Hero Section */}
-      <section className="container max-w-5xl px-4 py-12 md:py-20">
-        <div className="text-center space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold">About Kulmid</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Kulmid is a platform that helps people create, organize, and attend events easily. 
-            We believe in bringing communities together through trust and meaningful connections.
-          </p>
-        </div>
+      {/* Hero */}
+      <section className="container max-w-5xl px-4 py-16 md:py-24">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">About Kulmid</h1>
+        <p className="text-xl text-muted-foreground max-w-2xl">
+          A platform that brings communities together through trust and meaningful connections.
+        </p>
       </section>
 
-      {/* Mission & Vision */}
-      <section className="container max-w-5xl px-4 py-12">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+      {/* Mission & What We Do */}
+      <section className="container max-w-5xl px-4 pb-16">
+        <div className="grid md:grid-cols-2 gap-12">
           <div>
-            <img src={heroImg} alt="Kulmid community events" className="rounded-xl object-cover w-full h-64 md:h-80" />
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">Our Mission</h2>
+            <p className="text-lg leading-relaxed">
+              Kulmid exists to strengthen communities through the power of gathering. We grew from the value of Isku-Kalsooni — trust among people. When people meet, ideas are born, relationships grow, and communities strengthen.
+            </p>
           </div>
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Kulmid exists to strengthen communities through the power of gathering. 
-                We grew from the value of Isku-Kalsooni — trust among people. When people meet, 
-                ideas are born, relationships grow, and communities strengthen. We make those moments possible.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-3">What We Do</h3>
-              <ul className="text-muted-foreground space-y-2">
-                <li>• Connect people through meaningful events and shared experiences</li>
-                <li>• Empower organizers with simple, accessible tools</li>
-                <li>• Build bridges between communities, stories, and opportunities</li>
-                <li>• Foster trust and collaboration through gathering</li>
-              </ul>
-            </div>
+          <div>
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">What We Do</h2>
+            <ul className="space-y-2 text-lg">
+              <li>Connect people through meaningful events</li>
+              <li>Empower organizers with simple tools</li>
+              <li>Build bridges between communities</li>
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* Company Story */}
-      <section className="container max-w-5xl px-4 py-12">
-        <h2 className="text-3xl font-bold text-center mb-12">Our Story</h2>
-        <div className="space-y-8">
-          <div className="prose max-w-none">
-            <p className="text-muted-foreground leading-relaxed">
-              Kulmid started from the value of Isku-Kalsooni — trust among people. 
-              We noticed how difficult it was to organize and discover events, so we built a platform 
-              that brings everything into one place. But more than that, we built a bridge.
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              A bridge between people who want to learn and those who want to teach. Between communities 
-              seeking connection and events that bring them together. Between ideas and the gatherings 
-              that give them life.
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              Kulmid is not just a tool. It is a commitment to the belief that when people meet, 
-              something beautiful happens. Communities thrive. Knowledge spreads. Opportunities emerge.
-            </p>
-          </div>
+      {/* Story */}
+      <section className="container max-w-5xl px-4 py-16 border-t border-border">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-6">Our Story</h2>
+        <div className="max-w-3xl space-y-4 text-lg text-muted-foreground">
+          <p>
+            Kulmid started from the value of Isku-Kalsooni — trust among people. We noticed how difficult it was to organize and discover events, so we built a platform that brings everything into one place.
+          </p>
+          <p>
+            A bridge between people who want to learn and those who want to teach. Between communities seeking connection and events that bring them together.
+          </p>
         </div>
       </section>
 
       {/* Timeline */}
-      <section className="container max-w-5xl px-4 py-12">
-        <h2 className="text-3xl font-bold text-center mb-12">Key Milestones</h2>
-        <div className="grid gap-6 md:gap-8">
-          {[
-            { year: "2024", title: "Platform Launch", desc: "Kulmid officially launched, bringing modern event management to our community." },
-            { year: "2024", title: "Growing Together", desc: "Events hosted across multiple cities, connecting communities and creating opportunities." },
-            { year: "2024", title: "Building Trust", desc: "Focused on user experience and platform reliability, earning the trust of organizers and attendees." },
-            { year: "2025", title: "Expanding Reach", desc: "Continuing to grow, improve features, and serve more communities every day." }
-          ].map((milestone, index) => (
-            <div key={milestone.year + index} className="flex gap-6 group">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-                  {milestone.year.slice(-2)}
+      <section className="container max-w-5xl px-4 py-16 border-t border-border">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-8">Our Journey</h2>
+        <div className="relative pl-8">
+          {/* Vertical line */}
+          <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
+          
+          <div className="space-y-8">
+            {milestones.map((milestone, index) => (
+              <div key={index} className="relative">
+                {/* Dot */}
+                <div className="absolute -left-8 top-1.5 w-[15px] h-[15px] rounded-full border-2 border-primary bg-background" />
+                <div>
+                  <span className="text-sm text-muted-foreground">{milestone.year}</span>
+                  <h3 className="text-lg font-medium">{milestone.title}</h3>
+                  <p className="text-muted-foreground">{milestone.desc}</p>
                 </div>
-                {index !== 3 && <div className="w-0.5 h-16 bg-border mt-4"></div>}
               </div>
-              <div className="flex-1 pb-8">
-                <h3 className="text-xl font-semibold">{milestone.year} — {milestone.title}</h3>
-                <p className="text-muted-foreground mt-2">{milestone.desc}</p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Values */}
-      <section className="container max-w-5xl px-4 py-12">
-        <h2 className="text-3xl font-bold text-center mb-12">Our Values</h2>
-        <div className="grid md:grid-cols-2 gap-8">
-          {[
-            { title: "Trust (Isku-Kalsooni)", desc: "Trust and unity are at the heart of everything we do. We build technology that strengthens relationships." },
-            { title: "Accessibility", desc: "Great experiences should be available to everyone. We keep our platform simple and inclusive." },
-            { title: "Innovation", desc: "We use technology to strengthen human connections, not replace them." },
-            { title: "Community", desc: "Communities thrive when people gather. We're proud to be part of that journey." }
-          ].map((value) => (
-            <div key={value.title} className="rounded-xl border p-6 hover-scale">
-              <h3 className="text-xl font-semibold mb-3">{value.title}</h3>
-              <p className="text-muted-foreground">{value.desc}</p>
+      <section className="container max-w-5xl px-4 py-16 border-t border-border">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-8">Our Values</h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          {values.map((value, index) => (
+            <div key={index} className="border border-border rounded-lg p-6">
+              <h3 className="font-medium mb-2">{value.title}</h3>
+              <p className="text-sm text-muted-foreground">{value.desc}</p>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="container max-w-5xl px-4 py-16 text-center">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <h2 className="text-3xl font-bold">Join Our Journey</h2>
-          <p className="text-lg text-muted-foreground">
-            Ready to be part of the future of events? Whether you're looking to discover amazing experiences 
-            or host your own, we'd love to have you with us.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg">
-              <Link to="/events">Explore Events</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/contact">Get In Touch</Link>
-            </Button>
-          </div>
         </div>
       </section>
     </Layout>
