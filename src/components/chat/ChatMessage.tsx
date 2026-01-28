@@ -28,7 +28,7 @@ export const ChatMessage = ({ role, content, isTyping }: ChatMessageProps) => {
         className={cn(
           "flex-1 px-4 py-3 rounded-2xl max-w-[80%]",
           isUser 
-            ? "bg-foreground text-background ml-auto" 
+            ? "bg-white text-black dark:bg-white dark:text-black ml-auto" 
             : "bg-muted text-foreground"
         )}
       >
