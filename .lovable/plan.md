@@ -1,171 +1,135 @@
 
-## Plan: CSV Import for Guest Invitations
+
+## Plan: Modern Chatbot Redesign
 
 ### Overview
-Add the ability to import multiple email addresses from a CSV file when inviting guests to events, matching the functionality shown in Luma's invite dialog.
+Redesign the Kulmid AI chatbot with a more modern, eye-catching design that fixes dark mode readability issues and adds click-outside-to-close functionality.
 
 ---
 
-### How It Will Work
+### Current Issues Identified
 
-1. **User Experience Flow**
-   - User opens the "Invite Guests" dialog
-   - They see the existing manual email input
-   - Below it, there's a new "Import CSV" section with a dashed border drop zone
-   - User can drag-and-drop a CSV file or click to browse
-   - The system reads the CSV, finds the "email" column, and extracts all valid emails
-   - Emails are added to the existing email list (with duplicate filtering)
-   - A "Download CSV Template" link is provided for users who need guidance
-
-2. **CSV Parsing Logic**
-   - Accept files with `.csv` extension
-   - Parse the CSV looking for a column header named "email" (case-insensitive)
-   - Extract all valid email addresses from that column
-   - Skip empty rows and invalid email formats
-   - Handle common CSV edge cases (quoted values, different delimiters)
-
-3. **User Feedback**
-   - Show count of successfully imported emails
-   - Show warnings for invalid emails (skipped)
-   - Show error if "email" column not found
-   - Show error if file is not a valid CSV
+1. **Dark Mode Readability**: User messages use teal background (`bg-primary`) with dark text (`--primary-foreground: 0 0% 5%`) - very hard to read
+2. **No Click-Outside-to-Close**: Chat stays open until user clicks the X button
+3. **Basic Design**: Current look doesn't catch the user's attention
+4. **Floating Button**: Simple button that doesn't stand out
 
 ---
 
-### Files to Modify/Create
+### Design Changes
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `package.json` | Modify | Add `papaparse` dependency for robust CSV parsing |
-| `src/components/events/InviteGuestsDialog.tsx` | Modify | Add CSV import UI and logic |
-| `src/lib/csvParser.ts` | Create | Utility for parsing CSV and extracting emails |
+#### 1. Floating Chat Button - Eye-Catching
+```text
+Current:  Simple round button
+New:      Animated gradient ring + pulse effect + tooltip on hover
+          Gently pulses to catch attention
+          Shows "Need help?" tooltip on first visit
+```
 
----
-
-### UI Design (Matching Kulmid Style)
-
-The CSV import section will be added below the manual email input:
-
+#### 2. Chat Panel - Modern Glass Design
 ```text
 +------------------------------------------+
-| Email Addresses                          |
-| [guest@example.com          ] [Add]      |
-| Press Enter or click Add after each email|
-|                                          |
-| [badge] [badge] [badge] ...              |
+|  ✦ Kulmid AI                        [×] |  <- Gradient accent line at top
 +------------------------------------------+
 |                                          |
-| Import CSV                               |
-| +--------------------------------------+ |
-| |        [CSV Icon]                    | |
-| |    Import CSV File                   | |
-| |  Drop file or click here to choose   | |
-| +--------------------------------------+ |
-| Download CSV Template                    |
+|   [Bot Avatar]                           |
+|   "Hi! 👋 How can I help?"              |
+|                                          |
+|   [FAQ Chips in grid layout]             |
+|                                          |
++------------------------------------------+
+|                                          |
+|  [Message input with send icon]          |
 +------------------------------------------+
 ```
 
-**Styling Details:**
-- Dashed border on the drop zone (`border-dashed border-2`)
-- Muted text for instructions
-- File icon from Lucide React (`FileSpreadsheet`)
-- Hover state with slightly darker background
-- Active/drag state with primary color border
+#### 3. Message Bubbles - Clean & Readable
+
+**User Messages (Right-aligned):**
+- Light mode: Dark background (`bg-foreground`) + light text
+- Dark mode: Light/white background + dark text
+- Creates strong contrast in both modes
+
+**Assistant Messages (Left-aligned):**
+- Subtle card-style background
+- Clean typography with proper markdown rendering
+
+---
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/chat/ChatWidget.tsx` | Add click-outside handler, modern styling, animated button |
+| `src/components/chat/ChatMessage.tsx` | Fix color scheme for both modes, modern bubble design |
+| `src/components/chat/FAQChips.tsx` | Update to grid layout, subtle styling |
 
 ---
 
 ### Technical Implementation
 
-**1. Add Papaparse Dependency**
-
-Papaparse is a fast, reliable CSV parser that handles edge cases like:
-- Different line endings (Windows/Mac/Linux)
-- Quoted fields with commas inside
-- Empty rows
-- Header detection
-
-**2. New CSV Parser Utility (`src/lib/csvParser.ts`)**
-
+#### Click-Outside-to-Close
+Add a `useRef` for the chat panel and a click listener:
 ```typescript
-interface ParseResult {
-  emails: string[];
-  skippedCount: number;
-  error?: string;
-}
-
-function parseEmailsFromCSV(file: File): Promise<ParseResult>
+useEffect(() => {
+  const handleClickOutside = (e: MouseEvent) => {
+    if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      setIsOpen(false);
+    }
+  };
+  
+  if (isOpen) {
+    document.addEventListener('mousedown', handleClickOutside);
+  }
+  
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, [isOpen]);
 ```
 
-This function will:
-- Read the file using FileReader
-- Parse with papaparse (header: true)
-- Find the "email" column (case-insensitive search)
-- Validate each email format
-- Return valid emails and count of skipped invalid ones
+#### Fixed Message Colors
+User messages will use explicit colors that work in both modes:
+- Background: `bg-foreground` (black in light mode, near-white in dark mode)
+- Text: `text-background` (white in light mode, near-black in dark mode)
 
-**3. Update InviteGuestsDialog.tsx**
+This ensures high contrast regardless of theme.
 
-Add state for:
-- `isDragging` - for drag-and-drop visual feedback
-- `isProcessingCSV` - loading state during parse
-
-Add functions:
-- `handleFileDrop(e: DragEvent)` - handle drag and drop
-- `handleFileSelect(e: ChangeEvent<HTMLInputElement>)` - handle file picker
-- `processCSVFile(file: File)` - parse and add emails
-- `downloadTemplate()` - generate sample CSV template
-
-Add UI elements:
-- Hidden file input with `accept=".csv"`
-- Drop zone div with click-to-browse
-- File icon and instructions
-- Download template link
+#### Animated Floating Button
+- Subtle pulse animation ring
+- Gradient border effect
+- Scale animation on hover
+- Sparkle/chat icon with animation
 
 ---
 
-### CSV Template
+### Visual Comparison
 
-When user clicks "Download CSV Template", generate a simple CSV:
-
-```csv
-email,name
-guest1@example.com,Guest Name
-guest2@example.com,Another Guest
+**Before (Current):**
+```text
+- Basic teal header
+- Hard-to-read user messages in dark mode
+- Simple floating button
+- No backdrop/click-outside
 ```
 
-Note: Only the "email" column is required; "name" is optional and ignored.
-
----
-
-### Validation and Error Handling
-
-| Scenario | User Feedback |
-|----------|---------------|
-| No "email" column found | Toast: "Could not find 'email' column in CSV. Please check your file format." |
-| Empty file | Toast: "The CSV file appears to be empty" |
-| All emails invalid | Toast: "No valid email addresses found in the CSV" |
-| Some invalid emails | Toast: "Imported X emails, skipped Y invalid entries" |
-| Duplicate emails | Silently filtered (same as manual entry) |
-| File read error | Toast: "Failed to read file. Please try again." |
-
----
-
-### Edge Cases Handled
-
-1. **Column name variations**: Matches "email", "Email", "EMAIL", "e-mail", "E-Mail"
-2. **Extra whitespace**: Trims emails before validation
-3. **Duplicates in CSV**: Removed before adding to list
-4. **Duplicates with existing**: Existing emails in the list are preserved, duplicates not re-added
-5. **Mixed valid/invalid**: Valid emails imported, invalid ones counted and reported
-6. **Large files**: Papaparse handles chunked parsing efficiently
+**After (New):**
+```text
+- Gradient accent line at top
+- High-contrast messages in both modes
+- Animated floating button with glow effect
+- Click-outside-to-close
+- Smooth entrance/exit animations
+- Better spacing and typography
+```
 
 ---
 
 ### Summary
 
-This feature adds a Luma-style CSV import to the guest invitation dialog:
-- Drop zone for drag-and-drop or click-to-browse
-- Automatic "email" column detection
-- Robust parsing with proper error handling
-- Sample template download
-- Seamless integration with existing email list
+This redesign will:
+
+1. **Fix the readability issue** - Messages will be clear in both light and dark modes
+2. **Add click-outside-to-close** - More intuitive UX
+3. **Make it eye-catching** - Animated button that users notice when they need help
+4. **Keep it clean** - Follows the monochrome teal design system
+5. **Improve overall polish** - Smooth animations, better spacing, modern look
+
