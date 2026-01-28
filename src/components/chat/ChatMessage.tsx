@@ -38,13 +38,12 @@ export const ChatMessage = ({ role, content, isTyping }: ChatMessageProps) => {
             <span className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: "150ms" }} />
             <span className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: "300ms" }} />
           </div>
+        ) : isUser ? (
+          <div className="text-sm leading-relaxed" style={{ color: '#000000' }}>
+            {content}
+          </div>
         ) : (
-          <div className={cn(
-            "text-sm leading-relaxed prose prose-sm max-w-none",
-            isUser 
-              ? "prose-invert" 
-              : "dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:my-2"
-          )}>
+          <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:my-2">
             <ReactMarkdown>{content}</ReactMarkdown>
           </div>
         )}
