@@ -16,7 +16,9 @@ export const ChatMessage = ({ role, content, isTyping }: ChatMessageProps) => {
       <div
         className={cn(
           "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-          isUser ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+          isUser 
+            ? "bg-foreground text-background" 
+            : "bg-muted text-muted-foreground"
         )}
       >
         {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
@@ -26,18 +28,23 @@ export const ChatMessage = ({ role, content, isTyping }: ChatMessageProps) => {
         className={cn(
           "flex-1 px-4 py-3 rounded-2xl max-w-[80%]",
           isUser 
-            ? "bg-primary text-primary-foreground ml-auto" 
-            : "bg-secondary text-secondary-foreground"
+            ? "bg-foreground text-background ml-auto" 
+            : "bg-muted text-foreground"
         )}
       >
         {isTyping ? (
-          <div className="flex gap-1">
-            <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-            <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-            <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          <div className="flex gap-1 py-1">
+            <span className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: "0ms" }} />
+            <span className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: "150ms" }} />
+            <span className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: "300ms" }} />
           </div>
         ) : (
-          <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:my-2">
+          <div className={cn(
+            "text-sm leading-relaxed prose prose-sm max-w-none",
+            isUser 
+              ? "prose-invert" 
+              : "dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:my-2"
+          )}>
             <ReactMarkdown>{content}</ReactMarkdown>
           </div>
         )}
