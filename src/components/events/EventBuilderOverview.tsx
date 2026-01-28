@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, MapPin, Users, Clock, CheckCircle, AlertTriangle, UserPlus, Eye, Globe, Video, Link, Copy, ExternalLink } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, CheckCircle, AlertTriangle, UserPlus, Eye, Globe, Video, Link, Copy, ExternalLink, Phone, Download } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import InviteGuestsDialog from "./InviteGuestsDialog";
+import { GuestExportData, generateGuestPhoneCSV, generateGuestContactsCSV } from "@/lib/csvParser";
+
 interface EventBuilderOverviewProps {
   event: any;
   onRefresh: () => void;
@@ -17,6 +19,7 @@ interface GuestStats {
   confirmed: number;
   pending: number;
   checkedIn: number;
+  withPhone: number;
 }
 
 interface RecentGuest {
@@ -28,8 +31,9 @@ interface RecentGuest {
 }
 
 const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) => {
-  const [guestStats, setGuestStats] = useState<GuestStats>({ total: 0, confirmed: 0, pending: 0, checkedIn: 0 });
+  const [guestStats, setGuestStats] = useState<GuestStats>({ total: 0, confirmed: 0, pending: 0, checkedIn: 0, withPhone: 0 });
   const [recentGuests, setRecentGuests] = useState<RecentGuest[]>([]);
+  const [guestsForExport, setGuestsForExport] = useState<GuestExportData[]>([]);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -54,10 +58,10 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
 
   const fetchGuestData = async () => {
     try {
-      // Fetch all guests for stats
+      // Fetch all guests for stats and export
       const { data: guests, error } = await supabase
         .from("event_guests")
-        .select("id, name, email, status, checked_in, created_at")
+        .select("id, name, email, phone_number, organization, status, checked_in, created_at")
         .eq("event_id", event.id)
         .order("created_at", { ascending: false });
 
@@ -69,8 +73,10 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
           confirmed: guests.filter(g => g.status === "confirmed").length,
           pending: guests.filter(g => g.status === "pending").length,
           checkedIn: guests.filter(g => g.checked_in).length,
+          withPhone: guests.filter(g => g.phone_number).length,
         });
         setRecentGuests(guests.slice(0, 5));
+        setGuestsForExport(guests);
       }
     } catch (error) {
       console.error("Error fetching guests:", error);
@@ -88,6 +94,38 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
     if (event.event_type === "online") return "Online Event";
     if (event.event_type === "hybrid") return "Hybrid Event";
     return "In-Person Event";
+  };
+
+  const handleExportPhones = () => {
+    if (guestStats.withPhone === 0) {
+      toast({
+        title: "No phone numbers",
+        description: "No guests have phone numbers to export",
+        variant: "destructive",
+      });
+      return;
+    }
+    generateGuestPhoneCSV(guestsForExport, event.title);
+    toast({
+      title: "✅ Download started",
+      description: `Exporting ${guestStats.withPhone} phone numbers`,
+    });
+  };
+
+  const handleExportAllContacts = () => {
+    if (guestStats.total === 0) {
+      toast({
+        title: "No contacts",
+        description: "No guests to export",
+        variant: "destructive",
+      });
+      return;
+    }
+    generateGuestContactsCSV(guestsForExport, event.title);
+    toast({
+      title: "✅ Download started",
+      description: `Exporting ${guestStats.total} contacts`,
+    });
   };
 
   return (
@@ -310,6 +348,42 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
                     <UserPlus className="h-3.5 w-3.5 mr-2" />
                     Invite Guests
                   </Button>
+                </div>
+              )}
+
+              {/* Export Contacts Section */}
+              {guestStats.total > 0 && (
+                <div className="border-t border-border pt-4 mt-4">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-3">
+                    Export Contacts
+                  </div>
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={handleExportPhones}
+                      disabled={guestStats.withPhone === 0}
+                    >
+                      <Phone className="h-4 w-4 mr-2" />
+                      Download Phone Numbers
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {guestStats.withPhone} contacts
+                      </span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={handleExportAllContacts}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download All Contacts
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {guestStats.total} total
+                      </span>
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

@@ -114,3 +114,102 @@ export const generateCSVTemplate = (): void => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+
+// ============= Guest Export Functions =============
+
+export interface GuestExportData {
+  name: string | null;
+  email: string;
+  phone_number: string | null;
+  organization: string | null;
+  status: string;
+  created_at: string;
+}
+
+const sanitizeFilename = (text: string): string => {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 50);
+};
+
+const downloadCSV = (content: string, filename: string): void => {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+const escapeCSVCell = (cell: string): string => {
+  // Escape quotes by doubling them and wrap in quotes if needed
+  if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+    return `"${cell.replace(/"/g, '""')}"`;
+  }
+  return cell;
+};
+
+/**
+ * Export phone numbers only (for SMS marketing via Hormuud etc.)
+ */
+export const generateGuestPhoneCSV = (
+  guests: GuestExportData[], 
+  eventTitle: string
+): void => {
+  // Filter guests with phone numbers
+  const withPhones = guests.filter(g => g.phone_number);
+  
+  if (withPhones.length === 0) {
+    return;
+  }
+
+  // Build CSV content
+  const headers = ['name', 'phone_number', 'status'];
+  const rows = withPhones.map(g => [
+    escapeCSVCell(g.name || 'Guest'),
+    escapeCSVCell(g.phone_number || ''),
+    escapeCSVCell(g.status)
+  ]);
+  
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.join(','))
+  ].join('\n');
+  
+  downloadCSV(csvContent, `phone-numbers-${sanitizeFilename(eventTitle)}.csv`);
+};
+
+/**
+ * Export all contact details (for email + phone campaigns)
+ */
+export const generateGuestContactsCSV = (
+  guests: GuestExportData[], 
+  eventTitle: string
+): void => {
+  if (guests.length === 0) {
+    return;
+  }
+
+  const headers = ['name', 'email', 'phone_number', 'organization', 'status', 'registered_at'];
+  const rows = guests.map(g => [
+    escapeCSVCell(g.name || 'Guest'),
+    escapeCSVCell(g.email),
+    escapeCSVCell(g.phone_number || ''),
+    escapeCSVCell(g.organization || ''),
+    escapeCSVCell(g.status),
+    escapeCSVCell(new Date(g.created_at).toLocaleDateString())
+  ]);
+  
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.join(','))
+  ].join('\n');
+  
+  downloadCSV(csvContent, `contacts-${sanitizeFilename(eventTitle)}.csv`);
+};
