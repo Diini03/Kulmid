@@ -22,8 +22,6 @@ import EventDetails from "./pages/EventDetails";
 import EventView from "./pages/EventView";
 import Favorites from "./pages/Favorites";
 import About from "./pages/About";
-import OurStory from "./pages/OurStory";
-import Achievements from "./pages/Achievements";
 import OurTeam from "./pages/OurTeam";
 import Contact from "./pages/Contact";
 import SignIn from "./pages/SignIn";
@@ -94,9 +92,10 @@ const App = () => (
                   
                   {/* Footer Pages - Always accessible */}
                   <Route path="/about" element={<About />} />
-                  <Route path="/our-story" element={<OurStory />} />
-                  <Route path="/achievements" element={<Achievements />} />
+                  <Route path="/our-story" element={<Navigate to="/about" replace />} />
+                  <Route path="/achievements" element={<Navigate to="/contact" replace />} />
                   <Route path="/our-team" element={<OurTeam />} />
+                  <Route path="/team" element={<OurTeam />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/help" element={<Help />} />
                   

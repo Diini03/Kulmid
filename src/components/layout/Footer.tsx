@@ -19,43 +19,31 @@ export const Footer = () => {
           <nav className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm">
             <Link 
               to="/events" 
-              className="text-muted-foreground hover:text-foreground transition-all hover:scale-105"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Events
             </Link>
             <Link 
               to="/about" 
-              className="text-muted-foreground hover:text-foreground transition-all hover:scale-105"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               About
             </Link>
             <Link 
-              to="/our-story" 
-              className="text-muted-foreground hover:text-foreground transition-all hover:scale-105"
-            >
-              Our Story
-            </Link>
-            <Link 
               to="/our-team" 
-              className="text-muted-foreground hover:text-foreground transition-all hover:scale-105"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Our Team
-            </Link>
-            <Link 
-              to="/achievements" 
-              className="text-muted-foreground hover:text-foreground transition-all hover:scale-105"
-            >
-              Achievements
+              Team
             </Link>
             <Link 
               to="/contact" 
-              className="text-muted-foreground hover:text-foreground transition-all hover:scale-105"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Contact
             </Link>
             <Link 
               to="/help" 
-              className="text-muted-foreground hover:text-foreground transition-all hover:scale-105"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Help
             </Link>
