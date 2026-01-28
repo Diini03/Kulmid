@@ -1,197 +1,216 @@
 
 
-## Plan: Informational Pages Redesign - Modern Minimal Consolidation
+## Plan: Phone Number CSV Export for SMS Marketing
 
 ### Overview
-Consolidate and redesign the 5 informational pages (About, OurStory, OurTeam, Achievements, Contact) into a modern, minimal design that matches the sleek Discover/Events pages aesthetic. Remove clutter, big hero images, and template-looking elements.
+Add a feature for event creators to export registered attendees' phone numbers as a CSV file directly from the Event Management Overview page. This helps creators who use services like Hormuud to send SMS notifications to their guests.
 
 ---
 
-### Current State Analysis
+### Why This Helps
 
-| Page | Issues |
-|------|--------|
-| **About** | Duplicate content (repeats story/milestones from OurStory), hero image not needed |
-| **OurStory** | 60vh hero with large image overlay, gradient backgrounds, too much padding |
-| **OurTeam** | Template-looking cards, gradient hero, emoji icons, placeholder images |
-| **Achievements** | Vague stats ("Growing", "Many"), gradient heroes, repetitive sections |
-| **Contact** | Fake US address/phone, FAQ duplicates Help page, map placeholder |
+Many event organizers in Somalia use:
+- **Hormuud SMS** - Local carrier for bulk messaging
+- **Google Forms** - To collect attendee data, then export for SMS
 
----
-
-### Consolidation Strategy
-
-**Remove 2 pages, keep 3:**
-
-| Keep | Merge Into | Remove |
-|------|------------|--------|
-| **About** | Absorb story + timeline + values | - |
-| **Team** | Standalone (redesigned) | - |
-| **Contact** | Absorb achievements as simple stats | - |
-| - | - | **OurStory** (merge into About) |
-| - | - | **Achievements** (merge into Contact as "Impact" section) |
-
-**Update Footer:** Links change from 7 to 5:
-- Events, About, Team, Contact, Help
+With this feature, your platform replaces Google Forms entirely:
+1. Attendees register through Kulmid
+2. Creator downloads phone numbers as CSV
+3. Upload CSV to Hormuud portal → Send SMS to all attendees
 
 ---
 
-### New Page Designs
+### Implementation
 
-#### 1. About Page (New - Absorbs OurStory)
+#### Location: Event Overview Tab
+Add an "Export Contacts" section in the Guests card on the Overview page (`EventBuilderOverview.tsx`).
+
 ```text
 +------------------------------------------+
-|  About Kulmid                            |  <- Simple text hero, no image
-|  One line tagline                        |
+|  GUESTS                          [Invite] |
 +------------------------------------------+
 |                                          |
-|  [Two columns: Mission | What We Do]     |  <- Clean grid, no images
+|  [123]        [89]         [45]          |
+|  Confirmed    Pending      Checked In    |
 |                                          |
-+------------------------------------------+
-|  Our Journey                             |
+|  ─────────────────────────────────────   |
 |                                          |
-|  2024 ─────● Platform Launch             |  <- Minimal timeline
-|  2024 ─────● Growing Together            |     (vertical line + dots)
-|  2025 ─────● Expanding Reach             |
-|                                          |
-+------------------------------------------+
-|  Our Values                              |
-|                                          |
-|  [Trust] [Accessibility] [Community]     |  <- Simple 3-column cards
+|  📥 Export Contacts                      |
+|  ┌──────────────────────────────────┐    |
+|  │  [📱] Download Phone Numbers     │    |  <- New CSV export button
+|  │       45 contacts with phone     │    |
+|  │                                  │    |
+|  │  [📧] Download All Contacts      │    |  <- Optional: Full export
+|  │       123 total registrations    │    |
+|  └──────────────────────────────────┘    |
 |                                          |
 +------------------------------------------+
 ```
 
-**Design principles:**
-- No hero image
-- No gradients (pure bg-background)
-- Minimal timeline with teal accent dots
-- Clean typography focus
-
 ---
 
-#### 2. Team Page (New Design)
-```text
-+------------------------------------------+
-|  The Team                                |  <- Simple heading
-|  Short tagline                           |
-+------------------------------------------+
-|                                          |
-|  [Avatar] Name                           |  <- Simple list layout
-|          Role                            |     Not cards, not grid
-|          One-line bio                    |
-|                                          |
-|  [Avatar] Name                           |
-|          Role                            |
-|          One-line bio                    |
-|                                          |
-|  ... (5 members)                         |
-|                                          |
-+------------------------------------------+
+### CSV Export Format
+
+**Phone Numbers CSV** (`event-phones-{eventId}.csv`):
+```csv
+name,phone_number,status
+Ahmed Mohamed,+252612345678,confirmed
+Fatima Hassan,+252617654321,confirmed
 ```
 
-**Design principles:**
-- Remove emojis, badges, expertise tags
-- Simple avatar + text rows (not card grid)
-- No social buttons (placeholder links anyway)
-- No "Culture" or "Stats" sections
-- Clean, minimal, professional
-
----
-
-#### 3. Contact Page (New - Absorbs Achievements)
-```text
-+------------------------------------------+
-|  Contact Us                              |  <- Simple heading
-|  Tagline                                 |
-+------------------------------------------+
-|                                          |
-|  [Contact Form - 2/3 width]              |  <- Simplified form
-|                                          |     Remove category dropdown
-|                                          |     Name, Email, Message only
-|                                          |
-|  [Contact Info - 1/3 width]              |  <- Real Kulmid info
-|    Email: hello@kulmid.com               |     Not fake US address
-|    Phone: (if available)                 |
-|                                          |
-+------------------------------------------+
-|  Our Impact                              |  <- Absorbed from Achievements
-|                                          |
-|  [Events Hosted] [Communities] [Users]   |  <- 3 simple stats
-|                                          |
-+------------------------------------------+
+**Full Contacts CSV** (optional, for email campaigns):
+```csv
+name,email,phone_number,organization,status,registered_at
+Ahmed Mohamed,ahmed@email.com,+252612345678,Tech Corp,confirmed,2024-01-15
 ```
-
-**Design principles:**
-- Remove fake US address
-- Remove FAQ (already in Help page)
-- Remove map placeholder
-- Add simple "Impact" stats section from Achievements
-- Streamlined form fields
 
 ---
 
 ### Files to Modify
 
-| Action | File |
-|--------|------|
-| **Rewrite** | `src/pages/About.tsx` - New minimal design with story/values |
-| **Rewrite** | `src/pages/OurTeam.tsx` - Simple list layout |
-| **Rewrite** | `src/pages/Contact.tsx` - Simplified form + impact stats |
-| **Delete** | `src/pages/OurStory.tsx` - Content merged into About |
-| **Delete** | `src/pages/Achievements.tsx` - Content merged into Contact |
-| **Update** | `src/App.tsx` - Remove routes, add redirects |
-| **Update** | `src/components/layout/Footer.tsx` - Remove links |
+| File | Changes |
+|------|---------|
+| `src/lib/csvParser.ts` | Add `generateGuestPhoneCSV()` and `generateGuestContactsCSV()` functions |
+| `src/components/events/EventBuilderOverview.tsx` | Add Export Contacts section with download buttons |
 
 ---
 
-### Route Changes
+### Technical Implementation
 
-```text
-/about         -> Keep (new design)
-/our-story     -> Redirect to /about
-/our-team      -> Keep (rename route to /team)
-/team          -> New route for Team page
-/achievements  -> Redirect to /contact
-/contact       -> Keep (new design with impact section)
-```
+#### 1. New CSV Generator Functions (`src/lib/csvParser.ts`)
 
----
-
-### Technical Details
-
-#### About Page Structure
-- Hero: Simple `<h1>` + `<p>` tagline (no image/gradient)
-- Section 1: Two-column grid (Mission | What We Do)
-- Section 2: Minimal timeline with CSS-only vertical line
-- Section 3: Three value cards (outline style, no backgrounds)
-
-#### Team Page Structure
-- Hero: Simple heading
-- List: Flexbox rows with avatar (64px circle) + text stack
-- No cards, no grid, no social icons
-
-#### Contact Page Structure
-- Hero: Simple heading
-- Grid: 2/3 form + 1/3 info
-- Form: Name, Email, Message only (3 fields)
-- Impact: 3 stats with actual numbers or "Growing" placeholders
-
-#### Redirects in App.tsx
 ```typescript
-<Route path="/our-story" element={<Navigate to="/about" replace />} />
-<Route path="/achievements" element={<Navigate to="/contact" replace />} />
+export interface GuestExportData {
+  name: string | null;
+  email: string;
+  phone_number: string | null;
+  organization: string | null;
+  status: string;
+  created_at: string;
+}
+
+// Export phone numbers only (for SMS marketing)
+export const generateGuestPhoneCSV = (
+  guests: GuestExportData[], 
+  eventTitle: string
+): void => {
+  // Filter guests with phone numbers
+  const withPhones = guests.filter(g => g.phone_number);
+  
+  // Build CSV content
+  const headers = ['name', 'phone_number', 'status'];
+  const rows = withPhones.map(g => [
+    g.name || 'Guest',
+    g.phone_number,
+    g.status
+  ]);
+  
+  // Generate and download
+  const csvContent = [headers, ...rows].map(row => 
+    row.map(cell => `"${cell}"`).join(',')
+  ).join('\n');
+  
+  downloadCSV(csvContent, `phone-numbers-${sanitize(eventTitle)}.csv`);
+};
+
+// Export all contact details (for email + phone campaigns)
+export const generateGuestContactsCSV = (
+  guests: GuestExportData[], 
+  eventTitle: string
+): void => {
+  const headers = ['name', 'email', 'phone_number', 'organization', 'status', 'registered_at'];
+  const rows = guests.map(g => [
+    g.name || 'Guest',
+    g.email,
+    g.phone_number || '',
+    g.organization || '',
+    g.status,
+    new Date(g.created_at).toLocaleDateString()
+  ]);
+  
+  const csvContent = [headers, ...rows].map(row => 
+    row.map(cell => `"${cell}"`).join(',')
+  ).join('\n');
+  
+  downloadCSV(csvContent, `contacts-${sanitize(eventTitle)}.csv`);
+};
 ```
+
+#### 2. Overview Page Updates (`EventBuilderOverview.tsx`)
+
+Add to existing guests data fetch:
+```typescript
+// In fetchGuestData()
+const { data: guests } = await supabase
+  .from("event_guests")
+  .select("id, name, email, phone_number, organization, status, created_at, checked_in")
+  .eq("event_id", event.id);
+
+// Store full guest data for export
+setGuestsForExport(guests);
+
+// Calculate phone count
+const phoneCount = guests.filter(g => g.phone_number).length;
+```
+
+Add Export section in UI:
+```typescript
+{/* Export Contacts Section */}
+<div className="border-t border-border pt-4 mt-4">
+  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-3">
+    Export Contacts
+  </div>
+  <div className="space-y-2">
+    <Button
+      variant="outline"
+      size="sm"
+      className="w-full justify-start"
+      onClick={handleExportPhones}
+      disabled={phoneCount === 0}
+    >
+      <Phone className="h-4 w-4 mr-2" />
+      Download Phone Numbers
+      <span className="ml-auto text-xs text-muted-foreground">
+        {phoneCount} contacts
+      </span>
+    </Button>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="w-full justify-start"
+      onClick={handleExportAllContacts}
+    >
+      <Download className="h-4 w-4 mr-2" />
+      Download All Contacts
+      <span className="ml-auto text-xs text-muted-foreground">
+        {guestStats.total} total
+      </span>
+    </Button>
+  </div>
+</div>
+```
+
+---
+
+### Edge Cases Handled
+
+| Case | Behavior |
+|------|----------|
+| No phone numbers | Button disabled, shows "0 contacts" |
+| Empty names | Falls back to "Guest" in CSV |
+| Special characters in names | Wrapped in quotes for CSV safety |
+| Large datasets | Uses standard browser download (no server processing) |
 
 ---
 
 ### Summary
 
-This redesign will:
+This feature adds:
 
-1. **Reduce from 5 to 3 pages** - Cleaner navigation, less maintenance
-2. **Remove template-looking elements** - No hero images, gradients, emojis
-3. **Match Events/Discover aesthetic** - Minimal, clean, professional
-4. **Fix fake content** - Remove US address, use real Kulmid info
-5. **Eliminate duplication** - FAQ only in Help, story only in About
+1. **Phone Numbers CSV Export** - Download only guests with phone numbers (for Hormuud SMS)
+2. **All Contacts CSV Export** - Download full contact list (name, email, phone, org)
+3. **Smart counts** - Shows how many guests have phone numbers before downloading
+4. **Easy access** - Export buttons directly in Overview tab (most visited)
+
+The CSV format is compatible with Hormuud and other bulk SMS services used in Somalia.
 
