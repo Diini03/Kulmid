@@ -6,11 +6,11 @@ interface FAQChipsProps {
 
 const FAQ_QUESTIONS = [
   "How do I find events?",
+  "Sideen dhacdooyin u helaa?",
   "How do I create an event?",
+  "Sideen dhacdaal u abuuraa?",
   "How does registration work?",
-  "What categories exist?",
-  "How to check in attendees?",
-  "How to manage my profile?",
+  "Sidee diiwaangelinta u shaqeysaa?",
 ];
 
 export const FAQChips = ({ onSelectQuestion }: FAQChipsProps) => {
