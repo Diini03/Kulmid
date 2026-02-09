@@ -1,32 +1,75 @@
-import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Sparkles } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { MessageCircle, X, Send, Sparkles, Trash2, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ChatMessage } from "./ChatMessage";
 import { FAQChips } from "./FAQChips";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
-type Message = { role: "user" | "assistant"; content: string };
+const MAX_CHARS = 500;
+const STORAGE_KEY = "kulmid-chat-history";
+
+type ChatMsg = {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  failed?: boolean;
+};
+
+const loadMessages = (): ChatMsg[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveMessages = (msgs: ChatMsg[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+  } catch {}
+};
 
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMsg[]>(loadMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
-  const scrollToBottom = () => {
+  // Persist messages
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
+
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
+
+  // Scroll detection for scroll-to-bottom button
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      setShowScrollBtn(scrollHeight - scrollTop - clientHeight > 100);
+    };
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [isOpen]);
 
   // Hide tooltip after 5 seconds
   useEffect(() => {
@@ -46,50 +89,45 @@ export const ChatWidget = () => {
         setIsOpen(false);
       }
     };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 96) + "px"; // max ~4 lines
+  }, [input]);
 
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return;
 
-    const userMessage: Message = { role: "user", content: messageText };
+    const userMessage: ChatMsg = { role: "user", content: messageText, timestamp: new Date().toISOString() };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
+      const allMessages = [...messages, userMessage];
       const response = await fetch(
         `https://txjglujklpxsfhedwwkl.supabase.co/functions/v1/ai-assistant`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ messages: [...messages, userMessage] }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: allMessages.map(m => ({ role: m.role, content: m.content })) }),
         }
       );
 
       if (!response.ok) {
         if (response.status === 429) {
-          toast({
-            title: "Rate limit exceeded",
-            description: "Please wait a moment before trying again.",
-            variant: "destructive",
-          });
+          toast({ title: "Rate limit exceeded", description: "Please wait a moment before trying again.", variant: "destructive" });
           setIsLoading(false);
           return;
         }
         if (response.status === 402) {
-          toast({
-            title: "Service unavailable",
-            description: "AI credits exhausted. Please contact support.",
-            variant: "destructive",
-          });
+          toast({ title: "Service unavailable", description: "AI credits exhausted. Please contact support.", variant: "destructive" });
           setIsLoading(false);
           return;
         }
@@ -102,8 +140,7 @@ export const ChatWidget = () => {
 
       if (!reader) throw new Error("No response body");
 
-      // Add empty assistant message to update progressively
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "", timestamp: new Date().toISOString() }]);
 
       let buffer = "";
       while (true) {
@@ -132,6 +169,7 @@ export const ChatWidget = () => {
                 updated[updated.length - 1] = {
                   role: "assistant",
                   content: assistantMessage,
+                  timestamp: updated[updated.length - 1].timestamp,
                 };
                 return updated;
               });
@@ -145,25 +183,53 @@ export const ChatWidget = () => {
       setIsLoading(false);
     } catch (error) {
       console.error("Error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
+      // Mark user message as failed instead of removing it
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastUserIdx = updated.length - 1;
+        if (updated[lastUserIdx]?.role === "user") {
+          updated[lastUserIdx] = { ...updated[lastUserIdx], failed: true };
+        }
+        return updated;
       });
       setIsLoading(false);
-      // Remove the user message if failed
-      setMessages((prev) => prev.slice(0, -1));
     }
+  };
+
+  const handleRetry = (idx: number) => {
+    const msg = messages[idx];
+    if (!msg || msg.role !== "user") return;
+    // Remove the failed message and re-send
+    setMessages((prev) => prev.filter((_, i) => i !== idx));
+    sendMessage(msg.content);
+  };
+
+  const handleClearChat = () => {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (input.length > MAX_CHARS) return;
     sendMessage(input);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (input.trim() && !isLoading && input.length <= MAX_CHARS) {
+        sendMessage(input);
+      }
+    }
   };
 
   const handleQuestionSelect = (question: string) => {
     sendMessage(question);
   };
+
+  const charCount = input.length;
+  const overLimit = charCount > MAX_CHARS;
 
   return (
     <>
@@ -192,10 +258,7 @@ export const ChatWidget = () => {
         {/* Button */}
         <Button
           ref={buttonRef}
-          onClick={() => {
-            setIsOpen(true);
-            setShowTooltip(false);
-          }}
+          onClick={() => { setIsOpen(true); setShowTooltip(false); }}
           className="relative w-14 h-14 rounded-full shadow-xl bg-foreground text-background hover:bg-foreground/90 transition-transform hover:scale-110"
           size="icon"
         >
@@ -208,7 +271,9 @@ export const ChatWidget = () => {
       <div
         ref={panelRef}
         className={cn(
-          "fixed bottom-6 right-6 w-[380px] h-[600px] bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl z-50 flex flex-col transition-all duration-300 transform overflow-hidden",
+          "fixed z-50 flex flex-col transition-all duration-300 transform overflow-hidden bg-background/95 backdrop-blur-xl border border-border/50 shadow-2xl",
+          // Mobile: full screen. Desktop: floating panel
+          "inset-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[380px] sm:h-[600px] sm:rounded-2xl",
           isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
         )}
       >
@@ -226,18 +291,31 @@ export const ChatWidget = () => {
               <p className="text-xs text-muted-foreground">Always here to help</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsOpen(false)}
-            className="h-8 w-8 rounded-full hover:bg-muted"
-          >
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClearChat}
+                className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                title="Clear conversation"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+              className="h-8 w-8 rounded-full hover:bg-muted"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 relative">
           {messages.length === 0 && (
             <div className="text-center py-6">
               <div className="mb-4">
@@ -255,7 +333,14 @@ export const ChatWidget = () => {
           )}
 
           {messages.map((msg, idx) => (
-            <ChatMessage key={idx} role={msg.role} content={msg.content} />
+            <ChatMessage
+              key={idx}
+              role={msg.role}
+              content={msg.content}
+              timestamp={new Date(msg.timestamp)}
+              failed={msg.failed}
+              onRetry={() => handleRetry(idx)}
+            />
           ))}
 
           {isLoading && <ChatMessage role="assistant" content="" isTyping />}
@@ -263,21 +348,52 @@ export const ChatWidget = () => {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Scroll to bottom button */}
+        {showScrollBtn && (
+          <div className="absolute bottom-[72px] left-1/2 -translate-x-1/2 z-10">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={scrollToBottom}
+              className="rounded-full shadow-lg h-8 px-3 text-xs gap-1"
+            >
+              <ArrowDown className="w-3 h-3" />
+              Latest
+            </Button>
+          </div>
+        )}
+
         {/* Input */}
-        <form onSubmit={handleSubmit} className="p-4 border-t border-border/50 bg-muted/30">
-          <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type in English or Somali... / Ku qor..."
-              disabled={isLoading}
-              className="flex-1 bg-background border-border/50 focus-visible:ring-primary/50"
-            />
+        <form onSubmit={handleSubmit} className="p-3 border-t border-border/50 bg-muted/30">
+          <div className="flex gap-2 items-end">
+            <div className="flex-1 relative">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type in English or Somali... / Ku qor..."
+                disabled={isLoading}
+                rows={1}
+                className={cn(
+                  "min-h-[40px] max-h-[96px] resize-none bg-background border-border/50 focus-visible:ring-primary/50 py-2.5 text-sm",
+                  overLimit && "border-destructive focus-visible:ring-destructive/50"
+                )}
+              />
+              {charCount > 0 && (
+                <span className={cn(
+                  "absolute bottom-1.5 right-2 text-[10px]",
+                  overLimit ? "text-destructive" : "text-muted-foreground"
+                )}>
+                  {charCount}/{MAX_CHARS}
+                </span>
+              )}
+            </div>
             <Button 
               type="submit" 
               size="icon" 
-              disabled={isLoading || !input.trim()}
-              className="bg-foreground text-background hover:bg-foreground/90 shrink-0"
+              disabled={isLoading || !input.trim() || overLimit}
+              className="bg-foreground text-background hover:bg-foreground/90 shrink-0 h-10 w-10"
             >
               <Send className="w-4 h-4" />
             </Button>
