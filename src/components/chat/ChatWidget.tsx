@@ -20,7 +20,13 @@ type ChatMsg = {
 const loadMessages = (): ChatMsg[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as ChatMsg[];
+    // Ensure all messages have a timestamp
+    return parsed.map((m) => ({
+      ...m,
+      timestamp: m.timestamp || new Date().toISOString(),
+    }));
   } catch {
     return [];
   }
@@ -166,11 +172,13 @@ export const ChatWidget = () => {
               assistantMessage += content;
               setMessages((prev) => {
                 const updated = [...prev];
-                updated[updated.length - 1] = {
-                  role: "assistant",
-                  content: assistantMessage,
-                  timestamp: updated[updated.length - 1].timestamp,
-                };
+                const last = updated[updated.length - 1];
+                if (last) {
+                  updated[updated.length - 1] = {
+                    ...last,
+                    content: assistantMessage,
+                  };
+                }
                 return updated;
               });
             }
