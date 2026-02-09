@@ -1,65 +1,106 @@
 
 
-## Plan: Bilingual Chatbot (English + Somali)
+## Plan: Complete Chatbot Enhancement — Phased Implementation
 
-### What We'll Do
-
-Make Kulmid AI fluently bilingual -- it will detect whether the user writes in **Somali** or **English** and respond in that same language with natural, proper structure for each. The FAQ suggestion chips will be a mix of both languages.
+We'll add the most impactful missing features in **4 phases**, each building on the previous one. Every phase delivers real user value.
 
 ---
 
-### Changes
+### Phase 1: Core Usability (Essential Controls)
 
-#### 1. Update System Prompt (`supabase/functions/ai-assistant/index.ts`)
+These are things users expect from any chatbot and will notice immediately if missing.
 
-Add bilingual instructions to the system prompt so the AI:
+**1a. Clear Conversation Button**
+- Add a trash/eraser icon in the header next to the close button
+- Clears all messages and resets to the welcome screen with FAQ chips
+- Shows a confirmation before clearing
 
-- **Detects language automatically** -- if the user writes in Somali, respond in Somali; if in English, respond in English
-- **Uses proper Somali grammar and structure** -- not just word-for-word translation, but natural Somali phrasing
-- **Handles mixed input** -- if the user mixes both, default to the dominant language
-- **Keeps Somali responses warm and culturally appropriate** (e.g., "Salaan!" greetings)
+**1b. Textarea for Multi-line Input**
+- Replace the single-line `Input` with a `Textarea` that auto-grows
+- Starts as 1 line, expands up to 4 lines as the user types
+- Submit on Enter, new line on Shift+Enter
 
-Added prompt section:
+**1c. Message Character Limit**
+- Cap input at 500 characters
+- Show a subtle character counter near the input (e.g., "127/500")
+- Disable send button when over limit
 
-```
-LANGUAGE RULES:
-- You are bilingual: English and Somali (Af-Soomaali).
-- Detect the user's language and ALWAYS reply in the same language.
-- If the user writes in Somali, respond fully in natural Somali with proper grammar. Do NOT just translate English word-for-word.
-- If the user writes in English, respond in English.
-- If the message mixes both, respond in whichever language dominates.
-- For Somali responses, use warm greetings like "Salaan!" or "Ku soo dhawoow!" when appropriate.
-- Keep the same helpful, friendly tone in both languages.
-
-Somali off-topic decline:
-"Waxaan ahay Kulmid AI, caawiye platform-ka dhacdooyinka! 🎫 Inkastoo aanan kaa caawin karin arrintaas, waxaan kugu caawin karaa inaad hesho dhacdooyin wanaagsan, aad abuurto kuwaada, aad maamusho diiwaangelinta, iyo inaad sahamiso sifooyinka platform-kayaga. Maxaad ka jeceshahay inaad ogaato Kulmid?"
-```
-
-#### 2. Update FAQ Chips (`src/components/chat/FAQChips.tsx`)
-
-Replace the current English-only questions with a mixed set of 6 chips (3 English, 3 Somali):
-
-| English | Somali |
-|---------|--------|
-| How do I find events? | Sideen dhacdooyin u helaa? |
-| How do I create an event? | Sideen dhacdaal u abuuraa? |
-| How does registration work? | Sidee diiwaangelinta u shaqeysaa? |
-
-#### 3. Update Welcome Text (`src/components/chat/ChatWidget.tsx`)
-
-Update the welcome message to be bilingual:
-
-- **Title**: "Hi! 👋 I'm Kulmid AI / Salaan! 👋 Waxaan ahay Kulmid AI"
-- **Subtitle**: "How can I help you today? / Sideen maanta kuugu caawin karaa?"
-- **Placeholder**: "Type in English or Somali..." / "Ku qor Ingiriisi ama Soomaali..."
+**Files changed:** `ChatWidget.tsx`
 
 ---
 
-### Files Changed
+### Phase 2: Message Interactions (Per-Message Actions)
 
-| File | Change |
-|------|--------|
-| `supabase/functions/ai-assistant/index.ts` | Add bilingual language detection rules to system prompt |
-| `src/components/chat/FAQChips.tsx` | Mix English and Somali FAQ questions |
-| `src/components/chat/ChatWidget.tsx` | Bilingual welcome text and input placeholder |
+Features that let users interact with individual messages.
+
+**2a. Copy Message Button**
+- On hover (desktop) or tap (mobile), show a small copy icon on assistant messages
+- Copies the raw text to clipboard
+- Brief "Copied!" feedback via tooltip or toast
+
+**2b. Retry Failed Messages**
+- When a message fails, show a retry button instead of removing the message
+- "Failed to send. Tap to retry" with a refresh icon
+- Clicking it re-sends the same message
+
+**2c. Message Timestamps**
+- Show a subtle timestamp below each message (e.g., "2:34 PM")
+- Only visible on hover (desktop) or always visible on mobile
+
+**Files changed:** `ChatMessage.tsx`, `ChatWidget.tsx`
+
+---
+
+### Phase 3: Persistence and Continuity
+
+Users lose their entire conversation on page refresh — this fixes that.
+
+**3a. Chat History via localStorage**
+- Save messages to `localStorage` on every update
+- Restore messages when the widget reopens or the page reloads
+- Clear conversation button also clears localStorage
+
+**3b. Scroll-to-Bottom Button**
+- When the user scrolls up in a long conversation, show a floating "scroll to bottom" pill
+- Disappears when already at the bottom
+- Shows unread message count if new messages arrived while scrolled up
+
+**Files changed:** `ChatWidget.tsx`
+
+---
+
+### Phase 4: Mobile Experience and Polish
+
+Make the chatbot feel native on phones.
+
+**4a. Full-Screen on Mobile**
+- On screens smaller than `sm` (640px), the chat panel takes the full screen instead of a small floating box
+- Proper safe-area handling for notched phones
+- Smooth slide-up animation on open
+
+**4b. Feedback Buttons (Thumbs Up/Down)**
+- Add thumbs up/down icons below each assistant message
+- Visual feedback when clicked (icon fills in)
+- Stored in local state (no backend needed for now)
+
+**Files changed:** `ChatWidget.tsx`, `ChatMessage.tsx`
+
+---
+
+### Summary Table
+
+| Phase | Feature | File(s) |
+|-------|---------|---------|
+| 1 | Clear conversation button | `ChatWidget.tsx` |
+| 1 | Textarea with auto-grow + Shift+Enter | `ChatWidget.tsx` |
+| 1 | Character limit (500) with counter | `ChatWidget.tsx` |
+| 2 | Copy message button | `ChatMessage.tsx` |
+| 2 | Retry on failure | `ChatWidget.tsx`, `ChatMessage.tsx` |
+| 2 | Message timestamps | `ChatMessage.tsx`, `ChatWidget.tsx` |
+| 3 | localStorage persistence | `ChatWidget.tsx` |
+| 3 | Scroll-to-bottom button | `ChatWidget.tsx` |
+| 4 | Full-screen mobile mode | `ChatWidget.tsx` |
+| 4 | Thumbs up/down feedback | `ChatMessage.tsx` |
+
+All 4 phases will be implemented in a single pass across 2 files: `ChatWidget.tsx` and `ChatMessage.tsx`.
 
