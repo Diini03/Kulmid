@@ -1,39 +1,78 @@
 
 
-## Chatbot Cleanup — Two Fixes
+## Fix Two UI Glitches
 
-### Fix 1: FAQ Chips Overflowing Their Area
-
-**Problem**: Six questions in a 2-column grid are too many and overflow the chat area.
-
-**Solution**: 
-- Switch from `grid-cols-2` to a single-column layout so each chip fits neatly
-- Reduce the list from 6 to 4 questions (keep 2 English + 2 Somali, removing the least essential pair)
-- Wrap the FAQ area in a scrollable container as a safety net
-
-**File**: `src/components/chat/FAQChips.tsx`
-- Remove "How does registration work?" and "Sidee diiwaangelinta u shaqeysaa?" (the least common first question)
-- Change grid to `flex flex-col gap-2` for a clean single-column stack
+Both glitches share the **same root cause**: the auth state listener resets `adminCheckComplete` to `false` every time a `SIGNED_IN` event fires -- which Supabase triggers on tab focus, token refresh, and page navigation. This causes brief "Loading..." flashes and conditional UI elements (like the navbar logo area) to disappear and reappear.
 
 ---
 
-### Fix 2: Remove the Gradient Accent Line
+### Root Cause
 
-**Problem**: The colored gradient bar at the very top of the chat panel (line 289 in `ChatWidget.tsx`) makes it look overly "AI-generated."
+In `src/contexts/AuthContext.tsx` (line 142):
 
-**Solution**: Delete the gradient line entirely. The header border already provides enough visual separation.
+```
+if (session?.user) {
+  setAdminCheckComplete(false);   // <-- THIS resets on every SIGNED_IN event
+  setTimeout(() => {
+    fetchProfile(session.user.id);
+    checkAdminRole(session.user.id);
+  }, 0);
+}
+```
 
-**File**: `src/components/chat/ChatWidget.tsx`
-- Remove: `<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/60" />`
+Every time you switch tabs or navigate, Supabase fires `SIGNED_IN` again. This sets `adminCheckComplete = false`, which:
+
+1. Makes `UserOnlyRoute` show "Loading..." briefly (Glitch 1 -- perceived page refresh)
+2. Makes the Navbar re-evaluate conditional renders while admin status is unknown (Glitch 2 -- logo/nav flicker)
 
 ---
 
-### Summary
+### Fix
 
-| Change | File |
-|--------|------|
-| Reduce FAQ to 4 items, single-column layout | `FAQChips.tsx` |
-| Remove gradient accent line at top | `ChatWidget.tsx` |
+**File: `src/contexts/AuthContext.tsx`**
 
-Two small, safe changes. No functionality affected.
+Only reset `adminCheckComplete` on the very first load, not on subsequent `SIGNED_IN` events for the same user. The fix:
+
+- Track the current user ID
+- If the `SIGNED_IN` event is for the **same user** who is already authenticated, skip the admin re-check entirely (the admin role does not change mid-session)
+- Only run `fetchProfile` and `checkAdminRole` when the user ID actually changes (new sign-in or different account)
+
+```
+// Before (fires on EVERY SIGNED_IN event):
+setAdminCheckComplete(false);
+setTimeout(() => {
+  fetchProfile(session.user.id);
+  checkAdminRole(session.user.id);
+}, 0);
+
+// After (only fires when user actually changes):
+if (session.user.id !== currentUserIdRef.current) {
+  currentUserIdRef.current = session.user.id;
+  setAdminCheckComplete(false);
+  setTimeout(() => {
+    fetchProfile(session.user.id);
+    checkAdminRole(session.user.id);
+  }, 0);
+}
+```
+
+This uses a `useRef` to track the current user ID without causing re-renders.
+
+---
+
+### What This Fixes
+
+| Glitch | Cause | Result After Fix |
+|--------|-------|-----------------|
+| Tab switch looks like refresh | `adminCheckComplete` reset triggers "Loading..." flash | No state reset on tab return -- UI stays stable |
+| Navbar logo flickers on navigation | Same reset causes conditional navbar elements to unmount/remount | Admin status stays resolved -- no flicker |
+
+### Files Changed
+
+Only one file: `src/contexts/AuthContext.tsx`
+
+- Add `useRef` import
+- Add `const currentUserIdRef = useRef<string | null>(null)`
+- Wrap the admin check reset in a user-ID-changed guard
+- Clear the ref on sign-out
 
