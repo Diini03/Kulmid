@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminCheckComplete, setAdminCheckComplete] = useState(false);
   const { toast } = useToast();
+  const currentUserIdRef = useRef<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -139,12 +140,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          setAdminCheckComplete(false);
-          // Defer profile fetch to avoid blocking auth state changes
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-            checkAdminRole(session.user.id);
-          }, 0);
+          // Only re-check admin role if the user actually changed
+          if (session.user.id !== currentUserIdRef.current) {
+            currentUserIdRef.current = session.user.id;
+            setAdminCheckComplete(false);
+            setTimeout(() => {
+              fetchProfile(session.user.id);
+              checkAdminRole(session.user.id);
+            }, 0);
+          }
         }
         
         // Only set loading to false on initial load
@@ -161,6 +165,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        currentUserIdRef.current = session.user.id;
         fetchProfile(session.user.id);
         checkAdminRole(session.user.id);
       } else {
@@ -337,6 +342,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       // Clear local state
+      currentUserIdRef.current = null;
       setUser(null);
       setSession(null);
       setProfile(null);
@@ -354,6 +360,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Sign out error:', error);
       
       // Even on error, clear local state and redirect
+      currentUserIdRef.current = null;
       setUser(null);
       setSession(null);
       setProfile(null);
