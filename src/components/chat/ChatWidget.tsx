@@ -285,8 +285,6 @@ export const ChatWidget = () => {
           isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
         )}
       >
-        {/* Gradient Accent Line */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/60" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
