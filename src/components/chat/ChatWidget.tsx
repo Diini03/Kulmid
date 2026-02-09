@@ -244,9 +244,10 @@ export const ChatWidget = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 mb-3">
                   <MessageCircle className="w-8 h-8 text-primary" />
                 </div>
-                <h4 className="font-semibold text-lg mb-1">Hi! 👋 I'm Kulmid AI</h4>
+                <h4 className="font-semibold text-lg mb-1">Hi! 👋 Salaan!</h4>
+                <p className="text-sm text-muted-foreground mb-1">I'm Kulmid AI / Waxaan ahay Kulmid AI</p>
                 <p className="text-sm text-muted-foreground mb-4">
-                  How can I help you today?
+                  How can I help you? / Sideen kuu caawin karaa?
                 </p>
               </div>
               <FAQChips onSelectQuestion={handleQuestionSelect} />
@@ -268,7 +269,7 @@ export const ChatWidget = () => {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
+              placeholder="Type in English or Somali... / Ku qor..."
               disabled={isLoading}
               className="flex-1 bg-background border-border/50 focus-visible:ring-primary/50"
             />
