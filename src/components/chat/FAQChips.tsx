@@ -9,13 +9,11 @@ const FAQ_QUESTIONS = [
   "Sideen dhacdooyin u helaa?",
   "How do I create an event?",
   "Sideen dhacdaal u abuuraa?",
-  "How does registration work?",
-  "Sidee diiwaangelinta u shaqeysaa?",
 ];
 
 export const FAQChips = ({ onSelectQuestion }: FAQChipsProps) => {
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="flex flex-col gap-2">
       {FAQ_QUESTIONS.map((question) => (
         <Button
           key={question}
