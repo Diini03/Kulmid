@@ -1,78 +1,61 @@
 
 
-## Fix Two UI Glitches
+## Update Create Event Form: Categories + Collapsible Host Section
 
-Both glitches share the **same root cause**: the auth state listener resets `adminCheckComplete` to `false` every time a `SIGNED_IN` event fires -- which Supabase triggers on tab focus, token refresh, and page navigation. This causes brief "Loading..." flashes and conditional UI elements (like the navbar logo area) to disappear and reappear.
+### 1. Update Categories Across the App
 
----
+**Replace Sports** with two new categories: **Webinar** and **Meetup**. The final list becomes 6 categories:
 
-### Root Cause
+| Category | Icon | Description |
+|----------|------|-------------|
+| Seminar | GraduationCap | Educational talks and presentations |
+| Workshop | Wrench | Hands-on learning experiences |
+| Conference | Users | Professional networking events |
+| Festival | Music | Cultural celebrations and entertainment |
+| Webinar | Monitor | Online educational sessions |
+| Meetup | Handshake | Casual gatherings and community networking |
 
-In `src/contexts/AuthContext.tsx` (line 142):
+**Files to update (8 files):**
 
-```
-if (session?.user) {
-  setAdminCheckComplete(false);   // <-- THIS resets on every SIGNED_IN event
-  setTimeout(() => {
-    fetchProfile(session.user.id);
-    checkAdminRole(session.user.id);
-  }, 0);
-}
-```
+- `src/constants/categories.ts` -- Add Webinar and Meetup, remove Sports from the type and config array
+- `src/data/events.ts` -- Update the EventCategory type, replace the Sports sample event with a Webinar or Meetup example
+- `src/pages/Create.tsx` -- Update the zod enum and Select options
+- `src/components/admin/EventForm.tsx` -- Same zod enum and Select updates
+- `src/constants/onboarding.ts` -- Update the category options list
+- `src/pages/HomePage.tsx` -- Update the categories filter array
+- `src/pages/OrganizerDashboard.tsx` -- Update the categories filter array
+- `src/components/events/SearchBar.tsx` -- Update the Select options
 
-Every time you switch tabs or navigate, Supabase fires `SIGNED_IN` again. This sets `adminCheckComplete = false`, which:
-
-1. Makes `UserOnlyRoute` show "Loading..." briefly (Glitch 1 -- perceived page refresh)
-2. Makes the Navbar re-evaluate conditional renders while admin status is unknown (Glitch 2 -- logo/nav flicker)
-
----
-
-### Fix
-
-**File: `src/contexts/AuthContext.tsx`**
-
-Only reset `adminCheckComplete` on the very first load, not on subsequent `SIGNED_IN` events for the same user. The fix:
-
-- Track the current user ID
-- If the `SIGNED_IN` event is for the **same user** who is already authenticated, skip the admin re-check entirely (the admin role does not change mid-session)
-- Only run `fetchProfile` and `checkAdminRole` when the user ID actually changes (new sign-in or different account)
-
-```
-// Before (fires on EVERY SIGNED_IN event):
-setAdminCheckComplete(false);
-setTimeout(() => {
-  fetchProfile(session.user.id);
-  checkAdminRole(session.user.id);
-}, 0);
-
-// After (only fires when user actually changes):
-if (session.user.id !== currentUserIdRef.current) {
-  currentUserIdRef.current = session.user.id;
-  setAdminCheckComplete(false);
-  setTimeout(() => {
-    fetchProfile(session.user.id);
-    checkAdminRole(session.user.id);
-  }, 0);
-}
-```
-
-This uses a `useRef` to track the current user ID without causing re-renders.
+Note: Existing events in the database with category "Sports" will still display correctly -- they just will not appear in filter dropdowns unless a user types it. No database migration is needed since `category` is a free text column.
 
 ---
 
-### What This Fixes
+### 2. Collapsible Host Section with Auto-Fill
 
-| Glitch | Cause | Result After Fix |
-|--------|-------|-----------------|
-| Tab switch looks like refresh | `adminCheckComplete` reset triggers "Loading..." flash | No state reset on tab return -- UI stays stable |
-| Navbar logo flickers on navigation | Same reset causes conditional navbar elements to unmount/remount | Admin status stays resolved -- no flicker |
+**Current behavior:** Host section is always visible with 4 fields (name, description, email, phone). Name is required, and at least one contact method (email or phone) is required.
 
-### Files Changed
+**New behavior:**
+- Host section is **collapsed by default** behind a toggle/switch labeled "Add custom host details"
+- When collapsed, the form auto-fills `host_name` with the user's profile name and `host_email` with the user's email (from auth)
+- When the user expands it, they see the 4 fields pre-filled and can edit
+- Validation: `host_name` is always auto-set (from profile or manual entry), so validation stays intact
 
-Only one file: `src/contexts/AuthContext.tsx`
+**Technical approach in `src/pages/Create.tsx`:**
+- Add a `showHostDetails` state (default: `false`)
+- Use a Switch component to toggle visibility
+- On mount (and when toggle is off), auto-fill `host_name` from `profile?.full_name` and `host_email` from `user?.email`
+- When toggled on, show the existing host fields pre-filled so the user can customize
+- Remove the "at least one contact method" zod refinement since email will always be auto-filled
+- Apply the same pattern to `src/components/admin/EventForm.tsx`
 
-- Add `useRef` import
-- Add `const currentUserIdRef = useRef<string | null>(null)`
-- Wrap the admin check reset in a user-ID-changed guard
-- Clear the ref on sign-out
+---
+
+### Summary of Changes
+
+| Area | What Changes |
+|------|-------------|
+| Categories | Replace "Sports" with "Webinar" + "Meetup" across 8 files |
+| Host Section (Create.tsx) | Add collapsible toggle, auto-fill from profile |
+| Host Section (EventForm.tsx) | Same collapsible toggle pattern |
+| Validation | Simplify host validation since email auto-fills |
 
