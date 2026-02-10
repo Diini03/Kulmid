@@ -16,8 +16,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2, Sparkles, ChevronDown, Check } from "lucide-react";
+import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2, Sparkles, ChevronDown, Check, X } from "lucide-react";
 import { coverImages } from "@/constants/coverImages";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
@@ -63,7 +64,11 @@ const Create = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
-  const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(null);
+  const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(() => {
+    const random = coverImages[Math.floor(Math.random() * coverImages.length)];
+    return random.src;
+  });
+  const [coverDialogOpen, setCoverDialogOpen] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [initialAuthChecked, setInitialAuthChecked] = useState(false);
   const [showHostDetails, setShowHostDetails] = useState(false);
@@ -321,91 +326,105 @@ const Create = () => {
                     Event Cover Image <span className="text-destructive">*</span>
                   </FormLabel>
 
-                  {/* Preview */}
-                  {(imagePreview || selectedCoverUrl) && (
-                    <div className="rounded-xl border-2 border-primary overflow-hidden">
-                      <img
-                        src={imagePreview || selectedCoverUrl || ""}
-                        alt="Selected cover"
-                        className="w-full aspect-[4/3] object-cover"
-                      />
-                    </div>
-                  )}
-
-                  {/* Gallery Grid */}
-                  <div className="grid grid-cols-4 gap-2 max-h-[360px] overflow-y-auto pr-1">
-                    {coverImages.map((cover) => (
-                      <button
-                        key={cover.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedCoverUrl(cover.src);
-                          setImageFile(null);
-                          setImagePreview(null);
-                          setImageError(null);
-                        }}
-                        className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-[4/3] group ${
-                          selectedCoverUrl === cover.src && !imageFile
-                            ? "border-primary ring-2 ring-primary/30"
-                            : "border-transparent hover:border-muted-foreground/30"
-                        }`}
-                      >
-                        <img
-                          src={cover.src}
-                          alt={cover.label}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                        {selectedCoverUrl === cover.src && !imageFile && (
-                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                            <div className="bg-primary rounded-full p-1">
-                              <Check className="h-3 w-3 text-primary-foreground" />
-                            </div>
-                          </div>
-                        )}
-                        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <p className="text-[10px] text-white text-center truncate">{cover.label}</p>
-                        </div>
-                      </button>
-                    ))}
-
-                    {/* Upload your own */}
-                    <label
-                      htmlFor="image-upload"
-                      className={`relative rounded-lg overflow-hidden border-2 border-dashed cursor-pointer transition-all aspect-[4/3] flex flex-col items-center justify-center bg-muted/30 hover:border-primary/50 ${
-                        imageFile ? "border-primary ring-2 ring-primary/30" : "border-muted-foreground/25"
-                      }`}
-                    >
-                      <Upload className="h-5 w-5 text-muted-foreground mb-1" />
-                      <p className="text-[10px] text-muted-foreground font-medium">Upload</p>
-                      {imageFile && (
-                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                          <div className="bg-primary rounded-full p-1">
-                            <Check className="h-3 w-3 text-primary-foreground" />
-                          </div>
-                        </div>
-                      )}
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        handleImageChange(e);
-                        if (e.target.files?.[0]) {
-                          setSelectedCoverUrl(null);
-                        }
-                      }}
-                      className="hidden"
-                      id="image-upload"
+                  {/* Clickable Preview - opens dialog */}
+                  <button
+                    type="button"
+                    onClick={() => setCoverDialogOpen(true)}
+                    className="w-full rounded-xl border-2 border-muted overflow-hidden cursor-pointer hover:border-primary/50 transition-all group relative"
+                  >
+                    <img
+                      src={imagePreview || selectedCoverUrl || ""}
+                      alt="Selected cover"
+                      className="w-full aspect-[4/3] object-cover"
                     />
-                  </div>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <ImageIcon className="h-8 w-8 mx-auto mb-2" />
+                        <p className="text-sm font-medium">Change Image</p>
+                      </div>
+                    </div>
+                  </button>
 
                   {imageError && (
                     <p className="text-sm text-destructive">{imageError}</p>
                   )}
-                  <p className="text-sm text-muted-foreground">
-                    Pick a cover or upload your own (max 5MB)
-                  </p>
+
+                  {/* Cover Image Dialog */}
+                  <Dialog open={coverDialogOpen} onOpenChange={setCoverDialogOpen}>
+                    <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Choose Image</DialogTitle>
+                      </DialogHeader>
+
+                      {/* Upload Area */}
+                      <label
+                        htmlFor="image-upload"
+                        className="block rounded-xl border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 cursor-pointer transition-all bg-muted/20 p-8"
+                      >
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <Upload className="h-8 w-8 text-muted-foreground mb-3" />
+                          <p className="text-sm font-medium text-foreground">
+                            Drag & drop or click here to upload.
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Or choose an image below. Max 5MB.
+                          </p>
+                        </div>
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          handleImageChange(e);
+                          if (e.target.files?.[0]) {
+                            setSelectedCoverUrl(null);
+                            setCoverDialogOpen(false);
+                          }
+                        }}
+                        className="hidden"
+                        id="image-upload"
+                      />
+
+                      {/* Gallery Grid */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {coverImages.map((cover) => (
+                          <button
+                            key={cover.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCoverUrl(cover.src);
+                              setImageFile(null);
+                              setImagePreview(null);
+                              setImageError(null);
+                              setCoverDialogOpen(false);
+                            }}
+                            className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-[4/3] group ${
+                              selectedCoverUrl === cover.src && !imageFile
+                                ? "border-primary ring-2 ring-primary/30"
+                                : "border-transparent hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            <img
+                              src={cover.src}
+                              alt={cover.label}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                            {selectedCoverUrl === cover.src && !imageFile && (
+                              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                <div className="bg-primary rounded-full p-1">
+                                  <Check className="h-3 w-3 text-primary-foreground" />
+                                </div>
+                              </div>
+                            )}
+                            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <p className="text-[10px] text-white text-center truncate">{cover.label}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
 
