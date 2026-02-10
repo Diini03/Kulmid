@@ -7,7 +7,7 @@ interface PublicRouteProps {
   redirectTo?: string;
 }
 
-export const PublicRoute = ({ children, redirectTo = "/home" }: PublicRouteProps) => {
+export const PublicRoute = ({ children, redirectTo = "/events" }: PublicRouteProps) => {
   const { user, loading, isAdmin, adminCheckComplete } = useAuth();
   const navigate = useNavigate();
 
