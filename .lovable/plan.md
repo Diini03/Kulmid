@@ -1,49 +1,64 @@
 
 
-## Reposition Category + Smart Category-Format Matching
+## Cover Image Gallery for Event Creation
 
-### 1. Move Category Before Description
+### What You're Getting
 
-Currently the form order is: Title -> Description -> Date -> Event Format -> Location -> **Category** + Price
+A selectable grid of 20 cover images in the Create Event form. Users can either pick from the gallery OR upload their own image. The gallery replaces the current upload-only approach.
 
-New order: Title -> **Category** -> Description (with AI button) -> Date -> Event Format -> Location -> Price
+### Image Strategy
 
-This makes category available before the user writes or generates a description, which is important because the "Suggest with AI" feature uses category as context.
+**Your 5 uploaded images** will be copied into the project as bundled assets.
 
-### 2. Smart Category-Format Linking
+**15 additional images** will use high-quality Unsplash URLs (free, stable, professional). These are direct image links that never expire and look premium. The mix will cover a variety of aesthetics:
 
-When the user selects **Webinar**, the form should:
-- Auto-set Event Format to **"online"**
-- Hide the location field (show only meeting link)
-- Optionally show a subtle note like "Webinars are online events"
+| # | Your Images | Style |
+|---|------------|-------|
+| 1 | 2026 gold/blue text | Bold, celebratory |
+| 2 | Anime cliff scene | Dark, atmospheric |
+| 3 | Anime sketch art | Artistic, creative |
+| 4 | BMW anime car | Urban, stylish |
+| 5 | VR headset portrait | Tech, futuristic |
 
-Other categories keep the current behavior (user picks in-person/online/hybrid freely).
+| # | Unsplash Images (I'll source) | Style |
+|---|------------------------------|-------|
+| 6 | Abstract dark gradient | Minimal |
+| 7 | Neon city lights | Urban night |
+| 8 | Concert crowd | Music/Festival |
+| 9 | Conference stage | Professional |
+| 10 | Mountain landscape | Nature/Outdoor |
+| 11 | Abstract wave art | Creative |
+| 12 | Workspace/laptop | Workshop/Tech |
+| 13 | Sunset skyline | Warm atmosphere |
+| 14 | Colorful smoke/powder | Vibrant energy |
+| 15 | Microphone on stage | Seminar/Talk |
+| 16 | Group collaboration | Meetup/Team |
+| 17 | Fireworks/lights | Celebration |
+| 18 | Ocean/water abstract | Calm/Webinar |
+| 19 | Street photography | Culture |
+| 20 | Geometric architecture | Modern/Minimal |
+
+### UI Design
+
+The current "upload only" image section on the left side of the Create form will be replaced with:
+
+1. **Gallery grid** -- 4 columns of thumbnail images, scrollable
+2. **Selected state** -- Teal border + checkmark on the selected image (matches your monochrome teal system)
+3. **"Upload your own" option** -- A card with upload icon at the end of the gallery, clicking opens file picker (preserving existing upload logic)
+4. **Preview** -- Selected/uploaded image shows larger at the top
 
 ### Technical Details
 
-**File: `src/pages/Create.tsx`**
+**New files:**
+- `src/assets/covers/` -- folder for your 5 uploaded images
+- `src/constants/coverImages.ts` -- array of 20 image objects with `id`, `src`, and `label`
 
-**Field reordering (lines 366-607):**
-- Move the Category `FormField` (currently at lines 560-584) to right after the Title field (after line 383)
-- Category becomes a standalone full-width field (no longer paired with Price in a grid)
-- Price stays in its current position
+**Modified files:**
+- `src/pages/Create.tsx` -- Replace the left-side image upload section with the gallery picker component. Add state for `selectedCoverUrl`. On submit, if a gallery image is selected (not uploaded), use its URL directly instead of uploading to Supabase storage
+- `src/components/admin/EventForm.tsx` -- Same gallery integration for admin form
 
-**Category-format auto-set:**
-- Add a `useEffect` watching the `category` field
-- When category changes to `"Webinar"`, auto-set `event_type` to `"online"` and clear `location`
-- When switching away from Webinar, don't force a change (let user pick)
-- Optionally disable the Event Format radio group when Webinar is selected, with a helper note
-
-**Same changes in `src/components/admin/EventForm.tsx`** for the admin form.
-
-### Summary
-
-| Change | What Happens |
-|--------|-------------|
-| Category moves up | Appears right after Title, before Description |
-| Webinar auto-sets online | Selecting Webinar switches format to online, hides location |
-| AI gets better context | Category is filled before user clicks "Suggest with AI" |
-| Price stays put | Remains in its current position near the bottom |
-
-**Files to modify:** `src/pages/Create.tsx`, `src/components/admin/EventForm.tsx`
+**Submit logic change:**
+- If user picks a gallery image: store the URL directly (no upload needed)
+- If user uploads custom image: use existing Supabase storage upload flow
+- The `imageFile` state becomes optional -- either `imageFile` OR `selectedCoverUrl` must be set
 
