@@ -21,7 +21,7 @@ type EventItem = {
   status: string;
 };
 
-const categories = ["All", "Seminar", "Workshop", "Conference", "Festival", "Sports"] as const;
+const categories = ["All", "Seminar", "Workshop", "Conference", "Festival", "Webinar", "Meetup"] as const;
 
 const HomePage = () => {
   const { user, isAdmin, loading: authLoading } = useAuth();

@@ -1,7 +1,7 @@
-import { GraduationCap, Wrench, Users, Music, Trophy } from "lucide-react";
+import { GraduationCap, Wrench, Users, Music, Monitor, Handshake } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type EventCategory = "Seminar" | "Workshop" | "Conference" | "Festival" | "Sports";
+export type EventCategory = "Seminar" | "Workshop" | "Conference" | "Festival" | "Webinar" | "Meetup";
 
 export interface CategoryConfig {
   name: EventCategory;
@@ -36,9 +36,15 @@ export const categories: CategoryConfig[] = [
     description: "Cultural celebrations and entertainment"
   },
   {
-    name: "Sports",
-    icon: Trophy,
-    color: "from-red-500 to-pink-500",
-    description: "Athletic events and competitions"
+    name: "Webinar",
+    icon: Monitor,
+    color: "from-indigo-500 to-violet-500",
+    description: "Online educational sessions"
+  },
+  {
+    name: "Meetup",
+    icon: Handshake,
+    color: "from-green-500 to-teal-500",
+    description: "Casual gatherings and community networking"
   }
 ];

@@ -1,4 +1,4 @@
-export type EventCategory = "Seminar" | "Workshop" | "Conference" | "Festival" | "Sports";
+export type EventCategory = "Seminar" | "Workshop" | "Conference" | "Festival" | "Webinar" | "Meetup";
 
 export interface EventItem {
   id: string;
@@ -14,7 +14,7 @@ import seminarImg from "@/assets/event-seminar.jpg";
 import workshopImg from "@/assets/event-workshop.jpg";
 import conferenceImg from "@/assets/event-conference.jpg";
 import festivalImg from "@/assets/event-festival.jpg";
-import sportsImg from "@/assets/event-sports.jpg";
+import sportsImg from "@/assets/event-sports.jpg"; // kept for fallback
 
 export const events: EventItem[] = [
   {
@@ -55,11 +55,20 @@ export const events: EventItem[] = [
   },
   {
     id: "ev-005",
-    title: "Pro League Finals",
+    title: "AI & Machine Learning Webinar",
     date: "2025-10-03T17:00:00Z",
-    location: "New York, NY",
-    category: "Sports",
-    price: 120,
+    location: "Online",
+    category: "Webinar",
+    price: 0,
     image: sportsImg,
+  },
+  {
+    id: "ev-006",
+    title: "Local Founders Meetup",
+    date: "2025-10-15T18:30:00Z",
+    location: "New York, NY",
+    category: "Meetup",
+    price: 10,
+    image: conferenceImg,
   },
 ];

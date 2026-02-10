@@ -20,7 +20,7 @@ const OrganizerDashboard = () => {
     totalFavorites: 0,
   });
 
-  const categories = ["All", "Pending", "Conference", "Workshop", "Sports", "Festival", "Seminar", "Past Events"];
+  const categories = ["All", "Pending", "Conference", "Workshop", "Webinar", "Meetup", "Festival", "Seminar", "Past Events"];
 
   const fetchEvents = async () => {
     try {

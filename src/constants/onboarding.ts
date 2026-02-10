@@ -1,4 +1,4 @@
-import { GraduationCap, Wrench, Users, Music, Trophy, Calendar, Code, TrendingUp, Heart, Briefcase, Palette } from "lucide-react";
+import { GraduationCap, Wrench, Users, Music, Monitor, Handshake, Calendar, Code, TrendingUp, Heart, Briefcase, Palette } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface OnboardingQuestion {
@@ -31,7 +31,8 @@ export const onboardingQuestions: OnboardingQuestion[] = [
       { value: "Workshop", label: "Workshop", icon: Wrench },
       { value: "Conference", label: "Conference", icon: Users },
       { value: "Festival", label: "Festival", icon: Music },
-      { value: "Sports", label: "Sports", icon: Trophy },
+      { value: "Webinar", label: "Webinar", icon: Monitor },
+      { value: "Meetup", label: "Meetup", icon: Handshake },
     ],
   },
   {

@@ -10,9 +10,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { Loader2, MapPin, Globe, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, MapPin, Globe, Users, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -20,7 +21,7 @@ const eventSchema = z.object({
   event_type: z.enum(["in-person", "online", "hybrid"]),
   location: z.string().optional(),
   meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  category: z.enum(["Seminar", "Workshop", "Conference", "Festival", "Sports"]),
+  category: z.enum(["Seminar", "Workshop", "Conference", "Festival", "Webinar", "Meetup"]),
   price: z.number().min(0, "Price must be positive"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   host_name: z.string().min(2, "Host name must be at least 2 characters").max(100, "Host name must be less than 100 characters"),
@@ -43,11 +44,6 @@ const eventSchema = z.object({
 }, {
   message: "Meeting link is required for online and hybrid events",
   path: ["meeting_link"],
-}).refine((data) => {
-  return !!data.host_email || !!data.host_phone;
-}, {
-  message: "Please provide at least one contact method (email or phone)",
-  path: ["host_email"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -63,7 +59,7 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
-
+  const [showHostDetails, setShowHostDetails] = useState(!!event?.host_name);
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: event ? {
@@ -96,6 +92,23 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   });
 
   const eventType = form.watch("event_type");
+
+  // Auto-fill host info from current user when not customizing
+  useEffect(() => {
+    if (showHostDetails || event) return;
+    const fillHostInfo = async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+      form.setValue('host_name', profile?.full_name || currentUser.email?.split('@')[0] || '');
+      form.setValue('host_email', currentUser.email || '');
+    };
+    fillHostInfo();
+  }, [showHostDetails, event]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -378,7 +391,8 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
                     <SelectItem value="Workshop">Workshop</SelectItem>
                     <SelectItem value="Conference">Conference</SelectItem>
                     <SelectItem value="Festival">Festival</SelectItem>
-                    <SelectItem value="Sports">Sports</SelectItem>
+                    <SelectItem value="Webinar">Webinar</SelectItem>
+                    <SelectItem value="Meetup">Meetup</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -408,73 +422,95 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
 
         {/* Host Information Section */}
         <div className="space-y-4 pt-6 border-t">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">Host Information</h3>
-            <Badge variant="outline" className="text-xs">Required</Badge>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Host Information</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="admin-host-toggle" className="text-sm text-muted-foreground">
+                Customize
+              </Label>
+              <Switch
+                id="admin-host-toggle"
+                checked={showHostDetails}
+                onCheckedChange={setShowHostDetails}
+              />
+            </div>
           </div>
-          
-          <FormField
-            control={form.control}
-            name="host_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Host Name/Organization *</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. Tech Innovators Inc. or John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
-          <FormField
-            control={form.control}
-            name="host_description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>About the Host (Optional)</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Brief description about the hosting organization or individual..."
-                    className="min-h-[100px]"
-                    {...field} 
-                  />
-                </FormControl>
-                <p className="text-xs text-muted-foreground">Max 500 characters</p>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!showHostDetails && (
+            <p className="text-sm text-muted-foreground">
+              Host info will be auto-filled from your profile ({form.watch('host_name') || 'your name'}, {form.watch('host_email') || 'your email'}).
+            </p>
+          )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="host_email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Email (Optional)</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="contact@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {showHostDetails && (
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="host_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Host Name/Organization *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Tech Innovators Inc. or John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="host_phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Phone (Optional)</FormLabel>
-                  <FormControl>
-                    <Input type="tel" placeholder="+1 (555) 123-4567" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+              <FormField
+                control={form.control}
+                name="host_description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>About the Host (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Brief description about the hosting organization or individual..."
+                        className="min-h-[100px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">Max 500 characters</p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="host_email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="contact@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="host_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Phone (Optional)</FormLabel>
+                      <FormControl>
+                        <Input type="tel" placeholder="+1 (555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div>
