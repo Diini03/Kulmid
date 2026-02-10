@@ -4,73 +4,54 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, User, Loader2, Mail } from "lucide-react";
+import { Eye, EyeOff, User, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signUpSchema, type SignUpFormData } from "@/lib/validations";
 import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { z } from "zod";
-
-const emailSchema = z.object({
-  email: z.string().trim().email({ message: "Please enter a valid email address" }),
-});
-
-type EmailFormData = z.infer<typeof emailSchema>;
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [step, setStep] = useState<'email' | 'details' | 'confirmation'>('email');
-  const [confirmedEmail, setConfirmedEmail] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signUp, loading } = useAuth();
   const navigate = useNavigate();
 
-  const emailForm = useForm<EmailFormData>({
-    resolver: zodResolver(emailSchema),
-  });
-
   const {
     register,
     handleSubmit,
-    setValue,
-    getValues,
-    reset,
+    control,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
+    defaultValues: { terms: undefined as unknown as true },
   });
 
-  const onEmailContinue = async (data: EmailFormData) => {
+  const onSubmit = async (data: SignUpFormData) => {
+    // Validate email domain first
     try {
       const { data: domainResult } = await supabase.functions.invoke('validate-email-domain', {
         body: { email: data.email },
       });
 
       if (domainResult && !domainResult.valid) {
-        emailForm.setError("email", {
+        setError("email", {
           message: domainResult.reason || "This email domain is not valid",
         });
         return;
       }
     } catch {
-      // If domain check fails (network error etc.), allow proceeding
       console.warn("Domain validation unavailable, skipping check");
     }
 
-    setValue("email", data.email);
-    setStep('details');
-  };
-
-  const onSubmit = async (data: SignUpFormData) => {
-    const { error, confirmationRequired } = await signUp(data.email, data.password, data.fullName);
-    if (!error && confirmationRequired) {
-      setConfirmedEmail(data.email);
-      setStep('confirmation');
-    } else if (!error) {
+    const { error } = await signUp(data.email, data.password, data.fullName);
+    if (!error) {
       navigate("/onboarding");
     }
   };
@@ -89,11 +70,6 @@ const SignUp = () => {
     }
   };
 
-  const handleEditEmail = () => {
-    setStep('email');
-    reset();
-  };
-
   return (
     <AuthLayout>
       <Seo title="Sign Up" canonical="/signup" />
@@ -102,184 +78,163 @@ const SignUp = () => {
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Create an account</h1>
         </div>
 
-        {step === 'confirmation' ? (
-          <div className="flex flex-col items-center text-center space-y-4 py-6">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Mail className="h-8 w-8 text-primary" />
-            </div>
-            <h2 className="text-xl font-semibold">Check your inbox</h2>
-            <p className="text-muted-foreground text-sm">
-              We sent a verification link to{" "}
-              <span className="font-medium text-foreground">{confirmedEmail}</span>.
-              Click the link to activate your account.
-            </p>
-            <Button variant="outline" className="w-full h-12 mt-4" asChild>
-              <Link to="/signin">Back to Sign In</Link>
-            </Button>
+        {/* Social Login */}
+        <SocialLoginButton
+          provider="google"
+          onClick={handleGoogleSignUp}
+          loading={googleLoading}
+        />
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border" />
           </div>
-        ) : step === 'email' ? (
-          <>
-            {/* Social Login */}
-            <SocialLoginButton
-              provider="google"
-              onClick={handleGoogleSignUp}
-              loading={googleLoading}
-            />
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-4 text-muted-foreground">
+              OR
+            </span>
+          </div>
+        </div>
 
-            {/* Divider */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Full Name */}
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Full name</Label>
             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-4 text-muted-foreground">
-                  OR
-                </span>
-              </div>
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="fullName"
+                placeholder="Enter your full name"
+                className="pl-10 h-12"
+                autoFocus
+                {...register("fullName")}
+              />
             </div>
+            {errors.fullName && (
+              <p className="text-sm text-destructive">{errors.fullName.message}</p>
+            )}
+          </div>
 
-            <form onSubmit={emailForm.handleSubmit(onEmailContinue)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  className="h-12"
-                  autoFocus
-                  {...emailForm.register("email")}
-                />
-                {emailForm.formState.errors.email && (
-                  <p className="text-sm text-destructive">{emailForm.formState.errors.email.message}</p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-12"
-                disabled={emailForm.formState.isSubmitting}
-              >
-                Continue
-              </Button>
-            </form>
-
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/signin" className="text-primary font-medium hover:text-primary/80 transition-colors underline">
-                Sign in
-              </Link>
-            </p>
-          </>
-        ) : (
-          <>
-            {/* Social Login */}
-            <SocialLoginButton
-              provider="google"
-              onClick={handleGoogleSignUp}
-              loading={googleLoading}
+          {/* Email */}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="name@example.com"
+              className="h-12"
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
+          </div>
 
-            {/* Divider */}
+          {/* Password */}
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-4 text-muted-foreground">
-                  OR
-                </span>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* Email display with Edit */}
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <div className="flex items-center justify-between h-12 px-3 rounded-md border border-border bg-muted/30">
-                  <span className="text-foreground">{getValues("email")}</span>
-                  <button
-                    type="button"
-                    onClick={handleEditEmail}
-                    className="text-sm text-primary font-medium hover:text-primary/80 transition-colors"
-                  >
-                    Edit
-                  </button>
-                </div>
-              </div>
-
-              <input type="hidden" {...register("email")} />
-
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    placeholder="Enter your full name"
-                    className="pl-10 h-12"
-                    autoFocus
-                    {...register("fullName")}
-                  />
-                </div>
-                {errors.fullName && (
-                  <p className="text-sm text-destructive">{errors.fullName.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a strong password"
-                    className="pr-10 h-12"
-                    {...register("password")}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password.message}</p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Must be at least 6 characters with one letter and one number
-                </p>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-12"
-                disabled={isSubmitting || loading}
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a strong password"
+                className="pr-10 h-12"
+                {...register("password")}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowPassword(!showPassword)}
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  "Create account"
-                )}
-              </Button>
-            </form>
-
-            <p className="text-center text-xs text-muted-foreground">
-              By continuing, you agree to our{" "}
-              <Link to="/help" className="text-primary hover:underline">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link to="/help" className="text-primary hover:underline">
-                Privacy Policy
-              </Link>
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password.message}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Must be at least 6 characters with one letter and one number
             </p>
-          </>
-        )}
+          </div>
+
+          {/* Confirm Password */}
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm password</Label>
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Re-enter your password"
+                className="pr-10 h-12"
+                {...register("confirmPassword")}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          {/* Terms & Conditions */}
+          <div className="space-y-2">
+            <div className="flex items-start space-x-2">
+              <Controller
+                name="terms"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    id="terms"
+                    checked={field.value === true}
+                    onCheckedChange={(checked) => field.onChange(checked === true ? true : undefined)}
+                    className="mt-0.5"
+                  />
+                )}
+              />
+              <label htmlFor="terms" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+                I agree to the{" "}
+                <Link to="/help" className="text-primary hover:underline">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link to="/help" className="text-primary hover:underline">
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+            {errors.terms && (
+              <p className="text-sm text-destructive">{errors.terms.message}</p>
+            )}
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full h-12"
+            disabled={isSubmitting || loading}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Create account"
+            )}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link to="/signin" className="text-primary font-medium hover:text-primary/80 transition-colors underline">
+            Sign in
+          </Link>
+        </p>
       </div>
     </AuthLayout>
   );

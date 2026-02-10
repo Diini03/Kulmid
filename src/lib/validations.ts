@@ -16,7 +16,14 @@ export const signUpSchema = z.object({
     .max(128, { message: "Password must be less than 128 characters" })
     .regex(/^(?=.*[a-zA-Z])(?=.*\d)/, {
       message: "Password must contain at least one letter and one number"
-    })
+    }),
+  confirmPassword: z.string(),
+  terms: z.literal(true, {
+    errorMap: () => ({ message: "You must accept the Terms & Privacy Policy" })
+  })
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 export const signInSchema = z.object({
