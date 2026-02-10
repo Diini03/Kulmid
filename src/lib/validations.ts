@@ -9,16 +9,13 @@ export const signUpSchema = z.object({
   email: z
     .string()
     .trim()
-    .email({ message: "Please enter a valid email address" })
-    .refine((email) => email.endsWith('@gmail.com'), {
-      message: "Only Gmail addresses are allowed"
-    }),
+    .email({ message: "Please enter a valid email address" }),
   password: z
     .string()
-    .min(8, { message: "Password must be at least 8 characters" })
+    .min(6, { message: "Password must be at least 6 characters" })
     .max(128, { message: "Password must be less than 128 characters" })
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-      message: "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    .regex(/^(?=.*[a-zA-Z])(?=.*\d)/, {
+      message: "Password must contain at least one letter and one number"
     })
 });
 
