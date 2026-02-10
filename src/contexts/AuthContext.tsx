@@ -18,7 +18,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   adminCheckComplete: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any; confirmationRequired?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -200,15 +200,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           description: error.message,
           variant: "destructive"
         });
-      } else {
-        // No need for email confirmation message since it's disabled
-        toast({
-          title: "Account created successfully",
-          description: "Welcome to EventEase! You're now signed in."
-        });
+        return { error };
       }
       
-      return { error };
+      // If user exists but no session, email confirmation is required
+      if (data.user && !data.session) {
+        toast({
+          title: "Check your inbox",
+          description: "We sent a verification link to your email."
+        });
+        return { error: null, confirmationRequired: true };
+      }
+      
+      toast({
+        title: "Account created successfully",
+        description: "Welcome to EventEase! You're now signed in."
+      });
+      
+      return { error: null };
     } catch (error: any) {
       toast({
         title: "Sign up failed",

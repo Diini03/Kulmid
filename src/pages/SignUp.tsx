@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, User, Loader2 } from "lucide-react";
+import { Eye, EyeOff, User, Loader2, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signUpSchema, type SignUpFormData } from "@/lib/validations";
 import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
@@ -23,7 +23,8 @@ type EmailFormData = z.infer<typeof emailSchema>;
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [step, setStep] = useState<'email' | 'details'>('email');
+  const [step, setStep] = useState<'email' | 'details' | 'confirmation'>('email');
+  const [confirmedEmail, setConfirmedEmail] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signUp, loading } = useAuth();
   const navigate = useNavigate();
@@ -49,8 +50,11 @@ const SignUp = () => {
   };
 
   const onSubmit = async (data: SignUpFormData) => {
-    const { error } = await signUp(data.email, data.password, data.fullName);
-    if (!error) {
+    const { error, confirmationRequired } = await signUp(data.email, data.password, data.fullName);
+    if (!error && confirmationRequired) {
+      setConfirmedEmail(data.email);
+      setStep('confirmation');
+    } else if (!error) {
       navigate("/onboarding");
     }
   };
@@ -82,7 +86,22 @@ const SignUp = () => {
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Create an account</h1>
         </div>
 
-        {step === 'email' ? (
+        {step === 'confirmation' ? (
+          <div className="flex flex-col items-center text-center space-y-4 py-6">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Mail className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold">Check your inbox</h2>
+            <p className="text-muted-foreground text-sm">
+              We sent a verification link to{" "}
+              <span className="font-medium text-foreground">{confirmedEmail}</span>.
+              Click the link to activate your account.
+            </p>
+            <Button variant="outline" className="w-full h-12 mt-4" asChild>
+              <Link to="/signin">Back to Sign In</Link>
+            </Button>
+          </div>
+        ) : step === 'email' ? (
           <>
             {/* Social Login */}
             <SocialLoginButton
@@ -213,7 +232,7 @@ const SignUp = () => {
                   <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Must be at least 8 characters
+                  Must be at least 6 characters with one letter and one number
                 </p>
               </div>
 
