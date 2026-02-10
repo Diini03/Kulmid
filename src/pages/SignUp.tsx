@@ -45,6 +45,22 @@ const SignUp = () => {
   });
 
   const onEmailContinue = async (data: EmailFormData) => {
+    try {
+      const { data: domainResult } = await supabase.functions.invoke('validate-email-domain', {
+        body: { email: data.email },
+      });
+
+      if (domainResult && !domainResult.valid) {
+        emailForm.setError("email", {
+          message: domainResult.reason || "This email domain is not valid",
+        });
+        return;
+      }
+    } catch {
+      // If domain check fails (network error etc.), allow proceeding
+      console.warn("Domain validation unavailable, skipping check");
+    }
+
     setValue("email", data.email);
     setStep('details');
   };
