@@ -1,29 +1,44 @@
 
-## Update Sign-Up Flow for Email Confirmation
+## Improve Email Validation and Error Handling
 
-Since you've enabled "Confirm email" in Supabase, users now receive a verification email before they can log in. We need to update the code so it doesn't try to navigate to onboarding immediately — instead, it shows a "Check your inbox" message.
+### Problem
+- Users can enter emails with valid format but fake addresses (e.g., `yuusuf@gmail.com`) — this is normal and handled by email confirmation
+- The "email rate limit exceeded" error shows a generic failure message
+- Password hint text may still show old "8 characters" requirement
 
-### Changes
+### What We Can Do
 
-**1. `src/contexts/AuthContext.tsx` — Update `signUp` function**
-- Detect when Supabase returns a user but no active session (meaning confirmation is pending)
-- Change the success toast to say "Check your inbox to verify your email"
-- Return a flag like `{ error: null, confirmationRequired: true }` so the SignUp page knows what to do
+**1. Add email domain validation (edge function)**
+- Create an edge function `validate-email-domain` that checks if the email's domain has valid MX (mail) records
+- For example, `user@fakeDomain123xyz.com` would be rejected because that domain doesn't exist
+- Note: `yuusuf@gmail.com` will still pass because `gmail.com` is a real domain — only the confirmation email can catch that
 
-**2. `src/pages/SignUp.tsx` — Show "Check your inbox" screen**
-- After successful sign-up, instead of navigating to `/onboarding`, show a confirmation screen with:
-  - A mail icon
-  - "Check your inbox" heading
-  - Message saying "We sent a verification link to [email]. Click the link to activate your account."
-  - A "Back to Sign In" button
-- No auto-navigation, user must verify first
+**2. Better error handling in sign-up flow**
+- Catch the "email rate limit exceeded" error specifically and show a friendlier message: "Too many attempts. Please wait a few minutes and try again."
+- Add a cooldown/disable on the submit button after an error
 
-**3. `src/pages/SignUp.tsx` — Fix password hint text**
-- Line 216 still says "Must be at least 8 characters" but we changed the rule to 6. Update to "Must be at least 6 characters with one letter and one number"
+**3. Ensure password hint text is correct**
+- Verify and fix the hint to say "Must be at least 6 characters with one letter and one number"
+
+### How It Works (User Perspective)
+
+1. User enters email like `user@nonexistentdomain.xyz` --> Immediately rejected: "This email domain doesn't exist"
+2. User enters `yuusuf@gmail.com` --> Passes domain check (gmail.com is real), sign-up proceeds, confirmation email sent. Since nobody owns that inbox, they can never verify, so the account stays inactive
+3. User enters a real email they own --> Gets confirmation email, clicks link, account activated
 
 ### Technical Details
 
-- `signUp` return type changes from `{ error: any }` to `{ error: any; confirmationRequired?: boolean }`
-- Detection logic: when `data.user` exists but `data.session` is `null`, confirmation is required
-- The confirmation screen is a new `step` state value (`'email' | 'details' | 'confirmation'`) in SignUp.tsx
-- No database or edge function changes needed — this is purely frontend
+**New edge function: `supabase/functions/validate-email-domain/index.ts`**
+- Accepts `{ email: string }` in POST body
+- Extracts domain from email
+- Uses `Deno.resolveDns(domain, "MX")` to check for mail exchange records
+- Returns `{ valid: true/false }`
+
+**`src/pages/SignUp.tsx` changes**
+- Before calling `signUp()`, call the edge function to validate the domain
+- Show inline error if domain is invalid
+- Handle rate limit errors with specific messaging
+- Ensure password hint text is updated
+
+**`src/contexts/AuthContext.tsx` changes**
+- Detect "email rate limit exceeded" error and return a clearer message
