@@ -85,6 +85,15 @@ const Create = () => {
   });
 
   const eventType = form.watch("event_type");
+  const selectedCategory = form.watch("category");
+
+  // Auto-set Webinar to online format
+  useEffect(() => {
+    if (selectedCategory === "Webinar") {
+      form.setValue('event_type', 'online');
+      form.setValue('location', '');
+    }
+  }, [selectedCategory]);
 
   // Persist form data to sessionStorage on every change
   useEffect(() => {
@@ -382,6 +391,36 @@ const Create = () => {
                     )}
                   />
 
+                  {/* Category */}
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Seminar">Seminar</SelectItem>
+                            <SelectItem value="Workshop">Workshop</SelectItem>
+                            <SelectItem value="Conference">Conference</SelectItem>
+                            <SelectItem value="Festival">Festival</SelectItem>
+                            <SelectItem value="Webinar">Webinar</SelectItem>
+                            <SelectItem value="Meetup">Meetup</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {selectedCategory === "Webinar" && (
+                          <p className="text-xs text-muted-foreground">Webinars are automatically set as online events</p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   {/* Description */}
                   <FormField
                     control={form.control}
@@ -461,10 +500,15 @@ const Create = () => {
                     render={({ field }) => (
                       <FormItem className="space-y-3">
                         <FormLabel>Event Format</FormLabel>
+                        {selectedCategory === "Webinar" && (
+                          <p className="text-xs text-muted-foreground">Format is locked to Online for Webinars</p>
+                        )}
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
                             defaultValue={field.value}
+                            value={field.value}
+                            disabled={selectedCategory === "Webinar"}
                             className="grid grid-cols-3 gap-3"
                           >
                             <div>
@@ -555,56 +599,28 @@ const Create = () => {
                     )}
                   </div>
 
-                  {/* Category & Price */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Seminar">Seminar</SelectItem>
-                              <SelectItem value="Workshop">Workshop</SelectItem>
-                              <SelectItem value="Conference">Conference</SelectItem>
-                              <SelectItem value="Festival">Festival</SelectItem>
-                              <SelectItem value="Webinar">Webinar</SelectItem>
-                              <SelectItem value="Meetup">Meetup</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Ticket Price ($)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              min="0"
-                              step="0.01"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormDescription>Use 0 for free events</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  {/* Price */}
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ticket Price ($)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            step="0.01"
+                            {...field}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormDescription>Use 0 for free events</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 {/* Host Information Section */}

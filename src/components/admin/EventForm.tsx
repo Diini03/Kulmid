@@ -92,6 +92,15 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   });
 
   const eventType = form.watch("event_type");
+  const selectedCategory = form.watch("category");
+
+  // Auto-set Webinar to online format
+  useEffect(() => {
+    if (selectedCategory === "Webinar") {
+      form.setValue('event_type', 'online');
+      form.setValue('location', '');
+    }
+  }, [selectedCategory]);
 
   // Auto-fill host info from current user when not customizing
   useEffect(() => {
@@ -258,6 +267,36 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
           )}
         />
 
+        {/* Category */}
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Seminar">Seminar</SelectItem>
+                  <SelectItem value="Workshop">Workshop</SelectItem>
+                  <SelectItem value="Conference">Conference</SelectItem>
+                  <SelectItem value="Festival">Festival</SelectItem>
+                  <SelectItem value="Webinar">Webinar</SelectItem>
+                  <SelectItem value="Meetup">Meetup</SelectItem>
+                </SelectContent>
+              </Select>
+              {selectedCategory === "Webinar" && (
+                <p className="text-xs text-muted-foreground">Webinars are automatically set as online events</p>
+              )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="description"
@@ -296,10 +335,15 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
           render={({ field }) => (
             <FormItem className="space-y-3">
               <FormLabel>Event Type</FormLabel>
+              {selectedCategory === "Webinar" && (
+                <p className="text-xs text-muted-foreground">Format is locked to Online for Webinars</p>
+              )}
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  value={field.value}
+                  disabled={selectedCategory === "Webinar"}
                   className="grid grid-cols-3 gap-4"
                 >
                   <div>
@@ -373,52 +417,24 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Seminar">Seminar</SelectItem>
-                    <SelectItem value="Workshop">Workshop</SelectItem>
-                    <SelectItem value="Conference">Conference</SelectItem>
-                    <SelectItem value="Festival">Festival</SelectItem>
-                    <SelectItem value="Webinar">Webinar</SelectItem>
-                    <SelectItem value="Meetup">Meetup</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Price ($)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="0" 
-                    {...field} 
-                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Price ($)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="0" 
+                  {...field} 
+                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Host Information Section */}
         <div className="space-y-4 pt-6 border-t">
