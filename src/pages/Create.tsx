@@ -16,7 +16,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2, Sparkles, ChevronDown } from "lucide-react";
+import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2, Sparkles, ChevronDown, Check } from "lucide-react";
+import { coverImages } from "@/constants/coverImages";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
@@ -62,6 +63,7 @@ const Create = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(null);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [initialAuthChecked, setInitialAuthChecked] = useState(false);
   const [showHostDetails, setShowHostDetails] = useState(false);
@@ -200,12 +202,12 @@ const Create = () => {
       return;
     }
 
-    // Validate image is selected
-    if (!imageFile) {
+    // Validate image is selected (either gallery or uploaded)
+    if (!imageFile && !selectedCoverUrl) {
       setImageError("Event image is required");
       toast({
         title: "Image required",
-        description: "Please upload an event image before submitting",
+        description: "Please select a cover image or upload your own",
         variant: "destructive",
       });
       return;
@@ -213,7 +215,7 @@ const Create = () => {
 
     setUploading(true);
     try {
-      let imageUrl = null;
+      let imageUrl: string | null = selectedCoverUrl;
 
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);
@@ -314,57 +316,95 @@ const Create = () => {
             <div className="grid lg:grid-cols-5 gap-6">
               {/* Left Side - Image Upload */}
               <div className="lg:col-span-2">
-                <div className="sticky top-20">
+                <div className="sticky top-20 space-y-4">
                   <FormLabel className="text-base mb-3 block">
                     Event Cover Image <span className="text-destructive">*</span>
                   </FormLabel>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                      id="image-upload"
-                      required
-                    />
-                    <label
-                      htmlFor="image-upload"
-                      className={`block rounded-xl border-2 border-dashed cursor-pointer transition-all overflow-hidden ${
-                        imagePreview ? 'border-primary' : imageError ? 'border-destructive' : 'border-muted-foreground/25 hover:border-primary/50'
-                      }`}
-                    >
-                      {imagePreview ? (
-                        <div className="relative group">
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="w-full aspect-[4/3] object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <div className="text-center text-white">
-                              <Upload className="h-8 w-8 mx-auto mb-2" />
-                              <p className="text-sm font-medium">Change Image</p>
+
+                  {/* Preview */}
+                  {(imagePreview || selectedCoverUrl) && (
+                    <div className="rounded-xl border-2 border-primary overflow-hidden">
+                      <img
+                        src={imagePreview || selectedCoverUrl || ""}
+                        alt="Selected cover"
+                        className="w-full aspect-[4/3] object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* Gallery Grid */}
+                  <div className="grid grid-cols-4 gap-2 max-h-[360px] overflow-y-auto pr-1">
+                    {coverImages.map((cover) => (
+                      <button
+                        key={cover.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCoverUrl(cover.src);
+                          setImageFile(null);
+                          setImagePreview(null);
+                          setImageError(null);
+                        }}
+                        className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-[4/3] group ${
+                          selectedCoverUrl === cover.src && !imageFile
+                            ? "border-primary ring-2 ring-primary/30"
+                            : "border-transparent hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        <img
+                          src={cover.src}
+                          alt={cover.label}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        {selectedCoverUrl === cover.src && !imageFile && (
+                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                            <div className="bg-primary rounded-full p-1">
+                              <Check className="h-3 w-3 text-primary-foreground" />
                             </div>
                           </div>
+                        )}
+                        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p className="text-[10px] text-white text-center truncate">{cover.label}</p>
                         </div>
-                      ) : (
-                        <div className="aspect-[4/3] flex flex-col items-center justify-center p-6 bg-muted/30">
-                          <ImageIcon className="h-12 w-12 text-muted-foreground mb-3" />
-                          <p className="text-sm font-medium text-foreground mb-1">
-                            Click to upload cover image
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            PNG, JPG up to 5MB
-                          </p>
+                      </button>
+                    ))}
+
+                    {/* Upload your own */}
+                    <label
+                      htmlFor="image-upload"
+                      className={`relative rounded-lg overflow-hidden border-2 border-dashed cursor-pointer transition-all aspect-[4/3] flex flex-col items-center justify-center bg-muted/30 hover:border-primary/50 ${
+                        imageFile ? "border-primary ring-2 ring-primary/30" : "border-muted-foreground/25"
+                      }`}
+                    >
+                      <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                      <p className="text-[10px] text-muted-foreground font-medium">Upload</p>
+                      {imageFile && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <div className="bg-primary rounded-full p-1">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
                         </div>
                       )}
                     </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        handleImageChange(e);
+                        if (e.target.files?.[0]) {
+                          setSelectedCoverUrl(null);
+                        }
+                      }}
+                      className="hidden"
+                      id="image-upload"
+                    />
                   </div>
+
                   {imageError && (
-                    <p className="text-sm text-destructive mt-2">{imageError}</p>
+                    <p className="text-sm text-destructive">{imageError}</p>
                   )}
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Choose a high-quality image that represents your event (Required)
+                  <p className="text-sm text-muted-foreground">
+                    Pick a cover or upload your own (max 5MB)
                   </p>
                 </div>
               </div>

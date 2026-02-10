@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { Loader2, MapPin, Globe, Users, Building2 } from "lucide-react";
+import { Loader2, MapPin, Globe, Users, Building2, Upload, Check } from "lucide-react";
+import { coverImages } from "@/constants/coverImages";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 
@@ -59,6 +60,8 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(event?.image_url || null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showHostDetails, setShowHostDetails] = useState(!!event?.host_name);
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -134,6 +137,13 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
       
       setImageFile(file);
       setImageError(null);
+      setSelectedCoverUrl(null);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -167,11 +177,11 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
 
   const onSubmit = async (data: EventFormData) => {
     // Validate image is selected for new events
-    if (!event && !imageFile) {
+    if (!event && !imageFile && !selectedCoverUrl) {
       setImageError("Event image is required");
       toast({
         title: "Image required",
-        description: "Please upload an event image before submitting",
+        description: "Please select a cover image or upload your own",
         variant: "destructive",
       });
       return;
@@ -186,7 +196,7 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
         throw new Error("User must be authenticated");
       }
 
-      let imageUrl = event?.image_url;
+      let imageUrl = selectedCoverUrl || event?.image_url;
 
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);
@@ -529,26 +539,83 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
           )}
         </div>
 
-        <div>
+        <div className="space-y-3">
           <FormLabel>
-            Event Image {!event && <span className="text-destructive">*</span>}
+            Event Cover Image {!event && <span className="text-destructive">*</span>}
           </FormLabel>
-          <Input 
-            type="file" 
-            accept="image/*"
-            onChange={handleImageChange}
-            className="mt-2"
-            required={!event}
-          />
+
+          {/* Preview */}
+          {(imagePreview || selectedCoverUrl) && (
+            <div className="rounded-lg border-2 border-primary overflow-hidden">
+              <img
+                src={imagePreview || selectedCoverUrl || ""}
+                alt="Selected cover"
+                className="w-full aspect-[16/9] object-cover"
+              />
+            </div>
+          )}
+
+          {/* Gallery Grid */}
+          <div className="grid grid-cols-5 gap-2 max-h-[240px] overflow-y-auto pr-1">
+            {coverImages.map((cover) => (
+              <button
+                key={cover.id}
+                type="button"
+                onClick={() => {
+                  setSelectedCoverUrl(cover.src);
+                  setImageFile(null);
+                  setImagePreview(null);
+                  setImageError(null);
+                }}
+                className={`relative rounded-md overflow-hidden border-2 transition-all aspect-[4/3] group ${
+                  selectedCoverUrl === cover.src && !imageFile
+                    ? "border-primary ring-2 ring-primary/30"
+                    : "border-transparent hover:border-muted-foreground/30"
+                }`}
+              >
+                <img src={cover.src} alt={cover.label} className="w-full h-full object-cover" loading="lazy" />
+                {selectedCoverUrl === cover.src && !imageFile && (
+                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                    <div className="bg-primary rounded-full p-1">
+                      <Check className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  </div>
+                )}
+              </button>
+            ))}
+
+            {/* Upload your own */}
+            <label
+              htmlFor="admin-image-upload"
+              className={`relative rounded-md overflow-hidden border-2 border-dashed cursor-pointer transition-all aspect-[4/3] flex flex-col items-center justify-center bg-muted/30 hover:border-primary/50 ${
+                imageFile ? "border-primary ring-2 ring-primary/30" : "border-muted-foreground/25"
+              }`}
+            >
+              <Upload className="h-4 w-4 text-muted-foreground mb-0.5" />
+              <p className="text-[9px] text-muted-foreground font-medium">Upload</p>
+              {imageFile && (
+                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                  <div className="bg-primary rounded-full p-1">
+                    <Check className="h-3 w-3 text-primary-foreground" />
+                  </div>
+                </div>
+              )}
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+              id="admin-image-upload"
+            />
+          </div>
+
           {imageError && (
-            <p className="text-sm text-destructive mt-1">{imageError}</p>
+            <p className="text-sm text-destructive">{imageError}</p>
           )}
-          {event?.image_url && !imageFile && (
-            <p className="text-sm text-muted-foreground mt-1">Current image will be kept if no new image is uploaded</p>
+          {event?.image_url && !imageFile && !selectedCoverUrl && (
+            <p className="text-sm text-muted-foreground">Current image will be kept if no new image is selected</p>
           )}
-          <p className="text-sm text-muted-foreground mt-1">
-            {event ? "Upload a new image to replace the current one" : "Upload an event image (Required, max 5MB)"}
-          </p>
         </div>
 
         <div className="flex gap-2 justify-end pt-4">
