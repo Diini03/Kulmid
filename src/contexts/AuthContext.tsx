@@ -195,9 +195,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       
       if (error) {
+        const message = error.message?.toLowerCase() || '';
+        let description = error.message;
+        
+        if (message.includes('rate limit') || message.includes('too many requests')) {
+          description = "Too many attempts. Please wait a few minutes and try again.";
+        } else if (message.includes('already registered') || message.includes('already been registered')) {
+          description = "This email is already registered. Try signing in instead.";
+        }
+        
         toast({
           title: "Sign up failed",
-          description: error.message,
+          description,
           variant: "destructive"
         });
         return { error };
