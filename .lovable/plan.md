@@ -1,61 +1,49 @@
 
 
-## Update Create Event Form: Categories + Collapsible Host Section
+## Reposition Category + Smart Category-Format Matching
 
-### 1. Update Categories Across the App
+### 1. Move Category Before Description
 
-**Replace Sports** with two new categories: **Webinar** and **Meetup**. The final list becomes 6 categories:
+Currently the form order is: Title -> Description -> Date -> Event Format -> Location -> **Category** + Price
 
-| Category | Icon | Description |
-|----------|------|-------------|
-| Seminar | GraduationCap | Educational talks and presentations |
-| Workshop | Wrench | Hands-on learning experiences |
-| Conference | Users | Professional networking events |
-| Festival | Music | Cultural celebrations and entertainment |
-| Webinar | Monitor | Online educational sessions |
-| Meetup | Handshake | Casual gatherings and community networking |
+New order: Title -> **Category** -> Description (with AI button) -> Date -> Event Format -> Location -> Price
 
-**Files to update (8 files):**
+This makes category available before the user writes or generates a description, which is important because the "Suggest with AI" feature uses category as context.
 
-- `src/constants/categories.ts` -- Add Webinar and Meetup, remove Sports from the type and config array
-- `src/data/events.ts` -- Update the EventCategory type, replace the Sports sample event with a Webinar or Meetup example
-- `src/pages/Create.tsx` -- Update the zod enum and Select options
-- `src/components/admin/EventForm.tsx` -- Same zod enum and Select updates
-- `src/constants/onboarding.ts` -- Update the category options list
-- `src/pages/HomePage.tsx` -- Update the categories filter array
-- `src/pages/OrganizerDashboard.tsx` -- Update the categories filter array
-- `src/components/events/SearchBar.tsx` -- Update the Select options
+### 2. Smart Category-Format Linking
 
-Note: Existing events in the database with category "Sports" will still display correctly -- they just will not appear in filter dropdowns unless a user types it. No database migration is needed since `category` is a free text column.
+When the user selects **Webinar**, the form should:
+- Auto-set Event Format to **"online"**
+- Hide the location field (show only meeting link)
+- Optionally show a subtle note like "Webinars are online events"
 
----
+Other categories keep the current behavior (user picks in-person/online/hybrid freely).
 
-### 2. Collapsible Host Section with Auto-Fill
+### Technical Details
 
-**Current behavior:** Host section is always visible with 4 fields (name, description, email, phone). Name is required, and at least one contact method (email or phone) is required.
+**File: `src/pages/Create.tsx`**
 
-**New behavior:**
-- Host section is **collapsed by default** behind a toggle/switch labeled "Add custom host details"
-- When collapsed, the form auto-fills `host_name` with the user's profile name and `host_email` with the user's email (from auth)
-- When the user expands it, they see the 4 fields pre-filled and can edit
-- Validation: `host_name` is always auto-set (from profile or manual entry), so validation stays intact
+**Field reordering (lines 366-607):**
+- Move the Category `FormField` (currently at lines 560-584) to right after the Title field (after line 383)
+- Category becomes a standalone full-width field (no longer paired with Price in a grid)
+- Price stays in its current position
 
-**Technical approach in `src/pages/Create.tsx`:**
-- Add a `showHostDetails` state (default: `false`)
-- Use a Switch component to toggle visibility
-- On mount (and when toggle is off), auto-fill `host_name` from `profile?.full_name` and `host_email` from `user?.email`
-- When toggled on, show the existing host fields pre-filled so the user can customize
-- Remove the "at least one contact method" zod refinement since email will always be auto-filled
-- Apply the same pattern to `src/components/admin/EventForm.tsx`
+**Category-format auto-set:**
+- Add a `useEffect` watching the `category` field
+- When category changes to `"Webinar"`, auto-set `event_type` to `"online"` and clear `location`
+- When switching away from Webinar, don't force a change (let user pick)
+- Optionally disable the Event Format radio group when Webinar is selected, with a helper note
 
----
+**Same changes in `src/components/admin/EventForm.tsx`** for the admin form.
 
-### Summary of Changes
+### Summary
 
-| Area | What Changes |
-|------|-------------|
-| Categories | Replace "Sports" with "Webinar" + "Meetup" across 8 files |
-| Host Section (Create.tsx) | Add collapsible toggle, auto-fill from profile |
-| Host Section (EventForm.tsx) | Same collapsible toggle pattern |
-| Validation | Simplify host validation since email auto-fills |
+| Change | What Happens |
+|--------|-------------|
+| Category moves up | Appears right after Title, before Description |
+| Webinar auto-sets online | Selecting Webinar switches format to online, hides location |
+| AI gets better context | Category is filled before user clicks "Suggest with AI" |
+| Price stays put | Remains in its current position near the bottom |
+
+**Files to modify:** `src/pages/Create.tsx`, `src/components/admin/EventForm.tsx`
 
