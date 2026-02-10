@@ -77,7 +77,8 @@ export const SearchBar = ({ onSearch, compact }: Props) => {
           <SelectItem value="Workshop">Workshop</SelectItem>
           <SelectItem value="Conference">Conference</SelectItem>
           <SelectItem value="Festival">Festival</SelectItem>
-          <SelectItem value="Sports">Sports</SelectItem>
+          <SelectItem value="Webinar">Webinar</SelectItem>
+          <SelectItem value="Meetup">Meetup</SelectItem>
         </SelectContent>
       </Select>
 
