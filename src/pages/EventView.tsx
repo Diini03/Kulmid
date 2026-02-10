@@ -125,11 +125,11 @@ const EventView = () => {
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
 
         {/* Event Image */}
-        <div className="rounded-xl overflow-hidden border">
+        <div className="rounded-xl overflow-hidden border max-h-[50vh] md:max-h-[400px]">
           <img 
             src={event.image_url || '/placeholder.svg'} 
             alt={event.title}
-            className="w-full aspect-[2/1] object-cover"
+            className="w-full h-full object-cover"
           />
         </div>
 
