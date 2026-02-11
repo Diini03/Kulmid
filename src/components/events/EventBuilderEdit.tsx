@@ -14,6 +14,8 @@ import { categories } from "@/constants/categories";
 import { Save, Sparkles } from "lucide-react";
 import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
 
+const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/;
+
 const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
@@ -23,10 +25,22 @@ const eventSchema = z.object({
   meeting_link: z.string().url().optional().or(z.literal("")),
   category: z.string().min(1, "Category is required"),
   price: z.number().min(0).default(0),
+  payout_phone: z.string()
+    .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
+    .optional()
+    .or(z.literal("")),
   host_name: z.string().optional(),
   host_description: z.string().optional(),
   host_email: z.string().email().optional().or(z.literal("")),
   host_phone: z.string().optional(),
+}).refine((data) => {
+  if (data.price > 0) {
+    return !!data.payout_phone && data.payout_phone.length > 0;
+  }
+  return true;
+}, {
+  message: "Payout phone number is required for paid events",
+  path: ["payout_phone"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -42,6 +56,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(event.image_url || "");
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [isPaid, setIsPaid] = useState(event.price > 0);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -54,6 +69,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
       meeting_link: event.meeting_link || "",
       category: event.category,
       price: event.price,
+      payout_phone: event.payout_phone || "",
       host_name: event.host_name || "",
       host_description: event.host_description || "",
       host_email: event.host_email || "",
@@ -218,14 +234,62 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
               </Select>
             </div>
 
-            <div>
-              <Label htmlFor="price">Price ($)</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                {...register("price", { valueAsNumber: true })}
-              />
+            <div className="space-y-3">
+              <Label>Ticket Pricing</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPaid(false);
+                    setValue("price", 0);
+                    setValue("payout_phone", "");
+                  }}
+                  className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
+                    !isPaid
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                  }`}
+                >
+                  Free
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPaid(true)}
+                  className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
+                    isPaid
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                  }`}
+                >
+                  Paid
+                </button>
+              </div>
+            {isPaid && (
+              <div className="space-y-4 pt-2">
+                <div>
+                  <Label htmlFor="price">Price ($)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    {...register("price", { valueAsNumber: true })}
+                  />
+                  {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="payout_phone">Payout Phone Number</Label>
+                  <Input
+                    id="payout_phone"
+                    type="tel"
+                    placeholder="+252611234567"
+                    {...register("payout_phone")}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">We'll send your earnings to this number</p>
+                  {errors.payout_phone && <p className="text-sm text-destructive mt-1">{errors.payout_phone.message}</p>}
+                </div>
+              </div>
+            )}
             </div>
           </div>
 

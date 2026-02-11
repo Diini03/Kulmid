@@ -23,6 +23,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
 
+const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/;
+
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title must be less than 100 characters"),
   description: z.string().min(10, "Description must be at least 10 characters").max(2000, "Description must be less than 2000 characters"),
@@ -32,6 +34,10 @@ const eventSchema = z.object({
   meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   category: z.enum(["Seminar", "Workshop", "Conference", "Festival", "Webinar", "Meetup"]),
   price: z.number().min(0, "Price must be 0 or higher"),
+  payout_phone: z.string()
+    .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
+    .optional()
+    .or(z.literal("")),
   host_name: z.string().min(2, "Host name must be at least 2 characters").max(100, "Host name must be less than 100 characters"),
   host_description: z.string().max(500, "Host description must be less than 500 characters").optional().or(z.literal("")),
   host_email: z.string().email("Must be a valid email").optional().or(z.literal("")),
@@ -52,6 +58,14 @@ const eventSchema = z.object({
 }, {
   message: "Meeting link is required for online and hybrid events",
   path: ["meeting_link"],
+}).refine((data) => {
+  if (data.price > 0) {
+    return !!data.payout_phone && data.payout_phone.length > 0;
+  }
+  return true;
+}, {
+  message: "Payout phone number is required for paid events",
+  path: ["payout_phone"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -72,6 +86,7 @@ const Create = () => {
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [initialAuthChecked, setInitialAuthChecked] = useState(false);
   const [showHostDetails, setShowHostDetails] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -84,6 +99,7 @@ const Create = () => {
       meeting_link: "",
       category: "Seminar",
       price: 0,
+      payout_phone: "",
       host_name: "",
       host_description: "",
       host_email: "",
@@ -240,6 +256,7 @@ const Create = () => {
         meeting_link: data.meeting_link || null,
         category: data.category,
         price: data.price,
+        payout_phone: data.payout_phone || null,
         image_url: imageUrl,
         status: eventStatus,
         created_by: user.id,
@@ -658,28 +675,84 @@ const Create = () => {
                     )}
                   </div>
 
-                  {/* Price */}
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ticket Price ($)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            min="0"
-                            step="0.01"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormDescription>Use 0 for free events</FormDescription>
-                        <FormMessage />
-                      </FormItem>
+                  {/* Ticket Pricing */}
+                  <div className="space-y-4">
+                    <FormLabel>Ticket Pricing</FormLabel>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPaid(false);
+                          form.setValue("price", 0);
+                          form.setValue("payout_phone", "");
+                        }}
+                        className={`rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
+                          !isPaid
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        Free
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsPaid(true)}
+                        className={`rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
+                          isPaid
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        Paid
+                      </button>
+                    </div>
+
+                    {isPaid && (
+                      <div className="space-y-4 pt-2">
+                        <FormField
+                          control={form.control}
+                          name="price"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Price ($)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  placeholder="0"
+                                  min="0.01"
+                                  step="0.01"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="payout_phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Payout Phone Number</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="tel"
+                                  placeholder="+252611234567"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                We'll send your earnings to this number
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     )}
-                  />
+                  </div>
                 </div>
 
                 {/* Host Information Section */}
