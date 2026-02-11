@@ -215,6 +215,7 @@ export type Database = {
           location: string
           max_attendees: number | null
           meeting_link: string | null
+          payout_phone: string | null
           price: number
           registration_deadline: string | null
           rejection_reason: string | null
@@ -239,6 +240,7 @@ export type Database = {
           location: string
           max_attendees?: number | null
           meeting_link?: string | null
+          payout_phone?: string | null
           price?: number
           registration_deadline?: string | null
           rejection_reason?: string | null
@@ -263,6 +265,7 @@ export type Database = {
           location?: string
           max_attendees?: number | null
           meeting_link?: string | null
+          payout_phone?: string | null
           price?: number
           registration_deadline?: string | null
           rejection_reason?: string | null
