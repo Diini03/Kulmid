@@ -1,82 +1,96 @@
 
 
-## Add Free/Paid Toggle with Payout Phone Number
+## Two Changes
 
-### Overview
-Replace the plain price input with a **Free/Paid toggle button**. Default is "Free". When "Paid" is selected, reveal a price field and a payout phone number field (where creators receive their earnings). Phone numbers are validated for Somali format.
+### 1. Fix Footer Logo Flicker on Theme Toggle
 
-### Database Change
-Add a `payout_phone` column to the `events` table:
+**Problem**: The footer renders both logo variants (dark/light) and swaps `src` on theme change, causing a visible image load delay.
+
+**Fix**: Render both `<img>` tags simultaneously but toggle visibility with CSS `hidden`/`block`. Both images are preloaded in the DOM so the swap is instant — no network fetch needed.
+
+**File**: `src/components/layout/Footer.tsx`
+- Import `useTheme` with `resolvedTheme` (next-themes provides this)
+- Render both logos, hide/show with `className={resolvedTheme === "dark" ? "block" : "hidden"}` and vice versa
+- Remove the JS-computed `footerLogo` variable and `window.matchMedia` call
+
+### 2. Notification System Enhancements
+
+**Problem**: Notifications only fire on registration. Need: welcome notification on first login, first event creation, and other lifecycle events. Also, notification items should not be clickable — only show a small "mark as read" icon button.
+
+#### A. Welcome Notification (DB Trigger)
+
+Create a DB trigger on `profiles` table INSERT that automatically inserts a welcome notification. This fires when `handle_new_user()` creates the profile row.
+
+**Migration SQL**:
 ```sql
-ALTER TABLE public.events ADD COLUMN payout_phone text;
-```
-This keeps `host_phone` for contact purposes and `payout_phone` for payment/earnings.
+CREATE OR REPLACE FUNCTION public.send_welcome_notification()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public' AS $$
+BEGIN
+  INSERT INTO public.notifications (user_id, type, title, message, actor_name)
+  VALUES (
+    NEW.user_id,
+    'welcome',
+    'Welcome to Kulmid! 🎉',
+    'We''re glad to have you here. Start exploring events or create your own!',
+    'Kulmid'
+  );
+  RETURN NEW;
+END;
+$$;
 
-### UI Design
-
-```text
-Ticket Pricing
-+----------+----------+
-|   Free   |   Paid   |   (toggle buttons, "Free" selected by default)
-+----------+----------+
-
--- When "Paid" is clicked: --
-
-Price ($)        [__________]
-Payout Phone     [+252 _________]
-  "We'll send your earnings to this number"
-```
-
-### Phone Validation
-Somali mobile numbers must start with `+252` followed by valid prefixes:
-- `61, 62, 63, 68` (Hormuud/EVC Plus)
-- `71, 77` (Telesom/Zaad)
-- Other valid: `65, 66, 69, 70, 73, 74, 76, 78, 79, 90`
-
-Regex pattern: `/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/`
-
-### Files to Change
-
-**1. `src/pages/Create.tsx`** (user event creation form)
-- Add `isPaid` state (default `false`)
-- Replace the price input with a Free/Paid toggle (two styled buttons)
-- When "Free": set price to 0, hide price + payout phone fields
-- When "Paid": show price input + payout phone input with Somali validation
-- Add `payout_phone` to the Zod schema (required when price > 0)
-- Save `payout_phone` to the database on submit
-
-**2. `src/components/admin/EventForm.tsx`** (admin event form)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
-
-**3. `src/components/events/EventBuilderEdit.tsx`** (event builder edit tab)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
-
-### Validation Schema Update (in all 3 forms)
-```typescript
-payout_phone: z.string()
-  .regex(/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/, 
-    "Enter a valid Somali phone number (e.g. +252611234567)")
-  .optional()
-  .or(z.literal(""))
+CREATE TRIGGER on_profile_created_welcome
+  AFTER INSERT ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.send_welcome_notification();
 ```
 
-With a `.refine()` to make it required when price > 0:
-```typescript
-.refine((data) => {
-  if (data.price > 0) {
-    return !!data.payout_phone && data.payout_phone.length > 0;
-  }
-  return true;
-}, {
-  message: "Payout phone number is required for paid events",
-  path: ["payout_phone"],
-})
+#### B. First Event Created Notification (DB Trigger)
+
+Trigger on `events` INSERT to congratulate the user on their first event.
+
+```sql
+CREATE OR REPLACE FUNCTION public.send_first_event_notification()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public' AS $$
+DECLARE
+  event_count integer;
+BEGIN
+  SELECT COUNT(*) INTO event_count FROM public.events WHERE created_by = NEW.created_by;
+  IF event_count = 1 THEN
+    INSERT INTO public.notifications (user_id, type, title, message, event_id, actor_name)
+    VALUES (
+      NEW.created_by,
+      'milestone',
+      'Your first event is live! 🚀',
+      'Congratulations on creating "' || NEW.title || '". Share it to get registrations!',
+      NEW.id,
+      'Kulmid'
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_event_created_notification
+  AFTER INSERT ON public.events
+  FOR EACH ROW EXECUTE FUNCTION public.send_first_event_notification();
 ```
 
-### What This Does NOT Include (for later)
-- Attendee payment flow (how users pay for paid events)
-- WAAFI API integration
-- Admin dashboard paid event details view
-- Payout tracking system
+#### C. Update Notification Type Union
+
+**File**: `src/contexts/NotificationsContext.tsx`
+- Expand `type` from `"registration" | "invitation"` to `string` to support `welcome`, `milestone`, etc.
+
+#### D. Update NotificationsPanel UI
+
+**File**: `src/components/notifications/NotificationsPanel.tsx`
+- Remove `onClick` handler from notification rows (not clickable)
+- Remove `cursor-pointer` class
+- Replace the delete button with a small "mark as read" `Check` icon button (only shown when unread)
+- Add icons for new types: `welcome` → `Sparkles`, `milestone` → `Trophy`
+- Keep the delete button but make it always visible (small)
+
+### Files Modified
+- `src/components/layout/Footer.tsx`
+- `src/components/notifications/NotificationsPanel.tsx`
+- `src/contexts/NotificationsContext.tsx`
+- New migration SQL (welcome + first event triggers)
+
