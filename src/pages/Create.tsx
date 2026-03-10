@@ -88,6 +88,7 @@ const Create = () => {
   const [initialAuthChecked, setInitialAuthChecked] = useState(false);
   const [showHostDetails, setShowHostDetails] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const [stripeDialogOpen, setStripeDialogOpen] = useState(false);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
