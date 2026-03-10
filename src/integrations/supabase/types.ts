@@ -275,6 +275,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_settings: {
+        Row: {
+          created_at: string | null
+          event_reminders: boolean | null
+          guest_alerts: boolean | null
+          id: string
+          invitation_emails: boolean | null
+          marketing_updates: boolean | null
+          platform_announcements: boolean | null
+          registration_confirmations: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_reminders?: boolean | null
+          guest_alerts?: boolean | null
+          id?: string
+          invitation_emails?: boolean | null
+          marketing_updates?: boolean | null
+          platform_announcements?: boolean | null
+          registration_confirmations?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_reminders?: boolean | null
+          guest_alerts?: boolean | null
+          id?: string
+          invitation_emails?: boolean | null
+          marketing_updates?: boolean | null
+          platform_announcements?: boolean | null
+          registration_confirmations?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_email: string | null
@@ -316,25 +355,64 @@ export type Database = {
       }
       profiles: {
         Row: {
+          allow_discovery: boolean | null
+          allow_invitations: boolean | null
+          avatar_url: string | null
+          bio: string | null
           created_at: string
           full_name: string
           id: string
+          instagram: string | null
+          is_public: boolean | null
+          linkedin: string | null
+          location: string | null
+          show_attended_events: boolean | null
+          show_hosted_events: boolean | null
+          twitter: string | null
           updated_at: string
           user_id: string
+          username: string | null
+          website: string | null
         }
         Insert: {
+          allow_discovery?: boolean | null
+          allow_invitations?: boolean | null
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           full_name: string
           id?: string
+          instagram?: string | null
+          is_public?: boolean | null
+          linkedin?: string | null
+          location?: string | null
+          show_attended_events?: boolean | null
+          show_hosted_events?: boolean | null
+          twitter?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
+          website?: string | null
         }
         Update: {
+          allow_discovery?: boolean | null
+          allow_invitations?: boolean | null
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           full_name?: string
           id?: string
+          instagram?: string | null
+          is_public?: boolean | null
+          linkedin?: string | null
+          location?: string | null
+          show_attended_events?: boolean | null
+          show_hosted_events?: boolean | null
+          twitter?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
+          website?: string | null
         }
         Relationships: []
       }
