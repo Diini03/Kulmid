@@ -83,6 +83,7 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   const [coverDialogOpen, setCoverDialogOpen] = useState(false);
   const [showHostDetails, setShowHostDetails] = useState(!!event?.host_name);
   const [isPaid, setIsPaid] = useState(event ? event.price > 0 : false);
+  const [stripeDialogOpen, setStripeDialogOpen] = useState(false);
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: event ? {
