@@ -109,12 +109,12 @@ const EventDetails = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <Seo title="Loading..." />
         <div className="max-w-5xl mx-auto px-4 py-20 text-center text-muted-foreground">
           Loading event...
         </div>
-      </Layout>
+      </>
     );
   }
 
