@@ -5,22 +5,19 @@ import kulmidLogoDark from "@/assets/kulmid-logo-dark.png";
 import kulmidLogoWhite from "@/assets/kulmid-logo-white.png";
 
 export const Footer = () => {
-  const { theme } = useTheme();
-  const resolvedTheme = theme === "system" 
-    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") 
-    : theme;
-  const footerLogo = resolvedTheme === "dark" ? kulmidLogoWhite : kulmidLogoDark;
+  const { resolvedTheme } = useTheme();
 
   return (
     <footer className="bg-card border-t mt-24">
       <div className="container mx-auto max-w-5xl py-16 px-4">
         <div className="flex flex-col items-center gap-10">
-          {/* Logo */}
+          {/* Logo - both rendered, visibility toggled for instant swap */}
           <Link 
             to="/" 
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src={footerLogo} alt="Kulmid" className="h-10" />
+            <img src={kulmidLogoWhite} alt="Kulmid" className={`h-10 ${resolvedTheme === "dark" ? "block" : "hidden"}`} />
+            <img src={kulmidLogoDark} alt="Kulmid" className={`h-10 ${resolvedTheme === "dark" ? "hidden" : "block"}`} />
           </Link>
 
           {/* Navigation Links */}
