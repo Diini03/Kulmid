@@ -31,6 +31,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
+  const resolvedTheme = theme === "system" 
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") 
+    : theme;
+  const navLogo = resolvedTheme === "dark" ? kulmidLogoWhite : kulmidLogoDark;
 
   const openAuthModal = (mode: "signin" | "signup") => {
     setAuthModalMode(mode);
