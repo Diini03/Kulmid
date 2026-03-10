@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import EventBuilderOverview from "@/components/events/EventBuilderOverview";
 import EventBuilderEdit from "@/components/events/EventBuilderEdit";

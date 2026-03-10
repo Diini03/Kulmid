@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar, Plus, ChevronRight, MapPin, Users, AlertTriangle, Clock, Compass, CalendarPlus } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
 interface Event {
