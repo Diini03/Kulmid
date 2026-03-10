@@ -13,8 +13,7 @@ import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { Badge } from "@/components/ui/badge";
-import kulmidLogoDark from "@/assets/kulmid-logo-dark.png";
-import kulmidLogoWhite from "@/assets/kulmid-logo-white.png";
+import kulmidLogoIcon from "@/assets/kulmid-logo-icon.png";
 
 interface NavbarProps {
   onOpenSearch: () => void;
@@ -31,10 +30,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
-  const resolvedTheme = theme === "system" 
-    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") 
-    : theme;
-  const navLogo = resolvedTheme === "dark" ? kulmidLogoWhite : kulmidLogoDark;
 
   const openAuthModal = (mode: "signin" | "signup") => {
     setAuthModalMode(mode);
@@ -92,7 +87,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             }}
             className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity p-1"
           >
-            <img src={navLogo} alt="Kulmid" className="h-8" />
+            <img src={kulmidLogoIcon} alt="Kulmid" className="h-9 w-9" />
           </button>
 
           {!isAdmin && (
@@ -264,7 +259,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
-                    <img src={navLogo} alt="Kulmid" className="h-7" />
+                    <img src={kulmidLogoIcon} alt="Kulmid" className="h-8 w-8" />
                     Menu
                   </SheetTitle>
                 </SheetHeader>
