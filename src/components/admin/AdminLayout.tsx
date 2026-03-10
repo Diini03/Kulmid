@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import kulmidLogo from "@/assets/kulmid-logo.png";
+import kulmidLogoIcon from "@/assets/kulmid-logo-icon.png";
 
 interface AdminLayoutProps {
   children: ReactNode;
