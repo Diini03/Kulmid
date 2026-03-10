@@ -5,6 +5,12 @@ import kulmidLogoDark from "@/assets/kulmid-logo-dark.png";
 import kulmidLogoWhite from "@/assets/kulmid-logo-white.png";
 
 export const Footer = () => {
+  const { theme } = useTheme();
+  const resolvedTheme = theme === "system" 
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") 
+    : theme;
+  const footerLogo = resolvedTheme === "dark" ? kulmidLogoWhite : kulmidLogoDark;
+
   return (
     <footer className="bg-card border-t mt-24">
       <div className="container mx-auto max-w-5xl py-16 px-4">
