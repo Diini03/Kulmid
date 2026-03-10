@@ -256,7 +256,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsPaid(true)}
+                  onClick={() => setStripeDialogOpen(true)}
                   className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
                     isPaid
                       ? "border-primary bg-primary/10 text-primary"

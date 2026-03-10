@@ -471,7 +471,7 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
             </button>
             <button
               type="button"
-              onClick={() => setIsPaid(true)}
+              onClick={() => setStripeDialogOpen(true)}
               className={`rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
                 isPaid
                   ? "border-primary bg-primary/10 text-primary"
