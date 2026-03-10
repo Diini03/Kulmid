@@ -109,7 +109,7 @@ const App = () => (
                     <Route path="/events" element={<UserOnlyRoute><Events /></UserOnlyRoute>} />
                     <Route path="/events/:id" element={<UserOnlyRoute><EventDetails /></UserOnlyRoute>} />
                     <Route path="/favorites" element={<ProtectedRoute><UserOnlyRoute><Favorites /></UserOnlyRoute></ProtectedRoute>} />
-                    <Route path="/dashboard" element={<ProtectedRoute><UserOnlyRoute><UserDashboard /></UserOnlyRoute></ProtectedRoute>} />
+                    
                     <Route path="/calendar" element={<ProtectedRoute><UserOnlyRoute><CalendarView /></UserOnlyRoute></ProtectedRoute>} />
                     <Route path="/create" element={<ProtectedRoute><UserOnlyRoute><Create /></UserOnlyRoute></ProtectedRoute>} />
                     <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />

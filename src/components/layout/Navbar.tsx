@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar, Moon, Sun, Menu, User, LogOut, Monitor, Check, Compass, Search, Bell, Plus, Sparkles, Settings } from "lucide-react";
+import { Calendar, Moon, Sun, Menu, User, LogOut, Compass, Search, Bell, Plus, Sparkles, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { usePendingActions } from "@/contexts/PendingActionsContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { Badge } from "@/components/ui/badge";
 import kulmidLogoNav from "@/assets/kulmid-logo-nav.png";
@@ -62,10 +62,8 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
         : "text-muted-foreground hover:bg-secondary hover:text-foreground"
     }`;
 
-  const getThemeIcon = () => {
-    if (theme === "system") return <Monitor className="h-4 w-4" />;
-    if (theme === "light") return <Sun className="h-4 w-4" />;
-    return <Moon className="h-4 w-4" />;
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
@@ -142,37 +140,10 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             </Popover>
           )}
 
-          {/* Theme Toggle */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="hidden md:flex rounded-xl" aria-label="Toggle theme">
-                {getThemeIcon()}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-xl">
-              <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center justify-between rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Monitor className="h-4 w-4" />
-                  System
-                </div>
-                {theme === "system" && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("light")} className="flex items-center justify-between rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Sun className="h-4 w-4" />
-                  Light
-                </div>
-                {theme === "light" && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")} className="flex items-center justify-between rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Moon className="h-4 w-4" />
-                  Dark
-                </div>
-                {theme === "dark" && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Theme Toggle - Simple switch */}
+          <Button variant="ghost" size="icon" className="hidden md:flex rounded-xl" aria-label="Toggle theme" onClick={toggleTheme}>
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
 
           {/* User Menu */}
           {user ? (
@@ -180,6 +151,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 p-0 relative">
                   <Avatar className="h-9 w-9 border-2 border-primary/20">
+                    {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
                     <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-bold text-sm">
                       {profile?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
@@ -201,12 +173,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                   <Link to={`/profile/${user.id}`} className="flex items-center gap-3">
                     <User className="h-4 w-4" />
                     My Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-xl">
-                  <Link to="/dashboard" className="flex items-center gap-3">
-                    <Calendar className="h-4 w-4" />
-                    Dashboard
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="rounded-xl">
@@ -341,20 +307,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                             </Badge>
                           )}
                         </NavLink>
-                        <NavLink 
-                          to="/dashboard" 
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={({ isActive }) => 
-                            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                              isActive 
-                                ? "bg-primary text-primary-foreground" 
-                                : "hover:bg-secondary"
-                            }`
-                          }
-                        >
-                          <User className="h-5 w-5" />
-                          <span className="font-medium">Dashboard</span>
-                        </NavLink>
                         {isAdmin && (
                           <NavLink 
                             to="/admin" 
@@ -413,33 +365,18 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                     </div>
                   )}
 
-                  {/* Theme Toggle */}
+                  {/* Theme Toggle - Simple switch */}
                   <div className="border-t pt-4">
                     <div className="px-4 mb-2 text-sm text-muted-foreground font-medium">Theme</div>
-                    <div className="flex gap-2 px-4">
+                    <div className="px-4">
                       <Button
-                        variant={theme === "system" ? "default" : "outline"}
+                        variant="outline"
                         size="sm"
-                        onClick={() => setTheme("system")}
-                        className="flex-1 rounded-xl"
+                        onClick={toggleTheme}
+                        className="rounded-xl gap-2"
                       >
-                        <Monitor className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={theme === "light" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setTheme("light")}
-                        className="flex-1 rounded-xl"
-                      >
-                        <Sun className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={theme === "dark" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setTheme("dark")}
-                        className="flex-1 rounded-xl"
-                      >
-                        <Moon className="h-4 w-4" />
+                        {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                        {theme === "dark" ? "Light Mode" : "Dark Mode"}
                       </Button>
                     </div>
                   </div>
