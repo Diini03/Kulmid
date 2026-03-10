@@ -191,7 +191,7 @@ export default function Help() {
   };
 
   return (
-    <Layout>
+    <>
       <Seo
         title="Help Center - Kulmid"
         description="Get help with the Kulmid event management platform. Chat with our AI assistant or browse FAQs."
