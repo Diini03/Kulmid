@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
-import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/events/EventCard";
 import { supabase } from "@/integrations/supabase/client";
