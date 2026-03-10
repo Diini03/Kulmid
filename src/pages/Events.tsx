@@ -236,7 +236,7 @@ const Events = () => {
   }
 
   // Main events list with timeline layout
-  return <Layout>
+  return <>
       <Seo title="Events" description="Manage your events on Kulmid" canonical="/events" />
       <div className="container max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
