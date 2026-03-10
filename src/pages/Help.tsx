@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { FAQChips } from "@/components/chat/FAQChips";
@@ -192,7 +191,7 @@ export default function Help() {
   };
 
   return (
-    <Layout>
+    <>
       <Seo
         title="Help Center - Kulmid"
         description="Get help with the Kulmid event management platform. Chat with our AI assistant or browse FAQs."
@@ -304,6 +303,6 @@ export default function Help() {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 }

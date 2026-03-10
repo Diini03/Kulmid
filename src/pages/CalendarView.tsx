@@ -1,4 +1,3 @@
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
@@ -9,7 +8,7 @@ const CalendarView = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
 
   return (
-    <Layout>
+    <>
       <Seo title="Event Calendar" canonical="/calendar" />
       <section className="container max-w-5xl px-4 py-16">
         <div className="text-center space-y-3 mb-16">
@@ -52,7 +51,7 @@ const CalendarView = () => {
           </div>
         </div>
       </section>
-    </Layout>
+    </>
   );
 };
 

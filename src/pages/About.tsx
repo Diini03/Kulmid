@@ -1,4 +1,3 @@
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 
 const About = () => {
@@ -15,7 +14,7 @@ const About = () => {
   ];
 
   return (
-    <Layout>
+    <>
       <Seo 
         title="About" 
         description="Learn about Kulmid's mission to connect communities through trust and meaningful events." 
@@ -98,7 +97,7 @@ const About = () => {
           ))}
         </div>
       </section>
-    </Layout>
+    </>
   );
 };
 

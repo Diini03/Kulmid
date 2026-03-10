@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar, Plus, ChevronRight, MapPin, Users, AlertTriangle, Clock, Compass, CalendarPlus } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
 interface Event {
@@ -123,7 +122,7 @@ const Events = () => {
 
   // Logged out state
   if (!authLoading && !user) {
-    return <Layout>
+    return <>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[70vh] flex items-center justify-center">
           <div className="max-w-md mx-4 text-center animate-fade-in">
@@ -175,22 +174,22 @@ const Events = () => {
           message="Sign in or create an account to start creating events."
           mode="signup"
         />
-      </Layout>;
+      </>;
   }
 
   // Loading state
   if (loading || authLoading) {
-    return <Layout>
+    return <>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="animate-pulse text-muted-foreground">Loading...</div>
         </div>
-      </Layout>;
+      </>;
   }
 
   // Empty state - no events
   if (events.length === 0) {
-    return <Layout>
+    return <>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[70vh] flex items-center justify-center">
           <div className="max-w-md mx-4 text-center animate-fade-in">
@@ -233,11 +232,11 @@ const Events = () => {
             </div>
           </div>
         </div>
-      </Layout>;
+      </>;
   }
 
   // Main events list with timeline layout
-  return <Layout>
+  return <>
       <Seo title="Events" description="Manage your events on Kulmid" canonical="/events" />
       <div className="container max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
@@ -385,6 +384,6 @@ const Events = () => {
         })}
         </div>
       </div>
-    </Layout>;
+    </>;
 };
 export default Events;

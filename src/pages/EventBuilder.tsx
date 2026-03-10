@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import EventBuilderOverview from "@/components/events/EventBuilderOverview";
 import EventBuilderEdit from "@/components/events/EventBuilderEdit";
@@ -47,17 +46,17 @@ const EventBuilder = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="animate-pulse text-muted-foreground">Loading...</div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   if (!event) {
     return (
-      <Layout>
+      <>
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">Event not found</h2>
@@ -66,12 +65,12 @@ const EventBuilder = () => {
             </Button>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   return (
-    <Layout>
+    <>
       <Seo title={`Manage: ${event.title}`} description={`Manage ${event.title} on Kulmid`} />
       
       <div className="container max-w-5xl mx-auto px-4 py-6">
@@ -157,7 +156,7 @@ const EventBuilder = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </>
   );
 };
 

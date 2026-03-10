@@ -1,4 +1,3 @@
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -20,7 +19,7 @@ const UserDashboard = () => {
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
 
   return (
-    <Layout>
+    <>
       <Seo title="My Dashboard" canonical="/dashboard" />
       <section className="container max-w-5xl px-4 py-8">
         {/* Welcome Header */}
@@ -53,7 +52,7 @@ const UserDashboard = () => {
           </div>
         </div>
       </section>
-    </Layout>
+    </>
   );
 };
 

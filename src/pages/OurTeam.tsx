@@ -1,4 +1,3 @@
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -37,7 +36,7 @@ const OurTeam = () => {
   ];
 
   return (
-    <Layout>
+    <>
       <Seo 
         title="Team" 
         description="Meet the passionate team behind Kulmid - talented engineers building the future of event management." 
@@ -74,7 +73,7 @@ const OurTeam = () => {
           ))}
         </div>
       </section>
-    </Layout>
+    </>
   );
 };
 

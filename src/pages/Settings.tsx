@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,16 +56,14 @@ const Settings = () => {
 
   if (authLoading || !user) {
     return (
-      <Layout>
-        <div className="container py-12">
-          <div className="text-center">Loading...</div>
-        </div>
-      </Layout>
+      <div className="container py-12">
+        <div className="text-center">Loading...</div>
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <>
       <Seo title="Settings" description="Manage your account settings" canonical="/settings" />
       
       <div className="container max-w-5xl px-4 py-12">
@@ -149,7 +146,7 @@ const Settings = () => {
           </Card>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

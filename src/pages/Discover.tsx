@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/events/EventCard";
@@ -112,8 +111,8 @@ const Discover = () => {
   };
 
   return (
-    <Layout>
-      <Seo 
+    <>
+      <Seo
         title="Discover Events" 
         description="Explore popular events near you, browse by category, or check out some of the great community calendars" 
         canonical="/discover" 
@@ -253,7 +252,7 @@ const Discover = () => {
           </div>
         )}
       </section>
-    </Layout>
+    </>
   );
 };
 

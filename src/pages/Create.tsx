@@ -6,7 +6,6 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Layout } from "@/components/layout/Layout";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
@@ -304,14 +303,12 @@ const Create = () => {
 
   // Only show loading on initial auth check, not on subsequent token refreshes
   if (!initialAuthChecked && authLoading) {
-    const LoadingLayout = isAdmin ? AdminLayout : Layout;
-    return (
-      <LoadingLayout>
-        <div className="container py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </LoadingLayout>
+    const loadingContent = (
+      <div className="container py-12 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
+    return isAdmin ? <AdminLayout>{loadingContent}</AdminLayout> : loadingContent;
   }
 
   if (!user && initialAuthChecked) {
@@ -319,10 +316,11 @@ const Create = () => {
     return null;
   }
 
-  const PageLayout = isAdmin ? AdminLayout : Layout;
+  // For admin users, wrap in AdminLayout; for regular users, Layout is provided by the router
+  const Wrapper = isAdmin ? AdminLayout : ({ children }: { children: React.ReactNode }) => <>{children}</>;
 
   return (
-    <PageLayout>
+    <Wrapper>
       <Seo title="Create Event" description="Create and publish your event" canonical="/create" />
       
       <div className="container max-w-5xl px-4 py-8 md:py-12">
@@ -884,7 +882,7 @@ const Create = () => {
       </div>
 
       <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
-    </PageLayout>
+    </Wrapper>
   );
 };
 

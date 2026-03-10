@@ -1,5 +1,4 @@
 import { useParams, Link } from "react-router-dom";
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -110,18 +109,18 @@ const EventDetails = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <Seo title="Loading..." />
         <div className="max-w-5xl mx-auto px-4 py-20 text-center text-muted-foreground">
           Loading event...
         </div>
-      </Layout>
+      </>
     );
   }
 
   if (!event) {
     return (
-      <Layout>
+      <>
         <Seo title="Event Not Found" />
         <div className="max-w-5xl mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold mb-2">Event not found</h1>
@@ -129,7 +128,7 @@ const EventDetails = () => {
             <Link to="/discover">Browse events</Link>
           </Button>
         </div>
-      </Layout>
+      </>
     );
   }
 
@@ -161,7 +160,7 @@ const EventDetails = () => {
   const isApproved = event.status === 'approved';
 
   return (
-    <Layout>
+    <>
       <Seo 
         title={event.title} 
         description={event.description || `${event.category} event at ${event.location} • ${fullDate}`} 
@@ -405,7 +404,7 @@ const EventDetails = () => {
         price={event.price}
         autoApprove={event.auto_approve_registrations || false}
       />
-    </Layout>
+    </>
   );
 };
 

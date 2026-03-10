@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
-import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/events/EventCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,11 +82,9 @@ const HomePage = () => {
 
   if (authLoading) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">Loading...</div>
-        </div>
-      </Layout>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
     );
   }
 
@@ -100,7 +97,7 @@ const HomePage = () => {
   );
 
   return (
-    <Layout>
+    <>
       <Seo
         title="Home"
         description="Discover and book amazing events. Conferences, workshops, festivals and more."
@@ -219,7 +216,7 @@ const HomePage = () => {
           </div>
         )}
       </section>
-    </Layout>
+    </>
   );
 };
 
