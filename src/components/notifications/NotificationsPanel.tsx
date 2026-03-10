@@ -1,6 +1,5 @@
-import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, Check, Trash2, UserPlus, Mail, Calendar } from "lucide-react";
+import { Bell, Check, Trash2, UserPlus, Mail, Calendar, Sparkles, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -11,28 +10,7 @@ interface NotificationsPanelProps {
 }
 
 export const NotificationsPanel = ({ onClose }: NotificationsPanelProps) => {
-  const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
-
-  const handleNotificationClick = async (notification: {
-    id: string;
-    event_id: string | null;
-    type: string;
-    read: boolean;
-  }) => {
-    if (!notification.read) {
-      await markAsRead(notification.id);
-    }
-    
-    if (notification.event_id) {
-      if (notification.type === "registration") {
-        navigate(`/event-builder/${notification.event_id}?tab=guests`);
-      } else {
-        navigate(`/events/${notification.event_id}`);
-      }
-    }
-    onClose();
-  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -40,6 +18,10 @@ export const NotificationsPanel = ({ onClose }: NotificationsPanelProps) => {
         return <UserPlus className="h-4 w-4 text-primary" />;
       case "invitation":
         return <Mail className="h-4 w-4 text-primary" />;
+      case "welcome":
+        return <Sparkles className="h-4 w-4 text-amber-500" />;
+      case "milestone":
+        return <Trophy className="h-4 w-4 text-amber-500" />;
       default:
         return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
@@ -89,10 +71,9 @@ export const NotificationsPanel = ({ onClose }: NotificationsPanelProps) => {
           {notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`flex gap-3 p-4 cursor-pointer transition-colors hover:bg-accent/50 ${
+              className={`flex gap-3 p-4 transition-colors ${
                 !notification.read ? "bg-primary/5" : ""
               }`}
-              onClick={() => handleNotificationClick(notification)}
             >
               {/* Avatar */}
               <Avatar className="h-9 w-9 shrink-0">
@@ -125,18 +106,29 @@ export const NotificationsPanel = ({ onClose }: NotificationsPanelProps) => {
                 </div>
               </div>
 
-              {/* Delete button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteNotification(notification.id);
-                }}
-              >
-                <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-              </Button>
+              {/* Action buttons */}
+              <div className="flex items-center gap-1 shrink-0">
+                {!notification.read && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    title="Mark as read"
+                    onClick={() => markAsRead(notification.id)}
+                  >
+                    <Check className="h-3.5 w-3.5 text-primary" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  title="Delete"
+                  onClick={() => deleteNotification(notification.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -149,12 +141,11 @@ export const NotificationsPanel = ({ onClose }: NotificationsPanelProps) => {
           size="sm"
           className="w-full text-xs"
           onClick={() => {
-            navigate("/events");
             onClose();
           }}
         >
           <Calendar className="h-3.5 w-3.5 mr-2" />
-          View My Events
+          Close
         </Button>
       </div>
     </div>
