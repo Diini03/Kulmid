@@ -303,6 +303,6 @@ export default function Help() {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 }

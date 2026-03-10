@@ -384,6 +384,6 @@ const Events = () => {
         })}
         </div>
       </div>
-    </Layout>;
+    </>;
 };
 export default Events;

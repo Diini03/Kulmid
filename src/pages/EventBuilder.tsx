@@ -156,7 +156,7 @@ const EventBuilder = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </>
   );
 };
 

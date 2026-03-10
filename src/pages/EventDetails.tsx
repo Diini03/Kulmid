@@ -404,7 +404,7 @@ const EventDetails = () => {
         price={event.price}
         autoApprove={event.auto_approve_registrations || false}
       />
-    </Layout>
+    </>
   );
 };
 
