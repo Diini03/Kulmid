@@ -160,7 +160,7 @@ const EventDetails = () => {
   const isApproved = event.status === 'approved';
 
   return (
-    <Layout>
+    <>
       <Seo 
         title={event.title} 
         description={event.description || `${event.category} event at ${event.location} • ${fullDate}`} 
