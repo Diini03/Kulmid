@@ -320,7 +320,7 @@ const Create = () => {
   const Wrapper = isAdmin ? AdminLayout : ({ children }: { children: React.ReactNode }) => <>{children}</>;
 
   return (
-    <PageLayout>
+    <Wrapper>
       <Seo title="Create Event" description="Create and publish your event" canonical="/create" />
       
       <div className="container max-w-5xl px-4 py-8 md:py-12">
