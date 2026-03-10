@@ -252,7 +252,7 @@ const Discover = () => {
           </div>
         )}
       </section>
-    </Layout>
+    </>
   );
 };
 

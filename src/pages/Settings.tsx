@@ -146,7 +146,7 @@ const Settings = () => {
           </Card>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 
