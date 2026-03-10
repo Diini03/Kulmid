@@ -122,7 +122,7 @@ const Events = () => {
 
   // Logged out state
   if (!authLoading && !user) {
-    return <Layout>
+    return <>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[70vh] flex items-center justify-center">
           <div className="max-w-md mx-4 text-center animate-fade-in">
