@@ -97,7 +97,7 @@ const HomePage = () => {
   );
 
   return (
-    <Layout>
+    <>
       <Seo
         title="Home"
         description="Discover and book amazing events. Conferences, workshops, festivals and more."
