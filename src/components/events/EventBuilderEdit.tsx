@@ -354,6 +354,8 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
+
+      <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
     </form>
   );
 };

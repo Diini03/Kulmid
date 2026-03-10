@@ -725,6 +725,8 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
           </Button>
         </div>
       </form>
+
+      <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
     </Form>
   );
 };

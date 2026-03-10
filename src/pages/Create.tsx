@@ -882,6 +882,8 @@ const Create = () => {
           </form>
         </Form>
       </div>
+
+      <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
     </PageLayout>
   );
 };
