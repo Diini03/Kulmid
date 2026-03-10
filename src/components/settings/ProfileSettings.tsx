@@ -87,6 +87,12 @@ export const ProfileSettings = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Profile updated", description: "Your profile has been saved." });
+      // Refresh the auth context profile so navbar avatar updates immediately
+      const { data: refreshed } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
+      if (refreshed) {
+        // Force a page-level profile refresh by dispatching a custom event
+        window.dispatchEvent(new CustomEvent("profile-updated", { detail: refreshed }));
+      }
     }
     setSaving(false);
   };

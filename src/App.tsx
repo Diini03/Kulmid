@@ -29,7 +29,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ResetPassword from "./pages/ResetPassword";
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-import UserDashboard from "./pages/UserDashboard";
+
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminSettings from "./pages/AdminSettings";
@@ -109,7 +109,7 @@ const App = () => (
                     <Route path="/events" element={<UserOnlyRoute><Events /></UserOnlyRoute>} />
                     <Route path="/events/:id" element={<UserOnlyRoute><EventDetails /></UserOnlyRoute>} />
                     <Route path="/favorites" element={<ProtectedRoute><UserOnlyRoute><Favorites /></UserOnlyRoute></ProtectedRoute>} />
-                    <Route path="/dashboard" element={<ProtectedRoute><UserOnlyRoute><UserDashboard /></UserOnlyRoute></ProtectedRoute>} />
+                    
                     <Route path="/calendar" element={<ProtectedRoute><UserOnlyRoute><CalendarView /></UserOnlyRoute></ProtectedRoute>} />
                     <Route path="/create" element={<ProtectedRoute><UserOnlyRoute><Create /></UserOnlyRoute></ProtectedRoute>} />
                     <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
