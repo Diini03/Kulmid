@@ -29,7 +29,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ResetPassword from "./pages/ResetPassword";
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-import UserDashboard from "./pages/UserDashboard";
+
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminSettings from "./pages/AdminSettings";
