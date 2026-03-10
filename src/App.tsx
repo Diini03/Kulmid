@@ -42,6 +42,7 @@ import EventScanner from "./pages/EventScanner";
 import SystemDocumentation from "./pages/SystemDocumentation";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
+const Profile = lazy(() => import("./pages/Profile"));
 import { useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
