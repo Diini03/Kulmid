@@ -56,11 +56,9 @@ const Settings = () => {
 
   if (authLoading || !user) {
     return (
-      <Layout>
-        <div className="container py-12">
-          <div className="text-center">Loading...</div>
-        </div>
-      </Layout>
+      <div className="container py-12">
+        <div className="text-center">Loading...</div>
+      </div>
     );
   }
 
