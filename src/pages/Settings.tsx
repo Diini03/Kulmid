@@ -52,10 +52,13 @@ const Settings = () => {
           <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
         </div>
 
-        <SettingsSidebar active={activeSection} onChange={setActiveSection} />
+        {/* Mobile tabs */}
+        <div className="md:hidden">
+          <SettingsSidebar active={activeSection} onChange={setActiveSection} />
+        </div>
 
-        <div className="flex gap-8 mt-4 md:mt-0">
-          {/* Desktop sidebar (rendered inline above on mobile) */}
+        <div className="flex gap-8 mt-4">
+          {/* Desktop sidebar */}
           <div className="hidden md:block">
             <SettingsSidebar active={activeSection} onChange={setActiveSection} />
           </div>
