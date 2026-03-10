@@ -20,7 +20,7 @@ export const Footer = () => {
             to="/" 
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src={kulmidLogoText} alt="Kulmid" className="h-24" />
+            <img src={footerLogo} alt="Kulmid" className="h-10" />
           </Link>
 
           {/* Navigation Links */}

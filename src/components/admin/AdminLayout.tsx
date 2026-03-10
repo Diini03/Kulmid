@@ -48,7 +48,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={kulmidLogo} alt="Kulmid" className="h-8 w-8" />
+            <img src={kulmidLogoIcon} alt="Kulmid" className="h-8 w-8" />
             {sidebarOpen && (
               <div>
                 <h2 className="font-bold text-xl">Kulmid</h2>
