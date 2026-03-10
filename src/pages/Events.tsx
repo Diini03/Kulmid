@@ -174,7 +174,7 @@ const Events = () => {
           message="Sign in or create an account to start creating events."
           mode="signup"
         />
-      </Layout>;
+      </>;
   }
 
   // Loading state
