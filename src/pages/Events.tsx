@@ -179,7 +179,7 @@ const Events = () => {
 
   // Loading state
   if (loading || authLoading) {
-    return <Layout>
+    return <>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="animate-pulse text-muted-foreground">Loading...</div>
