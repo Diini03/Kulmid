@@ -13,7 +13,7 @@ import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { Badge } from "@/components/ui/badge";
-import kulmidLogoIcon from "@/assets/kulmid-logo-icon.png";
+import kulmidLogoNav from "@/assets/kulmid-logo-nav.png";
 
 interface NavbarProps {
   onOpenSearch: () => void;
@@ -87,7 +87,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             }}
             className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity p-1"
           >
-            <img src={kulmidLogoIcon} alt="Kulmid" className="h-9 w-9" />
+            <img src={kulmidLogoNav} alt="Kulmid" className="h-9 w-9" />
           </button>
 
           {!isAdmin && (
@@ -259,7 +259,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
-                    <img src={kulmidLogoIcon} alt="Kulmid" className="h-8 w-8" />
+                    <img src={kulmidLogoNav} alt="Kulmid" className="h-8 w-8" />
                     Menu
                   </SheetTitle>
                 </SheetHeader>
