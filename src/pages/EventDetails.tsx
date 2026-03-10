@@ -120,7 +120,7 @@ const EventDetails = () => {
 
   if (!event) {
     return (
-      <Layout>
+      <>
         <Seo title="Event Not Found" />
         <div className="max-w-5xl mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold mb-2">Event not found</h1>
@@ -128,7 +128,7 @@ const EventDetails = () => {
             <Link to="/discover">Browse events</Link>
           </Button>
         </div>
-      </Layout>
+      </>
     );
   }
 
