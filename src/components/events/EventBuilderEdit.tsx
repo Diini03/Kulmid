@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { categories } from "@/constants/categories";
 import { Save, Sparkles } from "lucide-react";
 import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
+import { StripeConnectDialog } from "@/components/events/StripeConnectDialog";
 
 const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/;
 
