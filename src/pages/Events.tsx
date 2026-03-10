@@ -232,7 +232,7 @@ const Events = () => {
             </div>
           </div>
         </div>
-      </Layout>;
+      </>;
   }
 
   // Main events list with timeline layout
