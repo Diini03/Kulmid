@@ -1,82 +1,57 @@
 
 
-## Add Free/Paid Toggle with Payout Phone Number
+## Fix: Navbar logo reloading on every page navigation
 
-### Overview
-Replace the plain price input with a **Free/Paid toggle button**. Default is "Free". When "Paid" is selected, reveal a price field and a payout phone number field (where creators receive their earnings). Phone numbers are validated for Somali format.
+### Root Cause
+Every page (Events, Discover, Create, etc.) individually wraps itself in `<Layout>`. When you navigate from one page to another, React unmounts the old page's `<Layout>` and mounts the new page's `<Layout>`, causing the Navbar (and its logo image) to briefly disappear and reappear.
 
-### Database Change
-Add a `payout_phone` column to the `events` table:
-```sql
-ALTER TABLE public.events ADD COLUMN payout_phone text;
-```
-This keeps `host_phone` for contact purposes and `payout_phone` for payment/earnings.
+### Solution
+Move `<Layout>` to `App.tsx` as a shared wrapper around the routes that use it, so it **persists across navigation**. Then remove the `<Layout>` wrapper from each individual page.
 
-### UI Design
+### Files to modify
 
-```text
-Ticket Pricing
-+----------+----------+
-|   Free   |   Paid   |   (toggle buttons, "Free" selected by default)
-+----------+----------+
+**`src/App.tsx`**
+- Import `Layout`
+- Wrap groups of routes that need the navbar/footer inside a single `<Layout>` element using a nested `<Route>` with a layout component
+- Pages that don't use Layout (e.g., `EventView`, auth pages with `AuthLayout`) remain outside
 
--- When "Paid" is clicked: --
+**15 page files** — remove the `<Layout>` import and wrapper from each:
+- `src/pages/Welcome.tsx`
+- `src/pages/HomePage.tsx`
+- `src/pages/Discover.tsx`
+- `src/pages/Events.tsx`
+- `src/pages/EventDetails.tsx`
+- `src/pages/EventBuilder.tsx`
+- `src/pages/Favorites.tsx`
+- `src/pages/UserDashboard.tsx`
+- `src/pages/CalendarView.tsx`
+- `src/pages/Create.tsx`
+- `src/pages/Settings.tsx`
+- `src/pages/About.tsx`
+- `src/pages/OurTeam.tsx`
+- `src/pages/Contact.tsx`
+- `src/pages/Help.tsx`
 
-Price ($)        [__________]
-Payout Phone     [+252 _________]
-  "We'll send your earnings to this number"
-```
+### Approach
+Create a `LayoutRoute` component in `App.tsx` using React Router's `<Outlet>`:
 
-### Phone Validation
-Somali mobile numbers must start with `+252` followed by valid prefixes:
-- `61, 62, 63, 68` (Hormuud/EVC Plus)
-- `71, 77` (Telesom/Zaad)
-- Other valid: `65, 66, 69, 70, 73, 74, 76, 78, 79, 90`
-
-Regex pattern: `/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/`
-
-### Files to Change
-
-**1. `src/pages/Create.tsx`** (user event creation form)
-- Add `isPaid` state (default `false`)
-- Replace the price input with a Free/Paid toggle (two styled buttons)
-- When "Free": set price to 0, hide price + payout phone fields
-- When "Paid": show price input + payout phone input with Somali validation
-- Add `payout_phone` to the Zod schema (required when price > 0)
-- Save `payout_phone` to the database on submit
-
-**2. `src/components/admin/EventForm.tsx`** (admin event form)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
-
-**3. `src/components/events/EventBuilderEdit.tsx`** (event builder edit tab)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
-
-### Validation Schema Update (in all 3 forms)
-```typescript
-payout_phone: z.string()
-  .regex(/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/, 
-    "Enter a valid Somali phone number (e.g. +252611234567)")
-  .optional()
-  .or(z.literal(""))
+```tsx
+import { Outlet } from "react-router-dom";
+const LayoutRoute = () => (
+  <Layout>
+    <Outlet />
+  </Layout>
+);
 ```
 
-With a `.refine()` to make it required when price > 0:
-```typescript
-.refine((data) => {
-  if (data.price > 0) {
-    return !!data.payout_phone && data.payout_phone.length > 0;
-  }
-  return true;
-}, {
-  message: "Payout phone number is required for paid events",
-  path: ["payout_phone"],
-})
+Then nest routes under it:
+```tsx
+<Route element={<LayoutRoute />}>
+  <Route path="/discover" element={<Discover />} />
+  <Route path="/events" element={<Events />} />
+  {/* ... all Layout-using routes */}
+</Route>
 ```
 
-### What This Does NOT Include (for later)
-- Attendee payment flow (how users pay for paid events)
-- WAAFI API integration
-- Admin dashboard paid event details view
-- Payout tracking system
+This way `Layout` mounts once and stays mounted -- no more logo flashing.
+
