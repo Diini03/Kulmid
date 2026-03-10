@@ -1,82 +1,28 @@
 
 
-## Add Free/Paid Toggle with Payout Phone Number
+## Three Changes
 
-### Overview
-Replace the plain price input with a **Free/Paid toggle button**. Default is "Free". When "Paid" is selected, reveal a price field and a payout phone number field (where creators receive their earnings). Phone numbers are validated for Somali format.
+### 1. Remove `/dashboard` page
+- **`src/App.tsx`**: Remove the `/dashboard` route (line 112), remove `UserDashboard` import (line 32)
+- **`src/components/layout/Navbar.tsx`**: Remove "Dashboard" link from desktop dropdown (lines 206-211) and mobile menu (lines 344-357)
+- Optionally delete `src/pages/UserDashboard.tsx` and dashboard components if no longer referenced
 
-### Database Change
-Add a `payout_phone` column to the `events` table:
-```sql
-ALTER TABLE public.events ADD COLUMN payout_phone text;
-```
-This keeps `host_phone` for contact purposes and `payout_phone` for payment/earnings.
+### 2. Fix avatar not showing in navbar after save
+The issue: `AuthContext` Profile interface only has `id, user_id, full_name, created_at, updated_at` — no `avatar_url`. Even if the DB saves it, the navbar Avatar component only reads `profile?.full_name` for the fallback letter and never checks `avatar_url`.
 
-### UI Design
+Fix:
+- **`src/contexts/AuthContext.tsx`**: Add `avatar_url?: string` to the `Profile` interface
+- **`src/components/layout/Navbar.tsx`**: Import `AvatarImage` alongside `AvatarFallback`, and render `<AvatarImage src={profile?.avatar_url} />` inside the Avatar so the uploaded photo appears
+- **`src/components/settings/ProfileSettings.tsx`**: After successful save, refresh the auth profile so the navbar picks up the new avatar immediately (call a profile refetch or update context)
 
-```text
-Ticket Pricing
-+----------+----------+
-|   Free   |   Paid   |   (toggle buttons, "Free" selected by default)
-+----------+----------+
+### 3. Replace theme dropdown with simple toggle button
+- **`src/components/layout/Navbar.tsx`**: Replace the `DropdownMenu` theme toggle (lines 146-175) with a single `Button` that toggles between light and dark mode. Click = switch. Show `Sun` icon in dark mode, `Moon` icon in light mode. Remove `Monitor`, `Check` imports if unused elsewhere.
+- Mobile menu theme section (lines 416-445): simplify to a single toggle button as well.
 
--- When "Paid" is clicked: --
+### Files modified
+- `src/App.tsx`
+- `src/components/layout/Navbar.tsx`
+- `src/contexts/AuthContext.tsx`
+- `src/components/settings/ProfileSettings.tsx`
+- `src/pages/UserDashboard.tsx` (delete)
 
-Price ($)        [__________]
-Payout Phone     [+252 _________]
-  "We'll send your earnings to this number"
-```
-
-### Phone Validation
-Somali mobile numbers must start with `+252` followed by valid prefixes:
-- `61, 62, 63, 68` (Hormuud/EVC Plus)
-- `71, 77` (Telesom/Zaad)
-- Other valid: `65, 66, 69, 70, 73, 74, 76, 78, 79, 90`
-
-Regex pattern: `/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/`
-
-### Files to Change
-
-**1. `src/pages/Create.tsx`** (user event creation form)
-- Add `isPaid` state (default `false`)
-- Replace the price input with a Free/Paid toggle (two styled buttons)
-- When "Free": set price to 0, hide price + payout phone fields
-- When "Paid": show price input + payout phone input with Somali validation
-- Add `payout_phone` to the Zod schema (required when price > 0)
-- Save `payout_phone` to the database on submit
-
-**2. `src/components/admin/EventForm.tsx`** (admin event form)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
-
-**3. `src/components/events/EventBuilderEdit.tsx`** (event builder edit tab)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
-
-### Validation Schema Update (in all 3 forms)
-```typescript
-payout_phone: z.string()
-  .regex(/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/, 
-    "Enter a valid Somali phone number (e.g. +252611234567)")
-  .optional()
-  .or(z.literal(""))
-```
-
-With a `.refine()` to make it required when price > 0:
-```typescript
-.refine((data) => {
-  if (data.price > 0) {
-    return !!data.payout_phone && data.payout_phone.length > 0;
-  }
-  return true;
-}, {
-  message: "Payout phone number is required for paid events",
-  path: ["payout_phone"],
-})
-```
-
-### What This Does NOT Include (for later)
-- Attendee payment flow (how users pay for paid events)
-- WAAFI API integration
-- Admin dashboard paid event details view
-- Payout tracking system
