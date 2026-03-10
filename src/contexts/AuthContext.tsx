@@ -110,20 +110,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Listen for profile updates from settings
+  useEffect(() => {
+    const handleProfileUpdate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) setProfile(detail);
+    };
+    window.addEventListener("profile-updated", handleProfileUpdate);
+    return () => window.removeEventListener("profile-updated", handleProfileUpdate);
+  }, []);
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth event:', event);
         
-        // Handle token refresh - update session silently without triggering loading state
         if (event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed successfully');
           setSession(session);
-          return; // Don't trigger loading or re-render the entire app
+          return;
         }
         
-        // Handle sign out or session expiry
         if (event === 'SIGNED_OUT' || !session) {
           setUser(null);
           setSession(null);
@@ -141,7 +149,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Only re-check admin role if the user actually changed
           if (session.user.id !== currentUserIdRef.current) {
             currentUserIdRef.current = session.user.id;
             setAdminCheckComplete(false);
@@ -152,7 +159,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         }
         
-        // Only set loading to false on initial load
         if (!initialLoadComplete) {
           setLoading(false);
           setInitialLoadComplete(true);
@@ -160,7 +166,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
