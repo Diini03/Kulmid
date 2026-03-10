@@ -13,7 +13,8 @@ import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { Badge } from "@/components/ui/badge";
-import kulmidLogo from "@/assets/kulmid-logo.png";
+import kulmidLogoDark from "@/assets/kulmid-logo-dark.png";
+import kulmidLogoWhite from "@/assets/kulmid-logo-white.png";
 
 interface NavbarProps {
   onOpenSearch: () => void;
