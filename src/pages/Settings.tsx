@@ -1,149 +1,70 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Save } from "lucide-react";
+import { SettingsSidebar } from "@/components/settings/SettingsSidebar";
+import { ProfileSettings } from "@/components/settings/ProfileSettings";
+import { AccountSettings } from "@/components/settings/AccountSettings";
+import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { PrivacySettings } from "@/components/settings/PrivacySettings";
+import { PreferencesSettings } from "@/components/settings/PreferencesSettings";
+import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
+import { SecuritySettings } from "@/components/settings/SecuritySettings";
 
 const Settings = () => {
-  const { user, profile, loading: authLoading } = useAuth();
-  const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [fullName, setFullName] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [activeSection, setActiveSection] = useState("profile");
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/signin");
     }
-    if (profile) {
-      setFullName(profile.full_name || "");
-    }
-  }, [user, profile, authLoading, navigate]);
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !fullName.trim()) return;
-
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ full_name: fullName.trim() })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been updated successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+  }, [user, authLoading, navigate]);
 
   if (authLoading || !user) {
     return (
       <div className="container py-12">
-        <div className="text-center">Loading...</div>
+        <div className="text-center text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
+  const renderSection = () => {
+    switch (activeSection) {
+      case "profile": return <ProfileSettings />;
+      case "account": return <AccountSettings />;
+      case "notifications": return <NotificationSettings />;
+      case "privacy": return <PrivacySettings />;
+      case "preferences": return <PreferencesSettings />;
+      case "appearance": return <AppearanceSettings />;
+      case "security": return <SecuritySettings />;
+      default: return <ProfileSettings />;
+    }
+  };
+
   return (
     <>
       <Seo title="Settings" description="Manage your account settings" canonical="/settings" />
-      
-      <div className="container max-w-5xl px-4 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your account settings and preferences
-          </p>
+      <div className="container max-w-5xl px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Settings</h1>
+          <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
         </div>
 
-        <div className="space-y-6">
-          {/* Profile Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile Information
-              </CardTitle>
-              <CardDescription>
-                Update your personal information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSave} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={user.email || ""}
-                      disabled
-                      className="pl-10"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Email cannot be changed
-                  </p>
-                </div>
+        {/* Mobile tabs */}
+        <div className="md:hidden">
+          <SettingsSidebar active={activeSection} onChange={setActiveSection} />
+        </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
-                    required
-                  />
-                </div>
-
-                <Button type="submit" disabled={saving}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? "Saving..." : "Save Changes"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Account Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Account</CardTitle>
-              <CardDescription>
-                Manage your account settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Account Status</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Your account is active and in good standing.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex gap-8 mt-4">
+          {/* Desktop sidebar */}
+          <div className="hidden md:block">
+            <SettingsSidebar active={activeSection} onChange={setActiveSection} />
+          </div>
+          <div className="flex-1 min-w-0">
+            {renderSection()}
+          </div>
         </div>
       </div>
     </>

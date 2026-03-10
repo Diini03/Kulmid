@@ -42,6 +42,7 @@ import EventScanner from "./pages/EventScanner";
 import SystemDocumentation from "./pages/SystemDocumentation";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
+const Profile = lazy(() => import("./pages/Profile"));
 import { useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
@@ -114,6 +115,7 @@ const App = () => (
                     <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
                     <Route path="/events/:id/manage" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><UserOnlyRoute><Settings /></UserOnlyRoute></ProtectedRoute>} />
+                    <Route path="/profile/:userId" element={<Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><Profile /></Suspense>} />
                   </Route>
 
                   {/* Routes WITHOUT Layout */}

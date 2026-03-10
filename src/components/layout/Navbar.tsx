@@ -198,8 +198,14 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 </div>
                 <div className="my-2 h-px bg-border" />
                 <DropdownMenuItem asChild className="rounded-xl">
-                  <Link to="/dashboard" className="flex items-center gap-3">
+                  <Link to={`/profile/${user.id}`} className="flex items-center gap-3">
                     <User className="h-4 w-4" />
+                    My Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-xl">
+                  <Link to="/dashboard" className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4" />
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
