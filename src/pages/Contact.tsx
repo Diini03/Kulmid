@@ -1,4 +1,3 @@
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +39,7 @@ const Contact = () => {
   ];
 
   return (
-    <Layout>
+    <>
       <Seo 
         title="Contact" 
         description="Get in touch with Kulmid. We're here to help with questions about events, partnerships, or support." 
@@ -121,7 +120,7 @@ const Contact = () => {
           ))}
         </div>
       </section>
-    </Layout>
+    </>
   );
 };
 

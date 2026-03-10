@@ -1,12 +1,11 @@
 import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
-import { Layout } from "@/components/layout/Layout";
 import { ArrowRight } from "lucide-react";
 
 const Welcome = () => {
   return (
-    <Layout>
+    <>
       <Seo
         title="Welcome to Kulmid"
         description="Discover, book & experience events like never before. Set up an event page, invite friends and sell tickets."
@@ -87,7 +86,7 @@ const Welcome = () => {
           </div>
         </div>
       </section>
-    </Layout>
+    </>
   );
 };
 

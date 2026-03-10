@@ -1,4 +1,3 @@
-import { Layout } from "@/components/layout/Layout";
 import { Seo } from "@/components/Seo";
 import { EventCard } from "@/components/events/EventCard";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -9,7 +8,7 @@ const Favorites = () => {
   const { favorites } = useFavorites();
 
   return (
-    <Layout>
+    <>
       <Seo title="My Favorites" description="Your favorite events in one place" canonical="/favorites" />
       
       <section className="container max-w-5xl px-4 py-16">
@@ -39,7 +38,7 @@ const Favorites = () => {
           />
         )}
       </section>
-    </Layout>
+    </>
   );
 };
 

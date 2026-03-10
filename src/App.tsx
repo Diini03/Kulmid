@@ -2,13 +2,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { PendingActionsProvider } from "@/contexts/PendingActionsContext";
+import { Layout } from "@/components/layout/Layout";
 import { lazy, Suspense } from "react";
 
 import Welcome from "./pages/Welcome";
@@ -66,6 +67,13 @@ const UserOnlyRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Persistent layout wrapper - Layout stays mounted across route changes
+const LayoutRoute = () => (
+  <Layout>
+    <Outlet />
+  </Layout>
+);
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -79,47 +87,47 @@ const App = () => (
                   <Toaster />
                   <Sonner />
                 <Routes>
-                  {/* Public Routes - Redirect to /home if logged in */}
-                  <Route path="/" element={<PublicRoute><Welcome /></PublicRoute>} />
-                  <Route path="/discover" element={<Discover />} />
-                  <Route path="/discover/:id" element={<EventDetails />} />
+                  {/* Routes WITH persistent Layout */}
+                  <Route element={<LayoutRoute />}>
+                    {/* Public Routes */}
+                    <Route path="/" element={<PublicRoute><Welcome /></PublicRoute>} />
+                    <Route path="/discover" element={<Discover />} />
+                    <Route path="/discover/:id" element={<EventDetails />} />
+                    
+                    {/* Footer Pages */}
+                    <Route path="/about" element={<About />} />
+                    <Route path="/our-story" element={<Navigate to="/about" replace />} />
+                    <Route path="/achievements" element={<Navigate to="/contact" replace />} />
+                    <Route path="/our-team" element={<OurTeam />} />
+                    <Route path="/team" element={<OurTeam />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/help" element={<Help />} />
+                    
+                    {/* Protected Routes */}
+                    <Route path="/home" element={<ProtectedRoute><UserOnlyRoute><HomePage /></UserOnlyRoute></ProtectedRoute>} />
+                    <Route path="/events" element={<UserOnlyRoute><Events /></UserOnlyRoute>} />
+                    <Route path="/events/:id" element={<UserOnlyRoute><EventDetails /></UserOnlyRoute>} />
+                    <Route path="/favorites" element={<ProtectedRoute><UserOnlyRoute><Favorites /></UserOnlyRoute></ProtectedRoute>} />
+                    <Route path="/dashboard" element={<ProtectedRoute><UserOnlyRoute><UserDashboard /></UserOnlyRoute></ProtectedRoute>} />
+                    <Route path="/calendar" element={<ProtectedRoute><UserOnlyRoute><CalendarView /></UserOnlyRoute></ProtectedRoute>} />
+                    <Route path="/create" element={<ProtectedRoute><UserOnlyRoute><Create /></UserOnlyRoute></ProtectedRoute>} />
+                    <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
+                    <Route path="/events/:id/manage" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><UserOnlyRoute><Settings /></UserOnlyRoute></ProtectedRoute>} />
+                  </Route>
+
+                  {/* Routes WITHOUT Layout */}
                   <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                   <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  
-                  {/* Onboarding - Protected but bypasses onboarding check */}
                   <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
                   
-                  {/* Footer Pages - Always accessible */}
-                  <Route path="/about" element={<About />} />
-                  <Route path="/our-story" element={<Navigate to="/about" replace />} />
-                  <Route path="/achievements" element={<Navigate to="/contact" replace />} />
-                  <Route path="/our-team" element={<OurTeam />} />
-                  <Route path="/team" element={<OurTeam />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/help" element={<Help />} />
-                  
-                  {/* Protected Routes - Require authentication */}
-                  <Route path="/home" element={<ProtectedRoute><UserOnlyRoute><HomePage /></UserOnlyRoute></ProtectedRoute>} />
-                  
-                  {/* Public Routes - Anyone can browse events */}
-                  <Route path="/events" element={<UserOnlyRoute><Events /></UserOnlyRoute>} />
-                  <Route path="/events/:id" element={<UserOnlyRoute><EventDetails /></UserOnlyRoute>} />
-                  
-                  {/* Standalone Event View - No layout, clean shareable page */}
+                  {/* Standalone Event View - No layout */}
                   <Route path="/event/:id" element={<UserOnlyRoute><EventView /></UserOnlyRoute>} />
                   <Route path="/e/:id" element={<ShortEventRedirect />} />
                   
-                  <Route path="/favorites" element={<ProtectedRoute><UserOnlyRoute><Favorites /></UserOnlyRoute></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute><UserOnlyRoute><UserDashboard /></UserOnlyRoute></ProtectedRoute>} />
-                  <Route path="/calendar" element={<ProtectedRoute><UserOnlyRoute><CalendarView /></UserOnlyRoute></ProtectedRoute>} />
-                  <Route path="/create" element={<ProtectedRoute><UserOnlyRoute><Create /></UserOnlyRoute></ProtectedRoute>} />
-                  <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
-                  <Route path="/events/:id/manage" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
                   <Route path="/event/:eventId/scanner" element={<ProtectedRoute><EventScanner /></ProtectedRoute>} />
-                  {/* /my-events removed in v2.0 - redirects to /events */}
                   <Route path="/my-events" element={<Navigate to="/events" replace />} />
-                  <Route path="/settings" element={<ProtectedRoute><UserOnlyRoute><Settings /></UserOnlyRoute></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute><OrganizerDashboard /></ProtectedRoute>} />
                   <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics /></ProtectedRoute>} />
                   <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
