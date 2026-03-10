@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
+import { StripeConnectDialog } from "@/components/events/StripeConnectDialog";
 
 const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/;
 
@@ -87,6 +88,7 @@ const Create = () => {
   const [initialAuthChecked, setInitialAuthChecked] = useState(false);
   const [showHostDetails, setShowHostDetails] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const [stripeDialogOpen, setStripeDialogOpen] = useState(false);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -696,7 +698,7 @@ const Create = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setIsPaid(true)}
+                        onClick={() => setStripeDialogOpen(true)}
                         className={`rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
                           isPaid
                             ? "border-primary bg-primary/10 text-primary"
@@ -880,6 +882,8 @@ const Create = () => {
           </form>
         </Form>
       </div>
+
+      <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
     </PageLayout>
   );
 };

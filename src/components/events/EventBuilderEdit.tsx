@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { categories } from "@/constants/categories";
 import { Save, Sparkles } from "lucide-react";
 import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
+import { StripeConnectDialog } from "@/components/events/StripeConnectDialog";
 
 const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/;
 
@@ -57,6 +58,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
   const [imagePreview, setImagePreview] = useState(event.image_url || "");
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [isPaid, setIsPaid] = useState(event.price > 0);
+  const [stripeDialogOpen, setStripeDialogOpen] = useState(false);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -254,7 +256,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsPaid(true)}
+                  onClick={() => setStripeDialogOpen(true)}
                   className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
                     isPaid
                       ? "border-primary bg-primary/10 text-primary"
@@ -352,6 +354,8 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
+
+      <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
     </form>
   );
 };
