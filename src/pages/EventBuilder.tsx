@@ -56,7 +56,7 @@ const EventBuilder = () => {
 
   if (!event) {
     return (
-      <Layout>
+      <>
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">Event not found</h2>
@@ -65,7 +65,7 @@ const EventBuilder = () => {
             </Button>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
