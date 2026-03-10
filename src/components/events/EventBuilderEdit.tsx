@@ -58,6 +58,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
   const [imagePreview, setImagePreview] = useState(event.image_url || "");
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [isPaid, setIsPaid] = useState(event.price > 0);
+  const [stripeDialogOpen, setStripeDialogOpen] = useState(false);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
