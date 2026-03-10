@@ -882,7 +882,7 @@ const Create = () => {
       </div>
 
       <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
-    </PageLayout>
+    </Wrapper>
   );
 };
 
