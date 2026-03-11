@@ -171,7 +171,7 @@ const AdminSettingsPage = () => {
                       </Avatar>
                       <div>
                         <p className="text-sm font-medium">{admin.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{admin.email || "admin@kulmid.com"}</p>
+                        <p className="text-xs text-muted-foreground">{admin.email || "kulmid@gmail.com"}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
