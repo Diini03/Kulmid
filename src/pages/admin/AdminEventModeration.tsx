@@ -70,7 +70,7 @@ const AdminEventModeration = () => {
   if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Event Moderation" canonical="/admin/events/pending" />
       <div className="space-y-6">
         <div>
