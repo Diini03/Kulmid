@@ -77,7 +77,7 @@ const AdminUsersPage = () => {
   });
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="User Management" canonical="/admin/users" />
       <div className="space-y-6">
         <div>
