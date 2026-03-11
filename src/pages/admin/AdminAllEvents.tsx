@@ -1,7 +1,5 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
