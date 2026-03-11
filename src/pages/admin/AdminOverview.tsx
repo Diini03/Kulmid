@@ -149,10 +149,9 @@ const AdminOverview = () => {
     }
   };
 
-  if (loading || !adminCheckComplete) {
-    return <AdminLayout><div className="flex items-center justify-center py-20 text-muted-foreground">Loading...</div></AdminLayout>;
+  if (loadingData) {
+    return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading...</div>;
   }
-  if (!isAdmin) return <Navigate to="/" replace />;
 
   const metricCards = [
     { label: "Total Events", value: stats.totalEvents, icon: Calendar, color: "text-primary" },
