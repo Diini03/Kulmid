@@ -1,24 +1,3 @@
-import coverCelebration from "@/assets/covers/cover-celebration.jpg";
-import coverCliff from "@/assets/covers/cover-cliff.jpg";
-import coverSketch from "@/assets/covers/cover-sketch.jpg";
-import coverCar from "@/assets/covers/cover-car.png";
-import coverVR from "@/assets/covers/cover-vr.jpg";
-import coverGradient from "@/assets/covers/cover-gradient.jpg";
-import coverNeonCity from "@/assets/covers/cover-neon-city.jpg";
-import coverConcert from "@/assets/covers/cover-concert.jpg";
-import coverConference from "@/assets/covers/cover-conference.jpg";
-import coverMountain from "@/assets/covers/cover-mountain.jpg";
-import coverWave from "@/assets/covers/cover-wave.jpg";
-import coverWorkspace from "@/assets/covers/cover-workspace.jpg";
-import coverSunset from "@/assets/covers/cover-sunset.jpg";
-import coverPowder from "@/assets/covers/cover-powder.jpg";
-import coverMicrophone from "@/assets/covers/cover-microphone.jpg";
-import coverCollaboration from "@/assets/covers/cover-collaboration.jpg";
-import coverFireworks from "@/assets/covers/cover-fireworks.jpg";
-import coverOcean from "@/assets/covers/cover-ocean.jpg";
-import coverStreet from "@/assets/covers/cover-street.jpg";
-import coverArchitecture from "@/assets/covers/cover-architecture.jpg";
-
 export interface CoverImage {
   id: string;
   src: string;
@@ -26,24 +5,24 @@ export interface CoverImage {
 }
 
 export const coverImages: CoverImage[] = [
-  { id: "celebration", src: coverCelebration, label: "Celebration" },
-  { id: "cliff", src: coverCliff, label: "Atmospheric" },
-  { id: "sketch", src: coverSketch, label: "Artistic" },
-  { id: "car", src: coverCar, label: "Urban Style" },
-  { id: "vr", src: coverVR, label: "Tech" },
-  { id: "gradient", src: coverGradient, label: "Minimal" },
-  { id: "neon-city", src: coverNeonCity, label: "City Night" },
-  { id: "concert", src: coverConcert, label: "Festival" },
-  { id: "conference", src: coverConference, label: "Conference" },
-  { id: "mountain", src: coverMountain, label: "Nature" },
-  { id: "wave", src: coverWave, label: "Creative" },
-  { id: "workspace", src: coverWorkspace, label: "Workshop" },
-  { id: "sunset", src: coverSunset, label: "Warm" },
-  { id: "powder", src: coverPowder, label: "Vibrant" },
-  { id: "microphone", src: coverMicrophone, label: "Seminar" },
-  { id: "collaboration", src: coverCollaboration, label: "Meetup" },
-  { id: "fireworks", src: coverFireworks, label: "Celebration" },
-  { id: "ocean", src: coverOcean, label: "Calm" },
-  { id: "street", src: coverStreet, label: "Culture" },
-  { id: "architecture", src: coverArchitecture, label: "Modern" },
+  { id: "celebration", src: "/covers/cover-celebration.jpg", label: "Celebration" },
+  { id: "cliff", src: "/covers/cover-cliff.jpg", label: "Atmospheric" },
+  { id: "sketch", src: "/covers/cover-sketch.jpg", label: "Artistic" },
+  { id: "car", src: "/covers/cover-car.png", label: "Urban Style" },
+  { id: "vr", src: "/covers/cover-vr.jpg", label: "Tech" },
+  { id: "gradient", src: "/covers/cover-gradient.jpg", label: "Minimal" },
+  { id: "neon-city", src: "/covers/cover-neon-city.jpg", label: "City Night" },
+  { id: "concert", src: "/covers/cover-concert.jpg", label: "Festival" },
+  { id: "conference", src: "/covers/cover-conference.jpg", label: "Conference" },
+  { id: "mountain", src: "/covers/cover-mountain.jpg", label: "Nature" },
+  { id: "wave", src: "/covers/cover-wave.jpg", label: "Creative" },
+  { id: "workspace", src: "/covers/cover-workspace.jpg", label: "Workshop" },
+  { id: "sunset", src: "/covers/cover-sunset.jpg", label: "Warm" },
+  { id: "powder", src: "/covers/cover-powder.jpg", label: "Vibrant" },
+  { id: "microphone", src: "/covers/cover-microphone.jpg", label: "Seminar" },
+  { id: "collaboration", src: "/covers/cover-collaboration.jpg", label: "Meetup" },
+  { id: "fireworks", src: "/covers/cover-fireworks.jpg", label: "Celebration" },
+  { id: "ocean", src: "/covers/cover-ocean.jpg", label: "Calm" },
+  { id: "street", src: "/covers/cover-street.jpg", label: "Culture" },
+  { id: "architecture", src: "/covers/cover-architecture.jpg", label: "Modern" },
 ];
