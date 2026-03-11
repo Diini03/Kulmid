@@ -98,7 +98,7 @@ const AdminSettingsPage = () => {
 
     setAddingAdmin(true);
 
-    // Note: only admin@kulmid.com can be admin due to DB trigger
+    // Note: only kulmid@gmail.com can be admin due to DB trigger
     // This UI shows the attempt but the DB will enforce the restriction
     const { data: profiles } = await supabase
       .from("profiles")
@@ -109,7 +109,7 @@ const AdminSettingsPage = () => {
     // The validate_admin_email trigger will enforce the restriction
     toast({
       title: "Admin restriction",
-      description: "Only admin@kulmid.com can have admin role (enforced at database level).",
+      description: "Only kulmid@gmail.com can have admin role (enforced at database level).",
       variant: "destructive",
     });
 
@@ -171,7 +171,7 @@ const AdminSettingsPage = () => {
                       </Avatar>
                       <div>
                         <p className="text-sm font-medium">{admin.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{admin.email || "admin@kulmid.com"}</p>
+                        <p className="text-xs text-muted-foreground">{admin.email || "kulmid@gmail.com"}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ const AdminSettingsPage = () => {
               <Label className="text-sm font-medium">Add Admin</Label>
               <div className="flex gap-2 mt-2">
                 <Input
-                  placeholder="admin@kulmid.com"
+                  placeholder="kulmid@gmail.com"
                   value={newAdminEmail}
                   onChange={(e) => setNewAdminEmail(e.target.value)}
                   className="flex-1"
@@ -209,7 +209,7 @@ const AdminSettingsPage = () => {
               </div>
               <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                 <AlertTriangle className="h-3 w-3" />
-                <span>Only admin@kulmid.com can be assigned admin role (database enforced)</span>
+                <span>Only kulmid@gmail.com can be assigned admin role (database enforced)</span>
               </div>
             </div>
           </CardContent>
