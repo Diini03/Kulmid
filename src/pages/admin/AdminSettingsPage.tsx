@@ -209,7 +209,7 @@ const AdminSettingsPage = () => {
               </div>
               <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                 <AlertTriangle className="h-3 w-3" />
-                <span>Only admin@kulmid.com can be assigned admin role (database enforced)</span>
+                <span>Only kulmid@gmail.com can be assigned admin role (database enforced)</span>
               </div>
             </div>
           </CardContent>
