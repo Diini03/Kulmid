@@ -316,11 +316,7 @@ const Create = () => {
     return null;
   }
 
-  // For admin users, wrap in AdminLayout; for regular users, Layout is provided by the router
-  const Wrapper = isAdmin ? AdminLayout : ({ children }: { children: React.ReactNode }) => <>{children}</>;
-
-  return (
-    <Wrapper>
+  const content = (
       <Seo title="Create Event" description="Create and publish your event" canonical="/create" />
       
       <div className="container max-w-5xl px-4 py-8 md:py-12">
