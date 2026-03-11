@@ -137,10 +137,17 @@ const App = () => (
                   
                   <Route path="/event/:eventId/scanner" element={<ProtectedRoute><EventScanner /></ProtectedRoute>} />
                   <Route path="/my-events" element={<Navigate to="/events" replace />} />
-                  <Route path="/admin" element={<ProtectedRoute><OrganizerDashboard /></ProtectedRoute>} />
+                  <Route path="/admin" element={<ProtectedRoute><AdminOverview /></ProtectedRoute>} />
+                  <Route path="/admin/events/pending" element={<ProtectedRoute><AdminEventModeration /></ProtectedRoute>} />
+                  <Route path="/admin/events" element={<ProtectedRoute><AdminAllEvents /></ProtectedRoute>} />
+                  <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
+                  <Route path="/admin/registrations" element={<ProtectedRoute><AdminRegistrations /></ProtectedRoute>} />
+                  <Route path="/admin/categories" element={<ProtectedRoute><AdminCategories /></ProtectedRoute>} />
                   <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics /></ProtectedRoute>} />
-                  <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
-                  <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+                  <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
+                  <Route path="/admin/settings/platform" element={<ProtectedRoute><AdminPlatformSettings /></ProtectedRoute>} />
+                  <Route path="/admin/settings/admin" element={<ProtectedRoute><AdminSettingsPage /></ProtectedRoute>} />
+                  <Route path="/admin/settings" element={<Navigate to="/admin/settings/platform" replace />} />
                   <Route path="/system-docs" element={<SystemDocumentation />} />
                   
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
