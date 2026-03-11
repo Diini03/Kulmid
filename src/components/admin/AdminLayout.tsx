@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import kulmidLogoIcon from "@/assets/kulmid-logo-icon.png";
+import kulmidLogoNav from "@/assets/kulmid-logo-nav.png";
 
 interface AdminLayoutProps {
   children: ReactNode;
