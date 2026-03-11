@@ -17,7 +17,7 @@ const AdminAnalytics = () => {
 
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Analytics" canonical="/admin/analytics" />
       <div className="space-y-8">
         <div className="flex items-center justify-between">
