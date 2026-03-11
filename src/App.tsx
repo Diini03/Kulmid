@@ -30,17 +30,24 @@ import SignUp from "./pages/SignUp";
 import ResetPassword from "./pages/ResetPassword";
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
-import OrganizerDashboard from "./pages/OrganizerDashboard";
-import AdminUsers from "./pages/AdminUsers";
-import AdminSettings from "./pages/AdminSettings";
 import CalendarView from "./pages/CalendarView";
 import Create from "./pages/Create";
-// MyEvents removed - merged into Events page (v2.0)
-import AdminAnalytics from "./pages/AdminAnalytics";
 import EventBuilder from "./pages/EventBuilder";
 import EventScanner from "./pages/EventScanner";
 import SystemDocumentation from "./pages/SystemDocumentation";
 import Settings from "./pages/Settings";
+
+// Admin pages
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminEventModeration from "./pages/admin/AdminEventModeration";
+import AdminAllEvents from "./pages/admin/AdminAllEvents";
+import AdminUsersPage from "./pages/admin/AdminUsers";
+import AdminRegistrations from "./pages/admin/AdminRegistrations";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminPlatformSettings from "./pages/admin/AdminPlatformSettings";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import Help from "./pages/Help";
 const Profile = lazy(() => import("./pages/Profile"));
 import { useAuth } from "./contexts/AuthContext";
