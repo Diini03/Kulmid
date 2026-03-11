@@ -314,7 +314,7 @@ const AdminOverview = () => {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

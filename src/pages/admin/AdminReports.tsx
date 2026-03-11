@@ -251,7 +251,7 @@ const AdminReports = () => {
           )}
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   );
 };
 

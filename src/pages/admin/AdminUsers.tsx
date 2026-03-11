@@ -211,7 +211,7 @@ const AdminUsersPage = () => {
           )}
         </SheetContent>
       </Sheet>
-    </AdminLayout>
+    </>
   );
 };
 

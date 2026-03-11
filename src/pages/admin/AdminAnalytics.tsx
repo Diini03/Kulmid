@@ -46,7 +46,7 @@ const AdminAnalytics = () => {
         <AttendanceInsights key={`a-${refreshKey}`} />
         <ActivityFeed key={`f-${refreshKey}`} />
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

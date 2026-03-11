@@ -198,7 +198,7 @@ const AdminEventModeration = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   );
 };
 

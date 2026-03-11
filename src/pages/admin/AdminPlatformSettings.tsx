@@ -263,7 +263,7 @@ const AdminPlatformSettings = () => {
           </div>
         )}
       </div>
-    </AdminLayout>
+    </>
   );
 };
 
