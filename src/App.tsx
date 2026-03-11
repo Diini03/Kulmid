@@ -108,7 +108,7 @@ const App = () => (
                     
                     {/* Protected User Routes */}
                     <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-                    <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+                    <Route path="/events" element={<Events />} />
                     <Route path="/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
                     <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                     <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
