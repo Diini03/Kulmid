@@ -45,8 +45,6 @@ const AdminCategories = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [form, setForm] = useState({ name: "", icon: "GraduationCap", description: "", active: true });
 
-  if (loading || !adminCheckComplete) return <AdminLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AdminLayout>;
-  if (!isAdmin) return <Navigate to="/" replace />;
 
   const openCreate = () => {
     setForm({ name: "", icon: "GraduationCap", description: "", active: true });

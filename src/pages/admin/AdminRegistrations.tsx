@@ -77,8 +77,7 @@ const AdminRegistrations = () => {
     URL.revokeObjectURL(url);
   };
 
-  if (loading || !adminCheckComplete) return <AdminLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AdminLayout>;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
 
   const filtered = registrations.filter((r: any) => {
     if (checkinFilter === "checked" && !r.checked_in) return false;

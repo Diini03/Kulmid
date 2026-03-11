@@ -132,8 +132,7 @@ const AdminSettingsPage = () => {
     setRemoveAdmin(null);
   };
 
-  if (loading || !adminCheckComplete) return <AdminLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AdminLayout>;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
 
   return (
     <AdminLayout>
