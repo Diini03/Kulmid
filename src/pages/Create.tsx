@@ -878,8 +878,14 @@ const Create = () => {
       </div>
 
       <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
-    </Wrapper>
+    </>
   );
+
+  if (isAdmin) {
+    return <AdminLayout>{content}</AdminLayout>;
+  }
+
+  return content;
 };
 
 export default Create;
