@@ -12,7 +12,6 @@ import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 const AdminAnalytics = () => {
-  const { isAdmin, loading, adminCheckComplete } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
 
 

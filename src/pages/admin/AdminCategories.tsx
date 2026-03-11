@@ -37,7 +37,6 @@ const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 const AdminCategories = () => {
-  const { isAdmin, loading, adminCheckComplete } = useAuth();
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [editCategory, setEditCategory] = useState<Category | null>(null);
