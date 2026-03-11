@@ -96,7 +96,7 @@ const AdminCategories = () => {
   const dialogOpen = isCreating || !!editCategory;
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Categories" canonical="/admin/categories" />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
