@@ -104,7 +104,7 @@ const AdminPlatformSettings = () => {
   if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Platform Settings" canonical="/admin/settings/platform" />
       <div className="space-y-6 max-w-3xl">
         <div className="flex items-center justify-between">
