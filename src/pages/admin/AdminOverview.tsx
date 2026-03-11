@@ -161,7 +161,7 @@ const AdminOverview = () => {
   ];
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Admin Overview" canonical="/admin" />
       <div className="space-y-8">
         <div>
