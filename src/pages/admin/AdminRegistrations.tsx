@@ -90,7 +90,7 @@ const AdminRegistrations = () => {
   });
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Registrations" canonical="/admin/registrations" />
       <div className="space-y-6">
         <div>
