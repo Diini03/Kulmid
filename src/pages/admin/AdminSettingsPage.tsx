@@ -198,7 +198,7 @@ const AdminSettingsPage = () => {
               <Label className="text-sm font-medium">Add Admin</Label>
               <div className="flex gap-2 mt-2">
                 <Input
-                  placeholder="admin@kulmid.com"
+                  placeholder="kulmid@gmail.com"
                   value={newAdminEmail}
                   onChange={(e) => setNewAdminEmail(e.target.value)}
                   className="flex-1"
