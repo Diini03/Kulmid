@@ -353,6 +353,27 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           allow_discovery: boolean | null
@@ -413,6 +434,42 @@ export type Database = {
           user_id?: string
           username?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string | null
+          id: string
+          reason: string
+          reported_by: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          target_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reason: string
+          reported_by?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reason?: string
+          reported_by?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id?: string
+          type?: string
         }
         Relationships: []
       }

@@ -30,17 +30,24 @@ import SignUp from "./pages/SignUp";
 import ResetPassword from "./pages/ResetPassword";
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
-import OrganizerDashboard from "./pages/OrganizerDashboard";
-import AdminUsers from "./pages/AdminUsers";
-import AdminSettings from "./pages/AdminSettings";
 import CalendarView from "./pages/CalendarView";
 import Create from "./pages/Create";
-// MyEvents removed - merged into Events page (v2.0)
-import AdminAnalytics from "./pages/AdminAnalytics";
 import EventBuilder from "./pages/EventBuilder";
 import EventScanner from "./pages/EventScanner";
 import SystemDocumentation from "./pages/SystemDocumentation";
 import Settings from "./pages/Settings";
+
+// Admin pages
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminEventModeration from "./pages/admin/AdminEventModeration";
+import AdminAllEvents from "./pages/admin/AdminAllEvents";
+import AdminUsersPage from "./pages/admin/AdminUsers";
+import AdminRegistrations from "./pages/admin/AdminRegistrations";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminPlatformSettings from "./pages/admin/AdminPlatformSettings";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import Help from "./pages/Help";
 const Profile = lazy(() => import("./pages/Profile"));
 import { useAuth } from "./contexts/AuthContext";
@@ -130,10 +137,17 @@ const App = () => (
                   
                   <Route path="/event/:eventId/scanner" element={<ProtectedRoute><EventScanner /></ProtectedRoute>} />
                   <Route path="/my-events" element={<Navigate to="/events" replace />} />
-                  <Route path="/admin" element={<ProtectedRoute><OrganizerDashboard /></ProtectedRoute>} />
+                  <Route path="/admin" element={<ProtectedRoute><AdminOverview /></ProtectedRoute>} />
+                  <Route path="/admin/events/pending" element={<ProtectedRoute><AdminEventModeration /></ProtectedRoute>} />
+                  <Route path="/admin/events" element={<ProtectedRoute><AdminAllEvents /></ProtectedRoute>} />
+                  <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
+                  <Route path="/admin/registrations" element={<ProtectedRoute><AdminRegistrations /></ProtectedRoute>} />
+                  <Route path="/admin/categories" element={<ProtectedRoute><AdminCategories /></ProtectedRoute>} />
                   <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics /></ProtectedRoute>} />
-                  <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
-                  <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+                  <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
+                  <Route path="/admin/settings/platform" element={<ProtectedRoute><AdminPlatformSettings /></ProtectedRoute>} />
+                  <Route path="/admin/settings/admin" element={<ProtectedRoute><AdminSettingsPage /></ProtectedRoute>} />
+                  <Route path="/admin/settings" element={<Navigate to="/admin/settings/platform" replace />} />
                   <Route path="/system-docs" element={<SystemDocumentation />} />
                   
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
