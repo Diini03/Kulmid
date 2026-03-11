@@ -80,7 +80,7 @@ const AdminReports = () => {
   };
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Reports" canonical="/admin/reports" />
       <div className="space-y-6">
         <div>
