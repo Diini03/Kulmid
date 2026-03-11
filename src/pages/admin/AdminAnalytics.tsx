@@ -1,7 +1,4 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
-import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
 import { StatsCards } from "@/components/admin/analytics/StatsCards";
 import { UserGrowthChart } from "@/components/admin/analytics/UserGrowthChart";
 import { CategoryDistributionChart } from "@/components/admin/analytics/CategoryDistributionChart";
