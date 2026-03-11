@@ -98,7 +98,7 @@ const AdminSettingsPage = () => {
 
     setAddingAdmin(true);
 
-    // Note: only admin@kulmid.com can be admin due to DB trigger
+    // Note: only kulmid@gmail.com can be admin due to DB trigger
     // This UI shows the attempt but the DB will enforce the restriction
     const { data: profiles } = await supabase
       .from("profiles")
@@ -109,7 +109,7 @@ const AdminSettingsPage = () => {
     // The validate_admin_email trigger will enforce the restriction
     toast({
       title: "Admin restriction",
-      description: "Only admin@kulmid.com can have admin role (enforced at database level).",
+      description: "Only kulmid@gmail.com can have admin role (enforced at database level).",
       variant: "destructive",
     });
 
