@@ -1,7 +1,5 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -69,11 +67,10 @@ const AdminEventModeration = () => {
     setProcessing(false);
   };
 
-  if (loading || !adminCheckComplete) return <AdminLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AdminLayout>;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Event Moderation" canonical="/admin/events/pending" />
       <div className="space-y-6">
         <div>
@@ -201,7 +198,7 @@ const AdminEventModeration = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   );
 };
 

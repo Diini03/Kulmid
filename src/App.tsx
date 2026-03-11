@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { PendingActionsProvider } from "@/contexts/PendingActionsContext";
 import { Layout } from "@/components/layout/Layout";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { lazy, Suspense } from "react";
 
 import Welcome from "./pages/Welcome";
@@ -18,6 +19,7 @@ import Discover from "./pages/Discover";
 import NotFound from "./pages/NotFound";
 import { PublicRoute } from "./components/auth/PublicRoute";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { AdminRoute } from "./components/auth/AdminRoute";
 import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
 import EventView from "./pages/EventView";
@@ -50,7 +52,6 @@ import AdminPlatformSettings from "./pages/admin/AdminPlatformSettings";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import Help from "./pages/Help";
 const Profile = lazy(() => import("./pages/Profile"));
-import { useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -60,26 +61,20 @@ const ShortEventRedirect = () => {
   return <Navigate to={`/event/${id}`} replace />;
 };
 
-// Wrapper component to redirect admins from user routes
-const UserOnlyRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAdmin, adminCheckComplete } = useAuth();
-  
-  if (!adminCheckComplete) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-  
-  if (isAdmin) {
-    return <Navigate to="/admin" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
 // Persistent layout wrapper - Layout stays mounted across route changes
 const LayoutRoute = () => (
   <Layout>
     <Outlet />
   </Layout>
+);
+
+// Admin layout wrapper with route protection
+const AdminLayoutRoute = () => (
+  <AdminRoute>
+    <AdminLayout>
+      <Outlet />
+    </AdminLayout>
+  </AdminRoute>
 );
 
 const App = () => (
@@ -95,7 +90,7 @@ const App = () => (
                   <Toaster />
                   <Sonner />
                 <Routes>
-                  {/* Routes WITH persistent Layout */}
+                  {/* Routes WITH persistent Layout (User interface) */}
                   <Route element={<LayoutRoute />}>
                     {/* Public Routes */}
                     <Route path="/" element={<PublicRoute><Welcome /></PublicRoute>} />
@@ -111,17 +106,16 @@ const App = () => (
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/help" element={<Help />} />
                     
-                    {/* Protected Routes */}
-                    <Route path="/home" element={<ProtectedRoute><UserOnlyRoute><HomePage /></UserOnlyRoute></ProtectedRoute>} />
-                    <Route path="/events" element={<UserOnlyRoute><Events /></UserOnlyRoute>} />
-                    <Route path="/events/:id" element={<UserOnlyRoute><EventDetails /></UserOnlyRoute>} />
-                    <Route path="/favorites" element={<ProtectedRoute><UserOnlyRoute><Favorites /></UserOnlyRoute></ProtectedRoute>} />
-                    
-                    <Route path="/calendar" element={<ProtectedRoute><UserOnlyRoute><CalendarView /></UserOnlyRoute></ProtectedRoute>} />
-                    <Route path="/create" element={<ProtectedRoute><UserOnlyRoute><Create /></UserOnlyRoute></ProtectedRoute>} />
+                    {/* Protected User Routes */}
+                    <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+                    <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+                    <Route path="/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
+                    <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+                    <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
+                    <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
                     <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
                     <Route path="/events/:id/manage" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
-                    <Route path="/settings" element={<ProtectedRoute><UserOnlyRoute><Settings /></UserOnlyRoute></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                     <Route path="/profile/:userId" element={<Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><Profile /></Suspense>} />
                   </Route>
 
@@ -129,25 +123,30 @@ const App = () => (
                   <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                   <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+                  <Route path="/onboarding" element={<ProtectedRoute><Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><Onboarding /></Suspense></ProtectedRoute>} />
                   
                   {/* Standalone Event View - No layout */}
-                  <Route path="/event/:id" element={<UserOnlyRoute><EventView /></UserOnlyRoute>} />
+                  <Route path="/event/:id" element={<EventView />} />
                   <Route path="/e/:id" element={<ShortEventRedirect />} />
                   
                   <Route path="/event/:eventId/scanner" element={<ProtectedRoute><EventScanner /></ProtectedRoute>} />
                   <Route path="/my-events" element={<Navigate to="/events" replace />} />
-                  <Route path="/admin" element={<ProtectedRoute><AdminOverview /></ProtectedRoute>} />
-                  <Route path="/admin/events/pending" element={<ProtectedRoute><AdminEventModeration /></ProtectedRoute>} />
-                  <Route path="/admin/events" element={<ProtectedRoute><AdminAllEvents /></ProtectedRoute>} />
-                  <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
-                  <Route path="/admin/registrations" element={<ProtectedRoute><AdminRegistrations /></ProtectedRoute>} />
-                  <Route path="/admin/categories" element={<ProtectedRoute><AdminCategories /></ProtectedRoute>} />
-                  <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics /></ProtectedRoute>} />
-                  <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
-                  <Route path="/admin/settings/platform" element={<ProtectedRoute><AdminPlatformSettings /></ProtectedRoute>} />
-                  <Route path="/admin/settings/admin" element={<ProtectedRoute><AdminSettingsPage /></ProtectedRoute>} />
-                  <Route path="/admin/settings" element={<Navigate to="/admin/settings/platform" replace />} />
+
+                  {/* Admin Routes - Fully separated interface */}
+                  <Route element={<AdminLayoutRoute />}>
+                    <Route path="/admin" element={<AdminOverview />} />
+                    <Route path="/admin/events/pending" element={<AdminEventModeration />} />
+                    <Route path="/admin/events" element={<AdminAllEvents />} />
+                    <Route path="/admin/users" element={<AdminUsersPage />} />
+                    <Route path="/admin/registrations" element={<AdminRegistrations />} />
+                    <Route path="/admin/categories" element={<AdminCategories />} />
+                    <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                    <Route path="/admin/reports" element={<AdminReports />} />
+                    <Route path="/admin/settings/platform" element={<AdminPlatformSettings />} />
+                    <Route path="/admin/settings/admin" element={<AdminSettingsPage />} />
+                    <Route path="/admin/settings" element={<Navigate to="/admin/settings/platform" replace />} />
+                  </Route>
+
                   <Route path="/system-docs" element={<SystemDocumentation />} />
                   
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

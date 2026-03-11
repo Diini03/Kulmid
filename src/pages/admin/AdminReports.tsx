@@ -1,7 +1,5 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,8 +64,7 @@ const AdminReports = () => {
     }
   };
 
-  if (loading || !adminCheckComplete) return <AdminLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AdminLayout>;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
 
   const filtered = reports.filter((r: any) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
@@ -83,7 +80,7 @@ const AdminReports = () => {
   };
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Reports" canonical="/admin/reports" />
       <div className="space-y-6">
         <div>
@@ -254,7 +251,7 @@ const AdminReports = () => {
           )}
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   );
 };
 

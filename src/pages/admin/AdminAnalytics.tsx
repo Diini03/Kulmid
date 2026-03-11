@@ -1,7 +1,4 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
-import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
 import { StatsCards } from "@/components/admin/analytics/StatsCards";
 import { UserGrowthChart } from "@/components/admin/analytics/UserGrowthChart";
 import { CategoryDistributionChart } from "@/components/admin/analytics/CategoryDistributionChart";
@@ -15,16 +12,11 @@ import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 const AdminAnalytics = () => {
-  const { isAdmin, loading, adminCheckComplete } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
 
-  if (loading || !adminCheckComplete) {
-    return <AdminLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AdminLayout>;
-  }
-  if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Analytics" canonical="/admin/analytics" />
       <div className="space-y-8">
         <div className="flex items-center justify-between">
@@ -53,7 +45,7 @@ const AdminAnalytics = () => {
         <AttendanceInsights key={`a-${refreshKey}`} />
         <ActivityFeed key={`f-${refreshKey}`} />
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

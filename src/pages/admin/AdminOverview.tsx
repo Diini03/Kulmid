@@ -1,7 +1,5 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -149,10 +147,9 @@ const AdminOverview = () => {
     }
   };
 
-  if (loading || !adminCheckComplete) {
-    return <AdminLayout><div className="flex items-center justify-center py-20 text-muted-foreground">Loading...</div></AdminLayout>;
+  if (loadingData) {
+    return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading...</div>;
   }
-  if (!isAdmin) return <Navigate to="/" replace />;
 
   const metricCards = [
     { label: "Total Events", value: stats.totalEvents, icon: Calendar, color: "text-primary" },
@@ -164,7 +161,7 @@ const AdminOverview = () => {
   ];
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Admin Overview" canonical="/admin" />
       <div className="space-y-8">
         <div>
@@ -317,7 +314,7 @@ const AdminOverview = () => {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </>
   );
 };
 

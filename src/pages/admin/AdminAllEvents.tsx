@@ -1,7 +1,5 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -152,11 +150,10 @@ const AdminAllEvents = () => {
     setProcessing(false);
   };
 
-  if (loading || !adminCheckComplete) return <AdminLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AdminLayout>;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="All Events" canonical="/admin/events" />
       <div className="space-y-6">
         {/* Header */}
@@ -433,7 +430,7 @@ const AdminAllEvents = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   );
 };
 

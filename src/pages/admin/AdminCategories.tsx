@@ -1,7 +1,4 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
-import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +37,6 @@ const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 const AdminCategories = () => {
-  const { isAdmin, loading, adminCheckComplete } = useAuth();
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [editCategory, setEditCategory] = useState<Category | null>(null);
@@ -48,8 +44,6 @@ const AdminCategories = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [form, setForm] = useState({ name: "", icon: "GraduationCap", description: "", active: true });
 
-  if (loading || !adminCheckComplete) return <AdminLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AdminLayout>;
-  if (!isAdmin) return <Navigate to="/" replace />;
 
   const openCreate = () => {
     setForm({ name: "", icon: "GraduationCap", description: "", active: true });
@@ -101,7 +95,7 @@ const AdminCategories = () => {
   const dialogOpen = isCreating || !!editCategory;
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Categories" canonical="/admin/categories" />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -217,7 +211,7 @@ const AdminCategories = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+    </>
   );
 };
 

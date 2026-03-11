@@ -1,7 +1,5 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Seo } from "@/components/Seo";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -103,11 +101,10 @@ const AdminPlatformSettings = () => {
     setSaving(false);
   };
 
-  if (loading || !adminCheckComplete) return <AdminLayout><div className="py-20 text-center text-muted-foreground">Loading...</div></AdminLayout>;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Platform Settings" canonical="/admin/settings/platform" />
       <div className="space-y-6 max-w-3xl">
         <div className="flex items-center justify-between">
@@ -266,7 +263,7 @@ const AdminPlatformSettings = () => {
           </div>
         )}
       </div>
-    </AdminLayout>
+    </>
   );
 };
 
