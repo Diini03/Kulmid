@@ -135,7 +135,7 @@ const AdminSettingsPage = () => {
   if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
 
   return (
-    <AdminLayout>
+    <>
       <Seo title="Admin Settings" canonical="/admin/settings/admin" />
       <div className="space-y-6 max-w-4xl">
         <div>
