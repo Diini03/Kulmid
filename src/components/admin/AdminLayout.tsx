@@ -73,7 +73,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-border/50 flex items-center gap-3">
-        <img src={kulmidLogoIcon} alt="Kulmid" className="h-8 w-8 flex-shrink-0" />
+        <img src={kulmidLogoNav} alt="Kulmid" className="h-8 w-8 flex-shrink-0" />
         {!collapsed && (
           <div className="min-w-0">
             <h2 className="font-bold text-base text-foreground">Kulmid</h2>
