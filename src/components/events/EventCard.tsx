@@ -16,6 +16,8 @@ type EventItem = {
   category: string;
   price: number;
   image_url: string | null;
+  status?: string;
+  description?: string | null;
 };
 
 interface Props {

@@ -164,14 +164,12 @@ export async function getPersonalizedEvents(
       .eq("user_id", userId)
       .maybeSingle();
 
-    const promises: [typeof prefsPromise, Promise<void> | Promise<null>] = [
-      prefsPromise,
-      sessionStorage.getItem(statusKey)
-        ? Promise.resolve(null)
-        : supabase.rpc("update_event_status").then(() => { sessionStorage.setItem(statusKey, '1'); return null; }),
-    ];
+    if (!sessionStorage.getItem(statusKey)) {
+      await supabase.rpc("update_event_status");
+      sessionStorage.setItem(statusKey, '1');
+    }
 
-    const [prefsResult] = await Promise.all(promises);
+    const prefsResult = await prefsPromise;
     const { data: prefs, error: prefsError } = prefsResult;
 
     if (prefsError || !prefs || !prefs.allow_recommendations) {
