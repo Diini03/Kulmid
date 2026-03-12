@@ -334,7 +334,7 @@ const EventDetails = () => {
               </p>
             )}
 
-            {(event.host_email || event.host_phone) && (
+            {user && (user.id === event.created_by || userRegistrationStatus === 'approved') && (event.host_email || event.host_phone) && (
               <div className="flex flex-wrap gap-4 pt-3 border-t">
                 {event.host_email && (
                   <a 
