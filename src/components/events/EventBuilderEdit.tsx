@@ -17,6 +17,9 @@ import { StripeConnectDialog } from "@/components/events/StripeConnectDialog";
 
 const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/;
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
 const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
@@ -83,10 +86,32 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+    if (!file) return;
+
+    // Validate file size
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast({
+        title: "File too large",
+        description: "Image must be under 5MB",
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
     }
+
+    // Validate MIME type
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Only JPEG, PNG, WebP, and GIF images are allowed",
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const uploadImage = async (): Promise<string | null> => {
@@ -162,13 +187,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label htmlFor="description">Description</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setAiDialogOpen(true)}
-                className="h-8 gap-1"
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAiDialogOpen(true)} className="h-8 gap-1">
                 <Sparkles className="h-3.5 w-3.5" />
                 <span className="text-xs">Suggest with AI</span>
               </Button>
@@ -186,9 +205,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
               event_type: watch("event_type"),
               location: watch("location"),
             }}
-            onAccept={(description) => {
-              setValue("description", description);
-            }}
+            onAccept={(description) => setValue("description", description)}
           />
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -197,21 +214,13 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
               <Input id="date" type="datetime-local" {...register("date")} />
               {errors.date && <p className="text-sm text-destructive mt-1">{errors.date.message}</p>}
             </div>
-
             <div>
               <Label htmlFor="category">Category</Label>
-              <Select
-                value={watch("category")}
-                onValueChange={(value) => setValue("category", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={watch("category")} onValueChange={(value) => setValue("category", value)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.name} value={cat.name}>
-                      {cat.name}
-                    </SelectItem>
+                    <SelectItem key={cat.name} value={cat.name}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -221,13 +230,8 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <Label htmlFor="event_type">Event Type</Label>
-              <Select
-                value={eventType}
-                onValueChange={(value: any) => setValue("event_type", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={eventType} onValueChange={(value: any) => setValue("event_type", value)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="in-person">In-Person</SelectItem>
                   <SelectItem value="online">Online</SelectItem>
@@ -235,63 +239,39 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-3">
               <Label>Ticket Pricing</Label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsPaid(false);
-                    setValue("price", 0);
-                    setValue("payout_phone", "");
-                  }}
+                  onClick={() => { setIsPaid(false); setValue("price", 0); setValue("payout_phone", ""); }}
                   className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
-                    !isPaid
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                    !isPaid ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
                   }`}
-                >
-                  Free
-                </button>
+                >Free</button>
                 <button
                   type="button"
                   onClick={() => setStripeDialogOpen(true)}
                   className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
-                    isPaid
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                    isPaid ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
                   }`}
-                >
-                  Paid
-                </button>
+                >Paid</button>
               </div>
-            {isPaid && (
-              <div className="space-y-4 pt-2">
-                <div>
-                  <Label htmlFor="price">Price ($)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    {...register("price", { valueAsNumber: true })}
-                  />
-                  {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
+              {isPaid && (
+                <div className="space-y-4 pt-2">
+                  <div>
+                    <Label htmlFor="price">Price ($)</Label>
+                    <Input id="price" type="number" step="0.01" min="0.01" {...register("price", { valueAsNumber: true })} />
+                    {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="payout_phone">Payout Phone Number</Label>
+                    <Input id="payout_phone" type="tel" placeholder="+252611234567" {...register("payout_phone")} />
+                    <p className="text-xs text-muted-foreground mt-1">We'll send your earnings to this number</p>
+                    {errors.payout_phone && <p className="text-sm text-destructive mt-1">{errors.payout_phone.message}</p>}
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="payout_phone">Payout Phone Number</Label>
-                  <Input
-                    id="payout_phone"
-                    type="tel"
-                    placeholder="+252611234567"
-                    {...register("payout_phone")}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">We'll send your earnings to this number</p>
-                  {errors.payout_phone && <p className="text-sm text-destructive mt-1">{errors.payout_phone.message}</p>}
-                </div>
-              </div>
-            )}
+              )}
             </div>
           </div>
 
@@ -311,9 +291,10 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
 
           <div>
             <Label htmlFor="image">Event Image</Label>
-            <Input id="image" type="file" accept="image/*" onChange={handleImageChange} />
+            <Input id="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageChange} />
+            <p className="text-xs text-muted-foreground mt-1">Max 5MB. JPEG, PNG, WebP, or GIF.</p>
             {imagePreview && (
-              <img src={imagePreview} alt="Preview" className="mt-2 w-full h-48 object-cover rounded" />
+              <img src={imagePreview} alt="Preview" className="mt-2 w-full h-48 object-cover rounded" loading="lazy" />
             )}
           </div>
         </CardContent>
@@ -329,18 +310,15 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
               <Label htmlFor="host_name">Host Name</Label>
               <Input id="host_name" {...register("host_name")} />
             </div>
-
             <div>
               <Label htmlFor="host_email">Host Email</Label>
               <Input id="host_email" type="email" {...register("host_email")} />
             </div>
           </div>
-
           <div>
             <Label htmlFor="host_description">Host Bio</Label>
             <Textarea id="host_description" {...register("host_description")} rows={3} />
           </div>
-
           <div>
             <Label htmlFor="host_phone">Host Phone</Label>
             <Input id="host_phone" {...register("host_phone")} />

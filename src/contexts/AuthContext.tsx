@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, user_id, full_name, avatar_url, created_at, updated_at')
         .eq('user_id', userId)
         .maybeSingle();
       
@@ -98,7 +98,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { data, error } = await supabase.auth.refreshSession();
       if (error) {
         console.error('Session refresh failed:', error);
-        // If refresh fails, sign out the user
         await signOut();
         return null;
       }
@@ -121,7 +120,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth event:', event);
@@ -194,9 +192,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName
-          }
+          data: { full_name: fullName }
         }
       });
       
@@ -210,68 +206,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           description = "This email is already registered. Try signing in instead.";
         }
         
-        toast({
-          title: "Sign up failed",
-          description,
-          variant: "destructive"
-        });
+        toast({ title: "Sign up failed", description, variant: "destructive" });
         return { error };
       }
       
-      toast({
-        title: "Account created successfully",
-        description: "Welcome! You're now signed in."
-      });
-      
+      toast({ title: "Account created successfully", description: "Welcome! You're now signed in." });
       return { error: null };
     } catch (error: any) {
-      toast({
-        title: "Sign up failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
       return { error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        toast({
-          title: "Sign in failed",
-          description: error.message,
-          variant: "destructive"
-        });
+        toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
       }
-      
       return { error };
     } catch (error: any) {
-      toast({
-        title: "Sign in failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
       return { error };
     }
   };
 
-
   const signOut = async () => {
     try {
-      // Sign out from Supabase first - this clears all auth tokens
       const { error } = await supabase.auth.signOut();
-      
       if (error) {
         console.error('Supabase sign out error:', error);
         throw error;
       }
       
-      // HARD CLEAR: remove any residual Supabase auth keys from localStorage
       try {
         for (const key of Object.keys(localStorage)) {
           if (key.startsWith('sb-') || key.includes('supabase')) {
@@ -282,7 +249,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.warn('Local storage cleanup warning:', e);
       }
       
-      // Clear local state
       currentUserIdRef.current = null;
       setUser(null);
       setSession(null);
@@ -290,29 +256,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAdmin(false);
       setAdminCheckComplete(true);
       
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out."
-      });
-      
-      // Force reload to clear any cached state
+      toast({ title: "Signed out", description: "You have been successfully signed out." });
       window.location.href = '/';
     } catch (error: any) {
       console.error('Sign out error:', error);
-      
-      // Even on error, clear local state and redirect
       currentUserIdRef.current = null;
       setUser(null);
       setSession(null);
       setProfile(null);
       setIsAdmin(false);
       setAdminCheckComplete(true);
-      
-      toast({
-        title: "Signed out",
-        description: "You have been signed out."
-      });
-      
+      toast({ title: "Signed out", description: "You have been signed out." });
       window.location.href = '/';
     }
   };
@@ -320,47 +274,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const resetPassword = async (email: string) => {
     try {
       const redirectUrl = `${window.location.origin}/reset-password`;
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
       
       if (error) {
-        toast({
-          title: "Reset failed",
-          description: error.message,
-          variant: "destructive"
-        });
+        toast({ title: "Reset failed", description: error.message, variant: "destructive" });
       } else {
-        toast({
-          title: "Reset email sent",
-          description: "Please check your email for password reset instructions."
-        });
+        toast({ title: "Reset email sent", description: "Please check your email for password reset instructions." });
       }
-      
       return { error };
     } catch (error: any) {
-      toast({
-        title: "Reset failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Reset failed", description: error.message, variant: "destructive" });
       return { error };
     }
   };
 
   const value: AuthContextType = {
-    user,
-    session,
-    profile,
-    loading,
-    isAdmin,
-    adminCheckComplete,
-    signUp,
-    signIn,
-    signOut,
-    resetPassword,
-    refreshSession
+    user, session, profile, loading, isAdmin, adminCheckComplete,
+    signUp, signIn, signOut, resetPassword, refreshSession
   };
 
   return (

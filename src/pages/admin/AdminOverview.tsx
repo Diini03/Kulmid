@@ -7,32 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  Calendar,
-  Users,
-  ClipboardList,
-  ShieldCheck,
-  Zap,
-  CalendarCheck,
-  Check,
-  X,
-  Eye,
+  Calendar, Users, ClipboardList, ShieldCheck, Zap, CalendarCheck, Check, X, Eye,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { SkeletonCard } from "@/components/common/SkeletonCard";
+import { ErrorCard } from "@/components/common/ErrorCard";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  Tooltip,
+  AreaChart, Area, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip,
 } from "recharts";
 
 const CHART_COLORS = ["hsl(175, 70%, 42%)", "hsl(0, 0%, 60%)", "hsl(0, 0%, 80%)", "hsl(0, 0%, 40%)", "hsl(175, 70%, 60%)"];
@@ -41,18 +23,16 @@ const AdminOverview = () => {
   const { isAdmin, loading, adminCheckComplete } = useAuth();
   const { toast } = useToast();
   const [stats, setStats] = useState({
-    totalEvents: 0,
-    pendingApprovals: 0,
-    totalUsers: 0,
-    totalRegistrations: 0,
-    eventsToday: 0,
-    activeEvents: 0,
+    totalEvents: 0, pendingApprovals: 0, totalUsers: 0,
+    totalRegistrations: 0, eventsToday: 0, activeEvents: 0,
   });
   const [pendingEvents, setPendingEvents] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [registrationTrend, setRegistrationTrend] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAdmin && adminCheckComplete) fetchData();
@@ -60,74 +40,74 @@ const AdminOverview = () => {
 
   const fetchData = async () => {
     setLoadingData(true);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(today);
-    todayEnd.setHours(23, 59, 59, 999);
+    setError(null);
+    try {
+      const today = new Date();
+      const todayStart = startOfDay(today);
+      const todayEnd = endOfDay(today);
+      const sevenDaysAgo = startOfDay(subDays(today, 6));
 
-    const [eventsRes, profilesRes, guestsRes, pendingRes, todayRes, activeRes] = await Promise.all([
-      supabase.from("events").select("*", { count: "exact", head: true }),
-      supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("event_guests").select("*", { count: "exact", head: true }),
-      supabase.from("events").select("id, title, date, category, location, created_at, created_by, status, description, profiles:created_by(full_name)").eq("status", "pending").order("created_at", { ascending: false }).limit(5),
-      supabase.from("events").select("*", { count: "exact", head: true }).gte("date", today.toISOString()).lte("date", todayEnd.toISOString()),
-      supabase.from("events").select("*", { count: "exact", head: true }).in("status", ["approved", "upcoming", "ongoing"]),
-    ]);
+      const [eventsRes, profilesRes, guestsRes, pendingRes, todayRes, activeRes, catEventsRes, trendRes, recentGuestsRes] = await Promise.all([
+        supabase.from("events").select("*", { count: "exact", head: true }),
+        supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("event_guests").select("*", { count: "exact", head: true }),
+        supabase.from("events").select("id, title, date, category, location, created_at, created_by, status, description, profiles:created_by(full_name)").eq("status", "pending").order("created_at", { ascending: false }).limit(5),
+        supabase.from("events").select("*", { count: "exact", head: true }).gte("date", todayStart.toISOString()).lte("date", todayEnd.toISOString()),
+        supabase.from("events").select("*", { count: "exact", head: true }).in("status", ["approved", "upcoming", "ongoing"]),
+        supabase.from("events").select("category"),
+        // Single query for 7-day registration trend instead of 7 sequential queries
+        supabase.from("event_guests").select("created_at").gte("created_at", sevenDaysAgo.toISOString()).lte("created_at", todayEnd.toISOString()),
+        supabase.from("event_guests").select("name, email, created_at, event_id, status").order("created_at", { ascending: false }).limit(8),
+      ]);
 
-    setStats({
-      totalEvents: eventsRes.count || 0,
-      pendingApprovals: 0,
-      totalUsers: profilesRes.count || 0,
-      totalRegistrations: guestsRes.count || 0,
-      eventsToday: todayRes.count || 0,
-      activeEvents: activeRes.count || 0,
-    });
+      const pendingCount = pendingRes.data?.length || 0;
 
-    // Get pending count separately
-    const { count: pendCount } = await supabase.from("events").select("*", { count: "exact", head: true }).eq("status", "pending");
-    setStats(s => ({ ...s, pendingApprovals: pendCount || 0 }));
-
-    setPendingEvents(pendingRes.data || []);
-
-    // Category distribution
-    const { data: catEvents } = await supabase.from("events").select("category");
-    if (catEvents) {
-      const counts: Record<string, number> = {};
-      catEvents.forEach((e: any) => {
-        counts[e.category] = (counts[e.category] || 0) + 1;
+      setStats({
+        totalEvents: eventsRes.count || 0,
+        pendingApprovals: pendingCount,
+        totalUsers: profilesRes.count || 0,
+        totalRegistrations: guestsRes.count || 0,
+        eventsToday: todayRes.count || 0,
+        activeEvents: activeRes.count || 0,
       });
-      setCategoryData(Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 5));
+
+      setPendingEvents(pendingRes.data || []);
+
+      // Category distribution
+      if (catEventsRes.data) {
+        const counts: Record<string, number> = {};
+        catEventsRes.data.forEach((e: any) => {
+          counts[e.category] = (counts[e.category] || 0) + 1;
+        });
+        setCategoryData(Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 5));
+      }
+
+      // Registration trend - group client-side
+      if (trendRes.data) {
+        const dayCounts: Record<string, number> = {};
+        for (let i = 6; i >= 0; i--) {
+          const d = subDays(today, i);
+          dayCounts[format(d, "EEE")] = 0;
+        }
+        trendRes.data.forEach((g: any) => {
+          const dayKey = format(new Date(g.created_at), "EEE");
+          if (dayKey in dayCounts) {
+            dayCounts[dayKey]++;
+          }
+        });
+        setRegistrationTrend(Object.entries(dayCounts).map(([day, count]) => ({ day, count })));
+      }
+
+      setRecentActivity(recentGuestsRes.data || []);
+    } catch (err: any) {
+      setError(err.message || "Failed to load dashboard data");
+    } finally {
+      setLoadingData(false);
     }
-
-    // Registration trend (last 7 days)
-    const days: any[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      d.setHours(0, 0, 0, 0);
-      const dEnd = new Date(d);
-      dEnd.setHours(23, 59, 59, 999);
-      const { count } = await supabase
-        .from("event_guests")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", d.toISOString())
-        .lte("created_at", dEnd.toISOString());
-      days.push({ day: format(d, "EEE"), count: count || 0 });
-    }
-    setRegistrationTrend(days);
-
-    // Recent activity
-    const { data: recentGuests } = await supabase
-      .from("event_guests")
-      .select("name, email, created_at, event_id, status")
-      .order("created_at", { ascending: false })
-      .limit(8);
-    setRecentActivity(recentGuests || []);
-
-    setLoadingData(false);
   };
 
   const handleApprove = async (eventId: string) => {
+    setActionLoading(eventId);
     const { error } = await supabase.from("events").update({ status: "approved" }).eq("id", eventId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -135,9 +115,11 @@ const AdminOverview = () => {
       toast({ title: "Event approved" });
       fetchData();
     }
+    setActionLoading(null);
   };
 
   const handleReject = async (eventId: string) => {
+    setActionLoading(eventId);
     const { error } = await supabase.from("events").update({ status: "rejected" }).eq("id", eventId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -145,10 +127,43 @@ const AdminOverview = () => {
       toast({ title: "Event rejected" });
       fetchData();
     }
+    setActionLoading(null);
   };
 
   if (loadingData) {
-    return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading...</div>;
+    return (
+      <>
+        <Seo title="Admin Overview" canonical="/admin" />
+        <div className="space-y-8">
+          <div>
+            <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-64 bg-muted rounded animate-pulse mt-2" />
+          </div>
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="border">
+                <CardContent className="pt-5 pb-4 px-4">
+                  <div className="h-4 w-4 bg-muted rounded animate-pulse mb-2" />
+                  <div className="h-8 w-12 bg-muted rounded animate-pulse" />
+                  <div className="h-3 w-20 bg-muted rounded animate-pulse mt-2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Seo title="Admin Overview" canonical="/admin" />
+        <div className="py-20">
+          <ErrorCard message={error} onRetry={fetchData} />
+        </div>
+      </>
+    );
   }
 
   const metricCards = [
@@ -169,7 +184,6 @@ const AdminOverview = () => {
           <p className="text-sm text-muted-foreground mt-1">Platform health and activity at a glance</p>
         </div>
 
-        {/* Metric Cards */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {metricCards.map((m) => (
             <Card key={m.label} className="border">
@@ -177,14 +191,13 @@ const AdminOverview = () => {
                 <div className="flex items-center justify-between mb-2">
                   <m.icon className={`h-4 w-4 ${m.color}`} />
                 </div>
-                <div className="text-2xl font-bold">{loadingData ? "–" : m.value}</div>
+                <div className="text-2xl font-bold">{m.value}</div>
                 <p className="text-[11px] text-muted-foreground mt-1">{m.label}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Moderation Queue */}
         {pendingEvents.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
@@ -222,11 +235,11 @@ const AdminOverview = () => {
                           <Button size="sm" variant="ghost" asChild>
                             <a href={`/event/${event.id}`} target="_blank"><Eye className="h-3.5 w-3.5" /></a>
                           </Button>
-                          <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => handleApprove(event.id)}>
-                            <Check className="h-3 w-3 mr-1" />Approve
+                          <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => handleApprove(event.id)} disabled={actionLoading === event.id}>
+                            <Check className="h-3 w-3 mr-1" />{actionLoading === event.id ? "..." : "Approve"}
                           </Button>
-                          <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => handleReject(event.id)}>
-                            <X className="h-3 w-3 mr-1" />Reject
+                          <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => handleReject(event.id)} disabled={actionLoading === event.id}>
+                            <X className="h-3 w-3 mr-1" />{actionLoading === event.id ? "..." : "Reject"}
                           </Button>
                         </div>
                       </TableCell>
@@ -238,9 +251,7 @@ const AdminOverview = () => {
           </Card>
         )}
 
-        {/* Charts + Activity */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Registration Trend */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Registrations (Last 7 Days)</CardTitle>
@@ -263,7 +274,6 @@ const AdminOverview = () => {
             </CardContent>
           </Card>
 
-          {/* Category Distribution */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Category Distribution</CardTitle>
@@ -291,7 +301,6 @@ const AdminOverview = () => {
           </Card>
         </div>
 
-        {/* Recent Activity */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Recent Platform Activity</CardTitle>

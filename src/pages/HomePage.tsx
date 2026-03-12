@@ -8,17 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPersonalizedEvents } from "@/utils/recommendations";
 import { ArrowRight, Sparkles, Settings } from "lucide-react";
-
-type EventItem = {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-  category: string;
-  price: number;
-  image_url: string | null;
-  status: string;
-};
+import { ErrorCard } from "@/components/common/ErrorCard";
+import { EventItem } from "@/types/event";
 
 const categories = ["All", "Seminar", "Workshop", "Conference", "Festival", "Webinar", "Meetup"] as const;
 
@@ -27,57 +18,53 @@ const HomePage = () => {
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [hasPreferences, setHasPreferences] = useState(false);
   const [isSupplemented, setIsSupplemented] = useState(false);
   const [preferenceMatchCount, setPreferenceMatchCount] = useState(0);
   const [userName, setUserName] = useState<string>("");
 
+  const fetchEvents = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
+    setError(null);
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (profile?.full_name) {
+        setUserName(profile.full_name.split(' ')[0]);
+      }
+
+      const result = await getPersonalizedEvents(user.id, user.email || undefined);
+      
+      setEvents(result.events);
+      setHasPreferences(result.hasPreferences);
+      setIsSupplemented(result.isSupplemented);
+      setPreferenceMatchCount(result.preferenceMatchCount);
+    } catch (err: any) {
+      setError(err.message || "Failed to load events");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     
-    const fetchEvents = async () => {
-      if (!user) {
-        if (mounted) setLoading(false);
-        return;
-      }
-      
-      try {
-        // Fetch user name
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        if (profile?.full_name && mounted) {
-          setUserName(profile.full_name.split(' ')[0]);
-        }
-
-        const {
-          events: personalizedEvents,
-          hasPreferences: prefs,
-          isSupplemented: supplemented,
-          preferenceMatchCount: matchCount,
-        } = await getPersonalizedEvents(user.id);
-        
-        if (mounted) {
-          setEvents(personalizedEvents);
-          setHasPreferences(prefs);
-          setIsSupplemented(supplemented);
-          setPreferenceMatchCount(matchCount);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error fetching personalized events:', error);
-        if (mounted) setLoading(false);
-      }
+    const run = async () => {
+      await fetchEvents();
     };
-
-    fetchEvents();
     
-    return () => {
-      mounted = false;
-    };
+    run();
+    
+    return () => { mounted = false; };
   }, [user]);
 
   if (authLoading) {
@@ -104,11 +91,9 @@ const HomePage = () => {
         canonical="/home"
       />
 
-      {/* Hero */}
       <section className="border-b">
         <div className="container mx-auto max-w-5xl px-4 py-16 md:py-24">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            {/* Greeting */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance animate-slide-up">
               {userName ? (
                 <>Welcome back, {userName}!</>
@@ -122,14 +107,11 @@ const HomePage = () => {
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-slide-up stagger-1">
               {hasPreferences
                 ? isSupplemented
-                  ? `We found ${preferenceMatchCount} ${
-                      preferenceMatchCount === 1 ? "event" : "events"
-                    } matching your interests, plus more you might enjoy`
+                  ? `We found ${preferenceMatchCount} ${preferenceMatchCount === 1 ? "event" : "events"} matching your interests, plus more you might enjoy`
                   : "Events curated based on your interests and preferences"
                 : "Discover events that inspire, educate, and connect."}
             </p>
 
-            {/* Action Buttons */}
             <div className="flex flex-wrap justify-center gap-4 pt-4 animate-slide-up stagger-2">
               {hasPreferences && isSupplemented && (
                 <Button asChild variant="outline" className="gap-2">
@@ -152,7 +134,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Filter Pills */}
       <section className="border-b bg-card sticky top-16 z-40">
         <div className="container mx-auto max-w-5xl px-4 py-4">
           <div className="flex items-center justify-between gap-4">
@@ -174,9 +155,10 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Events Grid */}
       <section className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
-        {loading ? (
+        {error ? (
+          <ErrorCard message={error} onRetry={fetchEvents} />
+        ) : loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-3">

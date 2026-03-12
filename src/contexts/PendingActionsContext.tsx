@@ -28,15 +28,16 @@ export const PendingActionsProvider: React.FC<{ children: React.ReactNode }> = (
   const { user } = useAuth();
   const [eventsWithPending, setEventsWithPending] = useState<PendingEvent[]>([]);
   const [totalPendingCount, setTotalPendingCount] = useState(0);
+  const [userEventIds, setUserEventIds] = useState<string[]>([]);
 
   const fetchPendingRegistrations = useCallback(async () => {
     if (!user) {
       setEventsWithPending([]);
       setTotalPendingCount(0);
+      setUserEventIds([]);
       return;
     }
 
-    // First get all events owned by the user
     const { data: userEvents, error: eventsError } = await supabase
       .from('events')
       .select('id')
@@ -45,12 +46,13 @@ export const PendingActionsProvider: React.FC<{ children: React.ReactNode }> = (
     if (eventsError || !userEvents?.length) {
       setEventsWithPending([]);
       setTotalPendingCount(0);
+      setUserEventIds([]);
       return;
     }
 
     const eventIds = userEvents.map(e => e.id);
+    setUserEventIds(eventIds);
 
-    // Get pending registrations for those events
     const { data: pendingGuests, error: guestsError } = await supabase
       .from('event_guests')
       .select('event_id')
@@ -63,7 +65,6 @@ export const PendingActionsProvider: React.FC<{ children: React.ReactNode }> = (
       return;
     }
 
-    // Group by event_id and count
     const countsByEvent: Record<string, number> = {};
     pendingGuests?.forEach(guest => {
       countsByEvent[guest.event_id] = (countsByEvent[guest.event_id] || 0) + 1;
@@ -84,9 +85,9 @@ export const PendingActionsProvider: React.FC<{ children: React.ReactNode }> = (
     fetchPendingRegistrations();
   }, [fetchPendingRegistrations]);
 
-  // Subscribe to real-time updates
+  // Narrowed realtime subscription — only listen to user's own events
   useEffect(() => {
-    if (!user) return;
+    if (!user || userEventIds.length === 0) return;
 
     const channel = supabase
       .channel('pending-actions-changes')
@@ -96,6 +97,7 @@ export const PendingActionsProvider: React.FC<{ children: React.ReactNode }> = (
           event: '*',
           schema: 'public',
           table: 'event_guests',
+          filter: `event_id=in.(${userEventIds.join(',')})`,
         },
         () => {
           fetchPendingRegistrations();
@@ -106,7 +108,7 @@ export const PendingActionsProvider: React.FC<{ children: React.ReactNode }> = (
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchPendingRegistrations]);
+  }, [user, userEventIds, fetchPendingRegistrations]);
 
   const getPendingCountForEvent = useCallback((eventId: string) => {
     const event = eventsWithPending.find(e => e.eventId === eventId);
