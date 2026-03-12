@@ -265,28 +265,7 @@ const EventView = () => {
               </p>
             )}
 
-            {(event.host_email || event.host_phone) && (
-              <div className="flex flex-wrap gap-4 pt-3 border-t">
-                {event.host_email && (
-                  <a 
-                    href={`mailto:${event.host_email}`}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    <Mail className="h-4 w-4" />
-                    {event.host_email}
-                  </a>
-                )}
-                {event.host_phone && (
-                  <a 
-                    href={`tel:${event.host_phone}`}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    <Phone className="h-4 w-4" />
-                    {event.host_phone}
-                  </a>
-                )}
-              </div>
-            )}
+            {/* Host contact info hidden on public view for privacy */}
           </div>
         </section>
 
