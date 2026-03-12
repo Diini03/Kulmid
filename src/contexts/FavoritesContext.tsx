@@ -3,16 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AuthRequiredModal } from '@/components/auth/AuthGuard';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-
-type EventItem = {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-  category: string;
-  price: number;
-  image_url: string | null;
-};
+import { EventItem } from '@/types/event';
 
 interface FavoritesContextType {
   favorites: EventItem[];
@@ -38,14 +29,12 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
   const { user } = useAuth();
   const location = useLocation();
 
-  // Close auth modal when location changes (user navigates to sign in/up pages)
   useEffect(() => {
     if (showAuthModal && (location.pathname === '/signin' || location.pathname === '/signup')) {
       setShowAuthModal(false);
     }
   }, [location.pathname, showAuthModal]);
 
-  // Load user favorites from database when user logs in, clear when logs out
   useEffect(() => {
     if (!user) {
       setFavorites([]);
@@ -69,10 +58,9 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
           return;
         }
 
-        // Fetch the actual event data from events table
         const { data: favoriteEvents, error: eventsError } = await supabase
           .from('events')
-          .select('*')
+          .select('id, title, date, location, category, price, image_url, status')
           .in('id', favoriteRecords.map(f => f.event_id));
 
         if (eventsError) {
@@ -96,20 +84,15 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
 
     try {
-      // Add to database
       const { error } = await supabase
         .from('user_favorites')
-        .insert({
-          user_id: user.id,
-          event_id: event.id
-        });
+        .insert({ user_id: user.id, event_id: event.id });
 
       if (error) {
         console.error('Error adding to favorites:', error);
         return;
       }
 
-      // Update local state
       setFavorites(prev => {
         const filtered = prev.filter(fav => fav.id !== event.id);
         return [...filtered, event];
@@ -126,7 +109,6 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
 
     try {
-      // Remove from database
       const { error } = await supabase
         .from('user_favorites')
         .delete()
@@ -138,7 +120,6 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
         return;
       }
 
-      // Update local state
       setFavorites(prev => prev.filter(fav => fav.id !== eventId));
     } catch (error) {
       console.error('Error removing from favorites:', error);

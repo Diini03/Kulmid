@@ -8,6 +8,9 @@ import { Calendar, Plus, ChevronRight, MapPin, Users, AlertTriangle, Clock, Comp
 import { format, parseISO, isPast } from "date-fns";
 import { Seo } from "@/components/Seo";
 import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
+import { EventEmptyState } from "@/components/common/EventEmptyState";
+import { SkeletonCard } from "@/components/common/SkeletonCard";
+
 interface Event {
   id: string;
   title: string;
@@ -18,20 +21,17 @@ interface Event {
   event_type: string | null;
   category: string;
 }
+
 const Events = () => {
-  const {
-    user,
-    loading: authLoading
-  } = useAuth();
-  const {
-    getPendingCountForEvent
-  } = usePendingActions();
+  const { user, loading: authLoading } = useAuth();
+  const { getPendingCountForEvent } = usePendingActions();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [guestCounts, setGuestCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
   const [showAuthModal, setShowAuthModal] = useState(false);
+
   useEffect(() => {
     if (!authLoading && user) {
       fetchUserEvents();
@@ -39,25 +39,25 @@ const Events = () => {
       setLoading(false);
     }
   }, [user, authLoading]);
+
   const fetchUserEvents = async () => {
     if (!user) return;
     try {
-      const {
-        data: eventsData,
-        error: eventsError
-      } = await supabase.from("events").select("id, title, date, location, status, image_url, event_type, category").eq("created_by", user.id).order("date", {
-        ascending: true
-      });
+      const { data: eventsData, error: eventsError } = await supabase
+        .from("events")
+        .select("id, title, date, location, status, image_url, event_type, category")
+        .eq("created_by", user.id)
+        .order("date", { ascending: true });
       if (eventsError) throw eventsError;
       setEvents(eventsData || []);
 
-      // Fetch guest counts for all events
       if (eventsData && eventsData.length > 0) {
         const eventIds = eventsData.map(e => e.id);
-        const {
-          data: guestsData,
-          error: guestsError
-        } = await supabase.from("event_guests").select("event_id").in("event_id", eventIds).eq("status", "confirmed");
+        const { data: guestsData, error: guestsError } = await supabase
+          .from("event_guests")
+          .select("event_id")
+          .in("event_id", eventIds)
+          .eq("status", "confirmed");
         if (!guestsError && guestsData) {
           const counts: Record<string, number> = {};
           guestsData.forEach(g => {
@@ -73,9 +73,7 @@ const Events = () => {
     }
   };
 
-  // Filter and group events by date
   const filteredEvents = useMemo(() => {
-    const now = new Date();
     return events.filter(event => {
       const eventDate = parseISO(event.date);
       if (filter === "upcoming") {
@@ -86,27 +84,23 @@ const Events = () => {
     });
   }, [events, filter]);
 
-  // Group events by date
   const groupedEvents = useMemo(() => {
     const groups: Record<string, Event[]> = {};
     filteredEvents.forEach(event => {
       const dateKey = format(parseISO(event.date), "yyyy-MM-dd");
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
+      if (!groups[dateKey]) groups[dateKey] = [];
       groups[dateKey].push(event);
     });
     return groups;
   }, [filteredEvents]);
+
   const sortedDateKeys = useMemo(() => {
     return Object.keys(groupedEvents).sort((a, b) => {
-      if (filter === "upcoming") {
-        return new Date(a).getTime() - new Date(b).getTime();
-      } else {
-        return new Date(b).getTime() - new Date(a).getTime();
-      }
+      if (filter === "upcoming") return new Date(a).getTime() - new Date(b).getTime();
+      return new Date(b).getTime() - new Date(a).getTime();
     });
   }, [groupedEvents, filter]);
+
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       draft: "bg-secondary text-muted-foreground",
@@ -122,128 +116,52 @@ const Events = () => {
 
   // Logged out state
   if (!authLoading && !user) {
-    return <>
+    return (
+      <>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
-        <div className="min-h-[70vh] flex items-center justify-center">
-          <div className="max-w-md mx-4 text-center animate-fade-in">
-            {/* Animated floating icon */}
-            <div className="relative mx-auto mb-8 w-32 h-32">
-              {/* Glowing orb behind */}
-              <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse" />
-              
-              {/* Icon container */}
-              <div className="relative w-full h-full flex items-center justify-center animate-float">
-                <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                  <CalendarPlus className="h-10 w-10" />
-                </div>
-              </div>
-            </div>
-
-            <h1 className="text-2xl font-bold mb-3">Create your first event</h1>
-            <p className="text-muted-foreground mb-2">
-              Host your next event with Kulmid.
-            </p>
-            <p className="text-muted-foreground mb-8">
-              Create beautiful event pages, invite guests, and track attendance.
-            </p>
-            <Button 
-              onClick={() => setShowAuthModal(true)} 
-              size="lg" 
-              className="px-8 gap-2"
-            >
-              <Plus className="h-5 w-5" />
-              Create Your First Event
-            </Button>
-            <div className="mt-10 pt-8">
-              <p className="text-sm text-muted-foreground mb-3">
-                or explore events happening around you
-              </p>
-              <Button asChild variant="ghost">
-                <Link to="/discover" className="gap-2">
-                  <Compass className="h-4 w-4" />
-                  Discover Events
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-        
+        <EventEmptyState onCreateClick={() => setShowAuthModal(true)} />
         <AuthRequiredModal 
           isOpen={showAuthModal} 
           onClose={() => setShowAuthModal(false)}
           message="Sign in or create an account to start creating events."
           mode="signup"
         />
-      </>;
+      </>
+    );
   }
 
   // Loading state
   if (loading || authLoading) {
-    return <>
+    return (
+      <>
         <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-      </>;
-  }
-
-  // Empty state - no events
-  if (events.length === 0) {
-    return <>
-        <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
-        <div className="min-h-[70vh] flex items-center justify-center">
-          <div className="max-w-md mx-4 text-center animate-fade-in">
-            {/* Animated floating icon */}
-            <div className="relative mx-auto mb-8 w-32 h-32">
-              {/* Glowing orb behind */}
-              <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse" />
-              
-              {/* Icon container */}
-              <div className="relative w-full h-full flex items-center justify-center animate-float">
-                <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                  <CalendarPlus className="h-10 w-10" />
-                </div>
-              </div>
-            </div>
-
-            <h1 className="text-2xl font-bold mb-3">Create your first event</h1>
-            <p className="text-muted-foreground mb-2">
-              Host your next event with Kulmid.
-            </p>
-            <p className="text-muted-foreground mb-8">
-              Create beautiful event pages, invite guests, and track attendance.
-            </p>
-            <Button asChild size="lg" variant="default" className="px-8">
-              <Link to="/create" className="gap-2">
-                <Plus className="h-5 w-5" />
-                Create Your First Event
-              </Link>
-            </Button>
-            <div className="mt-10 pt-8">
-              <p className="text-sm text-muted-foreground mb-3">
-                or explore events happening around you
-              </p>
-              <Button asChild variant="ghost">
-                <Link to="/discover" className="gap-2">
-                  <Compass className="h-4 w-4" />
-                  Discover Events
-                </Link>
-              </Button>
-            </div>
+        <div className="container max-w-5xl mx-auto px-4 py-8">
+          <div className="h-8 w-32 bg-muted rounded animate-pulse mb-8" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         </div>
-      </>;
+      </>
+    );
   }
 
-  // Main events list with timeline layout
-  return <>
+  // Empty state
+  if (events.length === 0) {
+    return (
+      <>
+        <Seo title="Events" description="Create and manage your events on Kulmid" canonical="/events" />
+        <EventEmptyState />
+      </>
+    );
+  }
+
+  return (
+    <>
       <Seo title="Events" description="Manage your events on Kulmid" canonical="/events" />
       <div className="container max-w-5xl mx-auto px-4 py-8">
-        {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <h1 className="text-3xl font-bold">My Events</h1>
           <div className="flex items-center gap-4">
-            {/* Filter Toggle */}
             <div className="flex rounded-full border p-1">
               <button onClick={() => setFilter("upcoming")} className={`px-5 py-2 text-sm font-medium rounded-full transition-colors ${filter === "upcoming" ? "bg-foreground text-background" : "text-muted-foreground"}`}>
                 Upcoming
@@ -255,61 +173,20 @@ const Events = () => {
           </div>
         </div>
 
-        {/* Empty state for current filter */}
         {filteredEvents.length === 0 && (
-          <div className="min-h-[50vh] flex items-center justify-center">
-            <div className="max-w-md mx-4 text-center animate-fade-in">
-              {/* Animated floating icon */}
-              <div className="relative mx-auto mb-8 w-32 h-32">
-                {/* Glowing orb behind */}
-                <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse" />
-                
-                {/* Icon container */}
-                <div className="relative w-full h-full flex items-center justify-center animate-float">
-                  <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                    <CalendarPlus className="h-10 w-10" />
-                  </div>
-                </div>
-              </div>
-
-              <h1 className="text-2xl font-bold mb-3">
-                {filter === "upcoming" ? "No upcoming events" : "No past events"}
-              </h1>
-              <p className="text-muted-foreground mb-8">
-                {filter === "upcoming" 
-                  ? "Create your next event and start inviting guests." 
-                  : "Your past events will appear here once completed."}
-              </p>
-              {filter === "upcoming" && (
-                <Button asChild size="lg" variant="default" className="px-8">
-                  <Link to="/create" className="gap-2">
-                    <Plus className="h-5 w-5" />
-                    Create Your First Event
-                  </Link>
-                </Button>
-              )}
-              <div className="mt-10 pt-8">
-                <p className="text-sm text-muted-foreground mb-3">
-                  or explore events happening around you
-                </p>
-                <Button asChild variant="ghost">
-                  <Link to="/discover" className="gap-2">
-                    <Compass className="h-4 w-4" />
-                    Discover Events
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
+          <EventEmptyState
+            title={filter === "upcoming" ? "No upcoming events" : "No past events"}
+            description={filter === "upcoming" ? "Create your next event and start inviting guests." : "Your past events will appear here once completed."}
+            showCreateButton={filter === "upcoming"}
+          />
         )}
 
-        {/* Timeline Events */}
         <div className="space-y-0">
           {sortedDateKeys.map((dateKey, dateIndex) => {
-          const dateEvents = groupedEvents[dateKey];
-          const date = parseISO(dateKey);
-          return <div key={dateKey} className={`flex gap-6 sm:gap-10 animate-slide-up stagger-${Math.min(dateIndex + 1, 6)}`}>
-                {/* Date Column */}
+            const dateEvents = groupedEvents[dateKey];
+            const date = parseISO(dateKey);
+            return (
+              <div key={dateKey} className={`flex gap-6 sm:gap-10 animate-slide-up stagger-${Math.min(dateIndex + 1, 6)}`}>
                 <div className="w-14 sm:w-16 flex-shrink-0 pt-2">
                   <div className="date-stack sticky top-24">
                     <div className="date-stack-month">{format(date, "MMM")}</div>
@@ -317,22 +194,17 @@ const Events = () => {
                     <div className="date-stack-year">{format(date, "yyyy")}</div>
                   </div>
                 </div>
-
-                {/* Timeline Line */}
                 <div className="relative flex flex-col items-center">
                   <div className="timeline-dot mt-3 z-10" />
                   <div className="timeline-line flex-1 -mt-1" />
                 </div>
-
-                {/* Events Column */}
                 <div className="flex-1 pb-8 space-y-4 min-w-0">
                   {dateEvents.map(event => {
-                const pendingCount = getPendingCountForEvent(event.id);
-                return <div key={event.id} onClick={() => navigate(`/events/${event.id}/manage`)} className="event-card-timeline">
+                    const pendingCount = getPendingCountForEvent(event.id);
+                    return (
+                      <div key={event.id} onClick={() => navigate(`/events/${event.id}/manage`)} className="event-card-timeline">
                         <div className="flex items-start gap-4">
-                          {/* Event Info */}
                           <div className="flex-1 min-w-0">
-                            {/* Time & Status */}
                             <div className="flex flex-wrap items-center gap-2 text-sm mb-2">
                               <span className="flex items-center gap-1.5 text-muted-foreground">
                                 <Clock className="h-4 w-4" />
@@ -341,49 +213,49 @@ const Events = () => {
                               <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${getStatusBadge(event.status)}`}>
                                 {event.status}
                               </span>
-                              {pendingCount > 0 && <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                              {pendingCount > 0 && (
+                                <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
                                   {pendingCount} pending
-                                </span>}
+                                </span>
+                              )}
                             </div>
-
-                            {/* Title */}
-                            <h3 className="font-bold text-lg text-foreground mb-2 line-clamp-1">
-                              {event.title}
-                            </h3>
-
-                            {/* Location */}
+                            <h3 className="font-bold text-lg text-foreground mb-2 line-clamp-1">{event.title}</h3>
                             <div className="flex items-center gap-2 text-sm mb-3">
-                              {event.location ? <span className="flex items-center gap-1.5 text-muted-foreground">
+                              {event.location ? (
+                                <span className="flex items-center gap-1.5 text-muted-foreground">
                                   <MapPin className="h-4 w-4 text-primary" />
                                   <span className="truncate">{event.location}</span>
-                                </span> : <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400">
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400">
                                   <AlertTriangle className="h-4 w-4" />
                                   <span>Location missing</span>
-                                </span>}
+                                </span>
+                              )}
                             </div>
-
-                            {/* Guest count */}
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                               <Users className="h-4 w-4" />
                               <span>{guestCounts[event.id] || 0} guests confirmed</span>
                             </div>
                           </div>
-
-                          {/* Thumbnail */}
-                          {event.image_url && <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 border">
-                              <img src={event.image_url} alt="" className="w-full h-full object-cover" />
-                            </div>}
-
-                          {/* Arrow */}
+                          {event.image_url && (
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 border">
+                              <img src={event.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                            </div>
+                          )}
                           <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 hidden sm:block mt-2" />
                         </div>
-                      </div>;
-              })}
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>;
-        })}
+              </div>
+            );
+          })}
         </div>
       </div>
-    </>;
+    </>
+  );
 };
+
 export default Events;

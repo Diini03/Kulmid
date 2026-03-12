@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Check, X, Eye, Calendar, MapPin, Globe, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { SkeletonCard } from "@/components/common/SkeletonCard";
+import { ErrorCard } from "@/components/common/ErrorCard";
 
 const AdminEventModeration = () => {
   const { isAdmin, loading, adminCheckComplete } = useAuth();
@@ -21,6 +23,7 @@ const AdminEventModeration = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [processing, setProcessing] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAdmin && adminCheckComplete) fetchPending();
@@ -28,13 +31,20 @@ const AdminEventModeration = () => {
 
   const fetchPending = async () => {
     setDataLoading(true);
-    const { data } = await supabase
-      .from("events")
-      .select("*, profiles:created_by(full_name)")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false });
-    setEvents(data || []);
-    setDataLoading(false);
+    setError(null);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from("events")
+        .select("*, profiles:created_by(full_name)")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (fetchError) throw fetchError;
+      setEvents(data || []);
+    } catch (err: any) {
+      setError(err.message || "Failed to load pending events");
+    } finally {
+      setDataLoading(false);
+    }
   };
 
   const handleApprove = async (eventId: string) => {
@@ -67,7 +77,33 @@ const AdminEventModeration = () => {
     setProcessing(false);
   };
 
-  if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
+  if (dataLoading) {
+    return (
+      <>
+        <Seo title="Event Moderation" canonical="/admin/events/pending" />
+        <div className="space-y-6">
+          <div>
+            <div className="h-7 w-48 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-72 bg-muted rounded animate-pulse mt-2" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Seo title="Event Moderation" canonical="/admin/events/pending" />
+        <div className="py-20">
+          <ErrorCard message={error} onRetry={fetchPending} />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -78,9 +114,7 @@ const AdminEventModeration = () => {
           <p className="text-sm text-muted-foreground mt-1">Review and approve events before they go live</p>
         </div>
 
-        {dataLoading ? (
-          <p className="text-muted-foreground py-12 text-center">Loading pending events...</p>
-        ) : events.length === 0 ? (
+        {events.length === 0 ? (
           <Card>
             <CardContent className="py-16 text-center">
               <ShieldCheck className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
@@ -93,7 +127,7 @@ const AdminEventModeration = () => {
               <Card key={event.id} className="overflow-hidden border">
                 {event.image_url && (
                   <div className="aspect-[16/9] overflow-hidden bg-muted">
-                    <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" />
+                    <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
                   </div>
                 )}
                 <CardContent className="p-4 space-y-3">
@@ -133,10 +167,10 @@ const AdminEventModeration = () => {
                       <Eye className="h-3 w-3 mr-1" />View
                     </Button>
                     <Button size="sm" variant="default" className="h-7 text-xs flex-1" onClick={() => handleApprove(event.id)} disabled={processing}>
-                      <Check className="h-3 w-3 mr-1" />Approve
+                      <Check className="h-3 w-3 mr-1" />{processing ? "..." : "Approve"}
                     </Button>
                     <Button size="sm" variant="destructive" className="h-7 text-xs flex-1" onClick={() => setRejectEvent(event)} disabled={processing}>
-                      <X className="h-3 w-3 mr-1" />Reject
+                      <X className="h-3 w-3 mr-1" />{processing ? "..." : "Reject"}
                     </Button>
                   </div>
                 </CardContent>
@@ -146,7 +180,6 @@ const AdminEventModeration = () => {
         )}
       </div>
 
-      {/* Preview Dialog */}
       <Dialog open={!!previewEvent} onOpenChange={() => setPreviewEvent(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -179,7 +212,6 @@ const AdminEventModeration = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Reject Dialog */}
       <Dialog open={!!rejectEvent} onOpenChange={() => setRejectEvent(null)}>
         <DialogContent>
           <DialogHeader>
@@ -193,7 +225,9 @@ const AdminEventModeration = () => {
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setRejectEvent(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleReject} disabled={processing}>Reject Event</Button>
+              <Button variant="destructive" onClick={handleReject} disabled={processing}>
+                {processing ? "Rejecting..." : "Reject Event"}
+              </Button>
             </div>
           </div>
         </DialogContent>

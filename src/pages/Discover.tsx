@@ -8,18 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { categories } from "@/constants/categories";
 import { Sparkles, Settings, ArrowRight } from "lucide-react";
-
-type EventItem = {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-  category: string;
-  price: number;
-  image_url: string | null;
-  description: string | null;
-  status: string;
-};
+import { ErrorCard } from "@/components/common/ErrorCard";
+import { EventItem, EVENT_LIST_COLUMNS } from "@/types/event";
 
 const Discover = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -27,44 +17,54 @@ const Discover = () => {
   const [showAll, setShowAll] = useState(false);
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const [hasPreferences, setHasPreferences] = useState(false);
   const [preferenceCount, setPreferenceCount] = useState(0);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      await supabase.rpc('update_event_status');
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Call update_event_status only once per session
+      const statusKey = 'kulmid_status_updated';
+      if (!sessionStorage.getItem(statusKey)) {
+        await supabase.rpc('update_event_status');
+        sessionStorage.setItem(statusKey, '1');
+      }
       
-      const { data: fetchedEvents } = await supabase
+      // Single query for events - derive category counts client-side
+      const { data: fetchedEvents, error: fetchError } = await supabase
         .from('events')
-        .select('*')
+        .select(EVENT_LIST_COLUMNS)
         .in('status', ['approved', 'upcoming', 'ongoing']);
       
+      if (fetchError) throw fetchError;
+
       if (fetchedEvents) {
+        // Derive category counts from the same data
+        const counts: Record<string, number> = {};
+        fetchedEvents.forEach(event => {
+          counts[event.category] = (counts[event.category] || 0) + 1;
+        });
+        setEventCounts(counts);
+
         const eventIds = fetchedEvents.map(e => e.id);
         const registrationCounts = await fetchRegistrationCounts(supabase, eventIds);
         const shuffled = smartShuffleEvents(fetchedEvents, registrationCounts);
         setAllEvents(shuffled);
         setEvents(shuffled.slice(0, 6));
       }
-
-      const { data: categoryEvents } = await supabase
-        .from('events')
-        .select('category')
-        .in('status', ['approved', 'upcoming', 'ongoing']);
-      
-      if (categoryEvents) {
-        const counts: Record<string, number> = {};
-        categoryEvents.forEach(event => {
-          counts[event.category] = (counts[event.category] || 0) + 1;
-        });
-        setEventCounts(counts);
-      }
-      
+    } catch (err: any) {
+      setError(err.message || "Failed to load events");
+    } finally {
       setLoading(false);
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -122,7 +122,6 @@ const Discover = () => {
       <section className="border-b">
         <div className="container max-w-5xl px-4 py-20 md:py-28">
           <div className="max-w-2xl mx-auto text-center space-y-6">
-            {/* Personalized Badge */}
             {user && hasPreferences && (
               <div className="animate-slide-up">
                 <span className="personalized-badge">
@@ -139,15 +138,9 @@ const Discover = () => {
               Explore experiences that inspire you
             </p>
 
-            {/* Personalization Buttons */}
             {user && hasPreferences && (
               <div className="pt-6 animate-slide-up stagger-3">
-                <Button 
-                  asChild 
-                  size="lg" 
-                  variant="default"
-                  className="gap-2"
-                >
+                <Button asChild size="lg" variant="default" className="gap-2">
                   <Link to="/home">
                     <Sparkles className="h-5 w-5" />
                     {preferenceCount > 0 
@@ -162,12 +155,7 @@ const Discover = () => {
             
             {user && !hasPreferences && (
               <div className="pt-6 animate-slide-up stagger-3">
-                <Button 
-                  asChild 
-                  size="lg" 
-                  variant="outline"
-                  className="gap-2"
-                >
+                <Button asChild size="lg" variant="outline" className="gap-2">
                   <Link to="/onboarding">
                     <Settings className="h-5 w-5" />
                     Set your preferences for personalized events
@@ -184,7 +172,6 @@ const Discover = () => {
         <div className="container max-w-5xl px-4 py-16">
           <h2 className="text-2xl font-bold mb-8">Browse by category</h2>
           
-          {/* Category Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {categories.map((category, index) => {
               const Icon = category.icon;
@@ -221,7 +208,9 @@ const Discover = () => {
           )}
         </div>
 
-        {loading ? (
+        {error ? (
+          <ErrorCard message={error} onRetry={fetchData} />
+        ) : loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-4 animate-pulse">

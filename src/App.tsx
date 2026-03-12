@@ -14,54 +14,74 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { lazy, Suspense } from "react";
 
 import Welcome from "./pages/Welcome";
-import HomePage from "./pages/HomePage";
 import Discover from "./pages/Discover";
 import NotFound from "./pages/NotFound";
 import { PublicRoute } from "./components/auth/PublicRoute";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminRoute } from "./components/auth/AdminRoute";
-import Events from "./pages/Events";
-import EventDetails from "./pages/EventDetails";
-import EventView from "./pages/EventView";
-import Favorites from "./pages/Favorites";
-import About from "./pages/About";
-import OurTeam from "./pages/OurTeam";
-import Contact from "./pages/Contact";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ResetPassword from "./pages/ResetPassword";
+
+// Lazy-loaded pages
+const HomePage = lazy(() => import("./pages/HomePage"));
+const Events = lazy(() => import("./pages/Events"));
+const EventDetails = lazy(() => import("./pages/EventDetails"));
+const EventView = lazy(() => import("./pages/EventView"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const About = lazy(() => import("./pages/About"));
+const OurTeam = lazy(() => import("./pages/OurTeam"));
+const Contact = lazy(() => import("./pages/Contact"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-
-import CalendarView from "./pages/CalendarView";
-import Create from "./pages/Create";
-import EventBuilder from "./pages/EventBuilder";
-import EventScanner from "./pages/EventScanner";
-import SystemDocumentation from "./pages/SystemDocumentation";
-import Settings from "./pages/Settings";
-
-// Admin pages
-import AdminOverview from "./pages/admin/AdminOverview";
-import AdminEventModeration from "./pages/admin/AdminEventModeration";
-import AdminAllEvents from "./pages/admin/AdminAllEvents";
-import AdminUsersPage from "./pages/admin/AdminUsers";
-import AdminRegistrations from "./pages/admin/AdminRegistrations";
-import AdminCategories from "./pages/admin/AdminCategories";
-import AdminAnalytics from "./pages/admin/AdminAnalytics";
-import AdminReports from "./pages/admin/AdminReports";
-import AdminPlatformSettings from "./pages/admin/AdminPlatformSettings";
-import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
-import Help from "./pages/Help";
+const CalendarView = lazy(() => import("./pages/CalendarView"));
+const Create = lazy(() => import("./pages/Create"));
+const EventBuilder = lazy(() => import("./pages/EventBuilder"));
+const EventScanner = lazy(() => import("./pages/EventScanner"));
+const SystemDocumentation = lazy(() => import("./pages/SystemDocumentation"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Help = lazy(() => import("./pages/Help"));
 const Profile = lazy(() => import("./pages/Profile"));
 
-const queryClient = new QueryClient();
+// Admin pages
+const AdminOverview = lazy(() => import("./pages/admin/AdminOverview"));
+const AdminEventModeration = lazy(() => import("./pages/admin/AdminEventModeration"));
+const AdminAllEvents = lazy(() => import("./pages/admin/AdminAllEvents"));
+const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminRegistrations = lazy(() => import("./pages/admin/AdminRegistrations"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
+const AdminPlatformSettings = lazy(() => import("./pages/admin/AdminPlatformSettings"));
+const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 
-// Short URL Redirect Component - redirects to standalone event view
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="animate-pulse text-muted-foreground">Loading...</div>
+  </div>
+);
+
+const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageLoader />}>{children}</Suspense>
+);
+
+// Short URL Redirect Component
 const ShortEventRedirect = () => {
   const { id } = useParams();
   return <Navigate to={`/event/${id}`} replace />;
 };
 
-// Persistent layout wrapper - Layout stays mounted across route changes
+// Persistent layout wrapper
 const LayoutRoute = () => (
   <Layout>
     <Outlet />
@@ -95,59 +115,59 @@ const App = () => (
                     {/* Public Routes */}
                     <Route path="/" element={<PublicRoute><Welcome /></PublicRoute>} />
                     <Route path="/discover" element={<Discover />} />
-                    <Route path="/discover/:id" element={<EventDetails />} />
+                    <Route path="/discover/:id" element={<SuspenseWrapper><EventDetails /></SuspenseWrapper>} />
                     
                     {/* Footer Pages */}
-                    <Route path="/about" element={<About />} />
+                    <Route path="/about" element={<SuspenseWrapper><About /></SuspenseWrapper>} />
                     <Route path="/our-story" element={<Navigate to="/about" replace />} />
                     <Route path="/achievements" element={<Navigate to="/contact" replace />} />
-                    <Route path="/our-team" element={<OurTeam />} />
-                    <Route path="/team" element={<OurTeam />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/help" element={<Help />} />
+                    <Route path="/our-team" element={<SuspenseWrapper><OurTeam /></SuspenseWrapper>} />
+                    <Route path="/team" element={<SuspenseWrapper><OurTeam /></SuspenseWrapper>} />
+                    <Route path="/contact" element={<SuspenseWrapper><Contact /></SuspenseWrapper>} />
+                    <Route path="/help" element={<SuspenseWrapper><Help /></SuspenseWrapper>} />
                     
                     {/* Protected User Routes */}
-                    <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-                    <Route path="/events" element={<Events />} />
-                    <Route path="/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
-                    <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-                    <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
-                    <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
-                    <Route path="/event/:id/builder" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
-                    <Route path="/events/:id/manage" element={<ProtectedRoute><EventBuilder /></ProtectedRoute>} />
-                    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                    <Route path="/profile/:userId" element={<Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><Profile /></Suspense>} />
+                    <Route path="/home" element={<ProtectedRoute><SuspenseWrapper><HomePage /></SuspenseWrapper></ProtectedRoute>} />
+                    <Route path="/events" element={<SuspenseWrapper><Events /></SuspenseWrapper>} />
+                    <Route path="/events/:id" element={<ProtectedRoute><SuspenseWrapper><EventDetails /></SuspenseWrapper></ProtectedRoute>} />
+                    <Route path="/favorites" element={<ProtectedRoute><SuspenseWrapper><Favorites /></SuspenseWrapper></ProtectedRoute>} />
+                    <Route path="/calendar" element={<ProtectedRoute><SuspenseWrapper><CalendarView /></SuspenseWrapper></ProtectedRoute>} />
+                    <Route path="/create" element={<ProtectedRoute><SuspenseWrapper><Create /></SuspenseWrapper></ProtectedRoute>} />
+                    <Route path="/event/:id/builder" element={<ProtectedRoute><SuspenseWrapper><EventBuilder /></SuspenseWrapper></ProtectedRoute>} />
+                    <Route path="/events/:id/manage" element={<ProtectedRoute><SuspenseWrapper><EventBuilder /></SuspenseWrapper></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><SuspenseWrapper><Settings /></SuspenseWrapper></ProtectedRoute>} />
+                    <Route path="/profile/:userId" element={<SuspenseWrapper><Profile /></SuspenseWrapper>} />
                   </Route>
 
                   {/* Routes WITHOUT Layout */}
                   <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                   <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/onboarding" element={<ProtectedRoute><Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><Onboarding /></Suspense></ProtectedRoute>} />
+                  <Route path="/onboarding" element={<ProtectedRoute><SuspenseWrapper><Onboarding /></SuspenseWrapper></ProtectedRoute>} />
                   
                   {/* Standalone Event View - No layout */}
-                  <Route path="/event/:id" element={<EventView />} />
+                  <Route path="/event/:id" element={<SuspenseWrapper><EventView /></SuspenseWrapper>} />
                   <Route path="/e/:id" element={<ShortEventRedirect />} />
                   
-                  <Route path="/event/:eventId/scanner" element={<ProtectedRoute><EventScanner /></ProtectedRoute>} />
+                  <Route path="/event/:eventId/scanner" element={<ProtectedRoute><SuspenseWrapper><EventScanner /></SuspenseWrapper></ProtectedRoute>} />
                   <Route path="/my-events" element={<Navigate to="/events" replace />} />
 
                   {/* Admin Routes - Fully separated interface */}
                   <Route element={<AdminLayoutRoute />}>
-                    <Route path="/admin" element={<AdminOverview />} />
-                    <Route path="/admin/events/pending" element={<AdminEventModeration />} />
-                    <Route path="/admin/events" element={<AdminAllEvents />} />
-                    <Route path="/admin/users" element={<AdminUsersPage />} />
-                    <Route path="/admin/registrations" element={<AdminRegistrations />} />
-                    <Route path="/admin/categories" element={<AdminCategories />} />
-                    <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                    <Route path="/admin/reports" element={<AdminReports />} />
-                    <Route path="/admin/settings/platform" element={<AdminPlatformSettings />} />
-                    <Route path="/admin/settings/admin" element={<AdminSettingsPage />} />
+                    <Route path="/admin" element={<SuspenseWrapper><AdminOverview /></SuspenseWrapper>} />
+                    <Route path="/admin/events/pending" element={<SuspenseWrapper><AdminEventModeration /></SuspenseWrapper>} />
+                    <Route path="/admin/events" element={<SuspenseWrapper><AdminAllEvents /></SuspenseWrapper>} />
+                    <Route path="/admin/users" element={<SuspenseWrapper><AdminUsersPage /></SuspenseWrapper>} />
+                    <Route path="/admin/registrations" element={<SuspenseWrapper><AdminRegistrations /></SuspenseWrapper>} />
+                    <Route path="/admin/categories" element={<SuspenseWrapper><AdminCategories /></SuspenseWrapper>} />
+                    <Route path="/admin/analytics" element={<SuspenseWrapper><AdminAnalytics /></SuspenseWrapper>} />
+                    <Route path="/admin/reports" element={<SuspenseWrapper><AdminReports /></SuspenseWrapper>} />
+                    <Route path="/admin/settings/platform" element={<SuspenseWrapper><AdminPlatformSettings /></SuspenseWrapper>} />
+                    <Route path="/admin/settings/admin" element={<SuspenseWrapper><AdminSettingsPage /></SuspenseWrapper>} />
                     <Route path="/admin/settings" element={<Navigate to="/admin/settings/platform" replace />} />
                   </Route>
 
-                  <Route path="/system-docs" element={<SystemDocumentation />} />
+                  <Route path="/system-docs" element={<SuspenseWrapper><SystemDocumentation /></SuspenseWrapper>} />
                   
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
