@@ -21,6 +21,18 @@ const REPORT_REASONS = [
   "Unsafe or harmful activity",
 ] as const;
 
+const REASON_PRIORITY: Record<string, string> = {
+  "Unsafe or harmful activity": "critical",
+  "Scam or fraud": "high",
+  "Misleading information": "medium",
+  "Fake event": "medium",
+  "Copyright violation": "medium",
+  "Duplicate event": "low",
+  "Wrong category": "low",
+  "Spam event": "low",
+  "Inappropriate content": "low",
+};
+
 interface ReportEventDialogProps {
   eventId: string;
   eventTitle: string;
@@ -63,6 +75,8 @@ export function ReportEventDialog({ eventId, eventTitle, trigger }: ReportEventD
         return;
       }
 
+      const priority = REASON_PRIORITY[reason] || "medium";
+
       const { error } = await supabase.from("reports").insert({
         type: "event",
         target_id: eventId,
@@ -70,6 +84,7 @@ export function ReportEventDialog({ eventId, eventTitle, trigger }: ReportEventD
         reason,
         description: description.trim() || null,
         status: "open",
+        priority,
       });
 
       if (error) throw error;
