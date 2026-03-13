@@ -4,6 +4,7 @@ import { AuthRequiredModal } from '@/components/auth/AuthGuard';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { EventItem } from '@/types/event';
+import { toast } from '@/hooks/use-toast';
 
 interface FavoritesContextType {
   favorites: EventItem[];
@@ -83,22 +84,26 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
       return;
     }
 
+    // Optimistic update
+    setFavorites(prev => {
+      const filtered = prev.filter(fav => fav.id !== event.id);
+      return [...filtered, event];
+    });
+
     try {
       const { error } = await supabase
         .from('user_favorites')
         .insert({ user_id: user.id, event_id: event.id });
 
       if (error) {
-        console.error('Error adding to favorites:', error);
+        // Rollback on failure
+        setFavorites(prev => prev.filter(fav => fav.id !== event.id));
+        toast({ title: 'Error', description: 'Failed to add to favorites', variant: 'destructive' });
         return;
       }
-
-      setFavorites(prev => {
-        const filtered = prev.filter(fav => fav.id !== event.id);
-        return [...filtered, event];
-      });
     } catch (error) {
-      console.error('Error adding to favorites:', error);
+      setFavorites(prev => prev.filter(fav => fav.id !== event.id));
+      toast({ title: 'Error', description: 'Failed to add to favorites', variant: 'destructive' });
     }
   };
 
@@ -108,6 +113,10 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
       return;
     }
 
+    // Optimistic update - save for rollback
+    const previousFavorites = favorites;
+    setFavorites(prev => prev.filter(fav => fav.id !== eventId));
+
     try {
       const { error } = await supabase
         .from('user_favorites')
@@ -116,13 +125,14 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
         .eq('event_id', eventId);
 
       if (error) {
-        console.error('Error removing from favorites:', error);
+        // Rollback on failure
+        setFavorites(previousFavorites);
+        toast({ title: 'Error', description: 'Failed to remove from favorites', variant: 'destructive' });
         return;
       }
-
-      setFavorites(prev => prev.filter(fav => fav.id !== eventId));
     } catch (error) {
-      console.error('Error removing from favorites:', error);
+      setFavorites(previousFavorites);
+      toast({ title: 'Error', description: 'Failed to remove from favorites', variant: 'destructive' });
     }
   };
 

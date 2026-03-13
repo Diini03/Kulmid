@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2, Send } from "lucide-react";
+import { Trash2, Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface EventBuilderSettingsProps {
@@ -18,8 +18,10 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [deleting, setDeleting] = useState(false);
+  const [resubmitting, setResubmitting] = useState(false);
 
   const handleDelete = async () => {
+    if (deleting) return;
     setDeleting(true);
 
     try {
@@ -49,6 +51,8 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
   };
 
   const handleResubmit = async () => {
+    if (resubmitting) return;
+    setResubmitting(true);
     try {
       const { error } = await supabase
         .from("events")
@@ -73,6 +77,8 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setResubmitting(false);
     }
   };
 
@@ -115,9 +121,13 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
             <p className="text-sm text-muted-foreground mb-4">
               After addressing the rejection feedback, you can resubmit your event for admin review.
             </p>
-            <Button onClick={handleResubmit}>
-              <Send className="h-4 w-4 mr-2" />
-              Resubmit for Approval
+            <Button onClick={handleResubmit} disabled={resubmitting}>
+              {resubmitting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              {resubmitting ? "Resubmitting..." : "Resubmit for Approval"}
             </Button>
           </CardContent>
         </Card>
@@ -146,8 +156,17 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-                  Delete Event
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive text-destructive-foreground"
+                  disabled={deleting}
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : "Delete Event"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

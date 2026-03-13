@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Check, X, Eye, Calendar, MapPin, Globe, ShieldCheck } from "lucide-react";
+import { Check, X, Eye, Calendar, MapPin, Globe, ShieldCheck, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { ErrorCard } from "@/components/common/ErrorCard";
+import { useProcessingSet } from "@/hooks/useAsyncAction";
 
 const AdminEventModeration = () => {
   const { isAdmin, loading, adminCheckComplete } = useAuth();
@@ -21,7 +22,8 @@ const AdminEventModeration = () => {
   const [previewEvent, setPreviewEvent] = useState<any>(null);
   const [rejectEvent, setRejectEvent] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
-  const [processing, setProcessing] = useState(false);
+  const [rejectProcessing, setRejectProcessing] = useState(false);
+  const { isProcessing, startProcessing, stopProcessing } = useProcessingSet();
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,20 +50,21 @@ const AdminEventModeration = () => {
   };
 
   const handleApprove = async (eventId: string) => {
-    setProcessing(true);
+    if (isProcessing(eventId)) return;
+    startProcessing(eventId);
     const { error } = await supabase.from("events").update({ status: "approved" }).eq("id", eventId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Event approved", description: "Now visible in Discover." });
-      fetchPending();
+      setEvents(prev => prev.filter(e => e.id !== eventId));
     }
-    setProcessing(false);
+    stopProcessing(eventId);
   };
 
   const handleReject = async () => {
     if (!rejectEvent) return;
-    setProcessing(true);
+    setRejectProcessing(true);
     const { error } = await supabase
       .from("events")
       .update({ status: "rejected", rejection_reason: rejectionReason || null })
@@ -70,11 +73,11 @@ const AdminEventModeration = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Event rejected" });
+      setEvents(prev => prev.filter(e => e.id !== rejectEvent.id));
       setRejectEvent(null);
       setRejectionReason("");
-      fetchPending();
     }
-    setProcessing(false);
+    setRejectProcessing(false);
   };
 
   if (dataLoading) {
@@ -123,59 +126,79 @@ const AdminEventModeration = () => {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {events.map((event: any) => (
-              <Card key={event.id} className="overflow-hidden border">
-                {event.image_url && (
-                  <div className="aspect-[16/9] overflow-hidden bg-muted">
-                    <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
-                  </div>
-                )}
-                <CardContent className="p-4 space-y-3">
-                  <div>
-                    <h3 className="font-semibold text-sm line-clamp-1">{event.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">by {(event.profiles as any)?.full_name || "Unknown"}</p>
-                  </div>
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(event.date), "MMM d, yyyy · h:mm a")}
+            {events.map((event: any) => {
+              const eventProcessing = isProcessing(event.id);
+              return (
+                <Card key={event.id} className="overflow-hidden border">
+                  {event.image_url && (
+                    <div className="aspect-[16/9] overflow-hidden bg-muted">
+                      <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
                     </div>
-                    {event.location && (
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3" />
-                        <span className="truncate">{event.location}</span>
-                      </div>
-                    )}
-                    {event.meeting_link && (
-                      <div className="flex items-center gap-1.5">
-                        <Globe className="h-3 w-3" />
-                        <span>Online</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px]">{event.category}</Badge>
-                    {event.max_attendees && (
-                      <span className="text-[10px] text-muted-foreground">Max {event.max_attendees}</span>
-                    )}
-                  </div>
-                  {event.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{event.description}</p>
                   )}
-                  <div className="flex gap-1.5 pt-2 border-t">
-                    <Button size="sm" variant="ghost" className="h-7 text-xs flex-1" onClick={() => setPreviewEvent(event)}>
-                      <Eye className="h-3 w-3 mr-1" />View
-                    </Button>
-                    <Button size="sm" variant="default" className="h-7 text-xs flex-1" onClick={() => handleApprove(event.id)} disabled={processing}>
-                      <Check className="h-3 w-3 mr-1" />{processing ? "..." : "Approve"}
-                    </Button>
-                    <Button size="sm" variant="destructive" className="h-7 text-xs flex-1" onClick={() => setRejectEvent(event)} disabled={processing}>
-                      <X className="h-3 w-3 mr-1" />{processing ? "..." : "Reject"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <CardContent className="p-4 space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-sm line-clamp-1">{event.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">by {(event.profiles as any)?.full_name || "Unknown"}</p>
+                    </div>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-3 w-3" />
+                        {format(new Date(event.date), "MMM d, yyyy · h:mm a")}
+                      </div>
+                      {event.location && (
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="h-3 w-3" />
+                          <span className="truncate">{event.location}</span>
+                        </div>
+                      )}
+                      {event.meeting_link && (
+                        <div className="flex items-center gap-1.5">
+                          <Globe className="h-3 w-3" />
+                          <span>Online</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px]">{event.category}</Badge>
+                      {event.max_attendees && (
+                        <span className="text-[10px] text-muted-foreground">Max {event.max_attendees}</span>
+                      )}
+                    </div>
+                    {event.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">{event.description}</p>
+                    )}
+                    <div className="flex gap-1.5 pt-2 border-t">
+                      <Button size="sm" variant="ghost" className="h-7 text-xs flex-1" onClick={() => setPreviewEvent(event)}>
+                        <Eye className="h-3 w-3 mr-1" />View
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-7 text-xs flex-1"
+                        onClick={() => handleApprove(event.id)}
+                        disabled={eventProcessing}
+                      >
+                        {eventProcessing ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <Check className="h-3 w-3 mr-1" />
+                        )}
+                        {eventProcessing ? "Approving..." : "Approve"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-7 text-xs flex-1"
+                        onClick={() => setRejectEvent(event)}
+                        disabled={eventProcessing}
+                      >
+                        <X className="h-3 w-3 mr-1" />Reject
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -200,10 +223,20 @@ const AdminEventModeration = () => {
                 {previewEvent.location && <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" />{previewEvent.location}</div>}
               </div>
               <div className="flex gap-2 pt-4 border-t">
-                <Button className="flex-1" onClick={() => { handleApprove(previewEvent.id); setPreviewEvent(null); }} disabled={processing}>
-                  <Check className="h-4 w-4 mr-2" />Approve
+                <Button
+                  className="flex-1"
+                  onClick={() => { handleApprove(previewEvent.id); setPreviewEvent(null); }}
+                  disabled={isProcessing(previewEvent.id)}
+                >
+                  {isProcessing(previewEvent.id) ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                  Approve
                 </Button>
-                <Button variant="destructive" className="flex-1" onClick={() => { setRejectEvent(previewEvent); setPreviewEvent(null); }} disabled={processing}>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={() => { setRejectEvent(previewEvent); setPreviewEvent(null); }}
+                  disabled={isProcessing(previewEvent.id)}
+                >
                   <X className="h-4 w-4 mr-2" />Reject
                 </Button>
               </div>
@@ -225,8 +258,13 @@ const AdminEventModeration = () => {
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setRejectEvent(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleReject} disabled={processing}>
-                {processing ? "Rejecting..." : "Reject Event"}
+              <Button variant="destructive" onClick={handleReject} disabled={rejectProcessing}>
+                {rejectProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : "Reject Event"}
               </Button>
             </div>
           </div>

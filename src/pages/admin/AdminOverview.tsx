@@ -6,8 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
-  Calendar, Users, ClipboardList, ShieldCheck, Zap, CalendarCheck, Check, X, Eye,
+  Calendar, Users, ClipboardList, ShieldCheck, Zap, CalendarCheck, Check, X, Eye, Loader2,
 } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -32,7 +35,9 @@ const AdminOverview = () => {
   const [registrationTrend, setRegistrationTrend] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<{ id: string; action: 'approve' | 'reject' } | null>(null);
+  const [rejectEvent, setRejectEvent] = useState<any>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   useEffect(() => {
     if (isAdmin && adminCheckComplete) fetchData();
@@ -55,7 +60,6 @@ const AdminOverview = () => {
         supabase.from("events").select("*", { count: "exact", head: true }).gte("date", todayStart.toISOString()).lte("date", todayEnd.toISOString()),
         supabase.from("events").select("*", { count: "exact", head: true }).in("status", ["approved", "upcoming", "ongoing"]),
         supabase.from("events").select("category"),
-        // Single query for 7-day registration trend instead of 7 sequential queries
         supabase.from("event_guests").select("created_at").gte("created_at", sevenDaysAgo.toISOString()).lte("created_at", todayEnd.toISOString()),
         supabase.from("event_guests").select("name, email, created_at, event_id, status").order("created_at", { ascending: false }).limit(8),
       ]);
@@ -73,7 +77,6 @@ const AdminOverview = () => {
 
       setPendingEvents(pendingRes.data || []);
 
-      // Category distribution
       if (catEventsRes.data) {
         const counts: Record<string, number> = {};
         catEventsRes.data.forEach((e: any) => {
@@ -82,7 +85,6 @@ const AdminOverview = () => {
         setCategoryData(Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 5));
       }
 
-      // Registration trend - group client-side
       if (trendRes.data) {
         const dayCounts: Record<string, number> = {};
         for (let i = 6; i >= 0; i--) {
@@ -107,25 +109,35 @@ const AdminOverview = () => {
   };
 
   const handleApprove = async (eventId: string) => {
-    setActionLoading(eventId);
+    if (actionLoading) return;
+    setActionLoading({ id: eventId, action: 'approve' });
     const { error } = await supabase.from("events").update({ status: "approved" }).eq("id", eventId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Event approved" });
-      fetchData();
+      // Local state update instead of full re-fetch
+      setPendingEvents(prev => prev.filter(e => e.id !== eventId));
+      setStats(prev => ({ ...prev, pendingApprovals: prev.pendingApprovals - 1 }));
     }
     setActionLoading(null);
   };
 
-  const handleReject = async (eventId: string) => {
-    setActionLoading(eventId);
-    const { error } = await supabase.from("events").update({ status: "rejected" }).eq("id", eventId);
+  const handleRejectSubmit = async () => {
+    if (!rejectEvent || actionLoading) return;
+    setActionLoading({ id: rejectEvent.id, action: 'reject' });
+    const { error } = await supabase
+      .from("events")
+      .update({ status: "rejected", rejection_reason: rejectionReason || null })
+      .eq("id", rejectEvent.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Event rejected" });
-      fetchData();
+      setPendingEvents(prev => prev.filter(e => e.id !== rejectEvent.id));
+      setStats(prev => ({ ...prev, pendingApprovals: prev.pendingApprovals - 1 }));
+      setRejectEvent(null);
+      setRejectionReason("");
     }
     setActionLoading(null);
   };
@@ -220,31 +232,53 @@ const AdminOverview = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pendingEvents.map((event: any) => (
-                    <TableRow key={event.id}>
-                      <TableCell>
-                        <div className="font-medium text-sm">{event.title}</div>
-                        <div className="text-xs text-muted-foreground line-clamp-1">{event.description}</div>
-                      </TableCell>
-                      <TableCell className="text-sm">{(event.profiles as any)?.full_name || "Unknown"}</TableCell>
-                      <TableCell className="text-sm">{format(new Date(event.date), "MMM d, yyyy")}</TableCell>
-                      <TableCell><Badge variant="outline" className="text-xs">{event.category}</Badge></TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{format(new Date(event.created_at), "MMM d")}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button size="sm" variant="ghost" asChild>
-                            <a href={`/event/${event.id}`} target="_blank"><Eye className="h-3.5 w-3.5" /></a>
-                          </Button>
-                          <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => handleApprove(event.id)} disabled={actionLoading === event.id}>
-                            <Check className="h-3 w-3 mr-1" />{actionLoading === event.id ? "..." : "Approve"}
-                          </Button>
-                          <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => handleReject(event.id)} disabled={actionLoading === event.id}>
-                            <X className="h-3 w-3 mr-1" />{actionLoading === event.id ? "..." : "Reject"}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {pendingEvents.map((event: any) => {
+                    const isThisLoading = actionLoading?.id === event.id;
+                    const loadingAction = actionLoading?.action;
+                    return (
+                      <TableRow key={event.id}>
+                        <TableCell>
+                          <div className="font-medium text-sm">{event.title}</div>
+                          <div className="text-xs text-muted-foreground line-clamp-1">{event.description}</div>
+                        </TableCell>
+                        <TableCell className="text-sm">{(event.profiles as any)?.full_name || "Unknown"}</TableCell>
+                        <TableCell className="text-sm">{format(new Date(event.date), "MMM d, yyyy")}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs">{event.category}</Badge></TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{format(new Date(event.created_at), "MMM d")}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button size="sm" variant="ghost" asChild>
+                              <a href={`/event/${event.id}`} target="_blank"><Eye className="h-3.5 w-3.5" /></a>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="h-7 text-xs"
+                              onClick={() => handleApprove(event.id)}
+                              disabled={!!actionLoading}
+                            >
+                              {isThisLoading && loadingAction === 'approve' ? (
+                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              ) : (
+                                <Check className="h-3 w-3 mr-1" />
+                              )}
+                              {isThisLoading && loadingAction === 'approve' ? "Approving..." : "Approve"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="h-7 text-xs"
+                              onClick={() => { setRejectEvent(event); setRejectionReason(""); }}
+                              disabled={!!actionLoading}
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
@@ -323,6 +357,42 @@ const AdminOverview = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Reject Dialog with reason */}
+      <Dialog open={!!rejectEvent} onOpenChange={() => setRejectEvent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Event</DialogTitle>
+            <DialogDescription>Provide a reason for rejecting "{rejectEvent?.title}"</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Rejection Reason (Optional)</Label>
+              <Textarea
+                placeholder="Let the creator know why..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setRejectEvent(null)}>Cancel</Button>
+              <Button
+                variant="destructive"
+                onClick={handleRejectSubmit}
+                disabled={!!actionLoading}
+              >
+                {actionLoading?.action === 'reject' ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : "Reject Event"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

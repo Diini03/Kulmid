@@ -279,7 +279,16 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
         </div>
         <div className="p-4">
           {loading ? (
-            <div className="text-sm text-muted-foreground">Loading...</div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="text-center space-y-2">
+                    <div className="h-8 w-12 mx-auto bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-16 mx-auto bg-muted rounded animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="space-y-4">
               {/* Stats */}
