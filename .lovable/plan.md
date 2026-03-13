@@ -1,114 +1,90 @@
 
 
-## Notification System (Implemented)
+# Admin Reporting & Moderation System
 
-### Database Triggers
-All notification triggers are attached and active:
+## Current State
 
-| Trigger | Table | Event | Notification Type |
-|---------|-------|-------|-------------------|
-| `on_profile_created_welcome` | profiles | INSERT | `welcome` |
-| `on_event_created_milestone` | events | INSERT | `milestone` |
-| `on_guest_registered_notify` | event_guests | INSERT | `registration` |
-| `on_event_status_change` | events | UPDATE | `event_approved` / `event_rejected` |
-| `on_registration_status_change` | event_guests | UPDATE | `registration_confirmed` / `registration_rejected` |
-| `on_guest_checked_in` | event_guests | UPDATE | `check_in` |
-| `on_new_event_admin_notify` | events | INSERT | `admin_new_event` |
+The `reports` table already exists with columns: `id`, `type`, `target_id`, `reported_by`, `reason`, `status`, `created_at`, `resolved_at`, `resolved_by`. RLS is in place (admins manage all, authenticated users can insert). The `AdminReports.tsx` page exists but is minimal — no description field, no enriched target data, no user-facing report submission UI, and limited admin actions.
 
-### Settings Integration
-Triggers respect `notification_settings` table preferences:
-- `guest_alerts` → registration + check_in notifications for organizers
-- `registration_confirmations` → registration_confirmed/rejected for attendees
+## What Will Be Implemented
 
-### Frontend
-- NotificationsPanel groups same-type notifications within 10min window
-- Clickable notifications navigate to relevant event
-- Icons per type: green CheckCircle (approved), red XCircle (rejected), Ticket (registration), ScanLine (check-in), ShieldCheck (admin)
+### Phase 1: Database — Add `description` column and `admin_notes` column
 
-### Not Yet Implemented
-- Event reminders (24h/1h) — requires pg_cron
-- Email notifications for new types — EmailJS free tier limited to 2 templates
-- Push notifications — requires service worker infrastructure
+Add two columns to `reports`:
+- `description` (text, nullable) — detailed report explanation from the reporter
+- `admin_notes` (text, nullable) — admin's internal notes when resolving
 
----
-
-## Add Free/Paid Toggle with Payout Phone Number
-
-### Overview
-Replace the plain price input with a **Free/Paid toggle button**. Default is "Free". When "Paid" is selected, reveal a price field and a payout phone number field (where creators receive their earnings). Phone numbers are validated for Somali format.
-
-### Database Change
-Add a `payout_phone` column to the `events` table:
+Migration SQL:
 ```sql
-ALTER TABLE public.events ADD COLUMN payout_phone text;
-```
-This keeps `host_phone` for contact purposes and `payout_phone` for payment/earnings.
-
-### UI Design
-
-```text
-Ticket Pricing
-+----------+----------+
-|   Free   |   Paid   |   (toggle buttons, "Free" selected by default)
-+----------+----------+
-
--- When "Paid" is clicked: --
-
-Price ($)        [__________]
-Payout Phone     [+252 _________]
-  "We'll send your earnings to this number"
+ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS admin_notes text;
 ```
 
-### Phone Validation
-Somali mobile numbers must start with `+252` followed by valid prefixes:
-- `61, 62, 63, 68` (Hormuud/EVC Plus)
-- `71, 77` (Telesom/Zaad)
-- Other valid: `65, 66, 69, 70, 73, 74, 76, 78, 79, 90`
+### Phase 2: Report Submission UI
 
-Regex pattern: `/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/`
+**A. ReportEventDialog component** (`src/components/events/ReportEventDialog.tsx`)
+- Triggered from a "Report" button on `EventView.tsx` and `EventDetails.tsx`
+- Form fields: reason (select from predefined list), description (textarea)
+- Predefined reasons: Inappropriate content, Misleading information, Scam/fraud, Spam, Duplicate event, Fake event, Wrong category, Copyright violation, Unsafe activity
+- Submits to `reports` table with `type: 'event'`, `target_id: event.id`, `reported_by: user.id`
+- Requires authentication — show auth modal if not logged in
+- Success toast, prevents duplicate reports (check if user already reported this event)
 
-### Files to Change
+**B. Add Report button to EventView.tsx and EventDetails.tsx**
+- Small "Report" link/button near the share button
+- Only visible to authenticated users (or shows auth prompt)
 
-**1. `src/pages/Create.tsx`** (user event creation form)
-- Add `isPaid` state (default `false`)
-- Replace the price input with a Free/Paid toggle (two styled buttons)
-- When "Free": set price to 0, hide price + payout phone fields
-- When "Paid": show price input + payout phone input with Somali validation
-- Add `payout_phone` to the Zod schema (required when price > 0)
-- Save `payout_phone` to the database on submit
+### Phase 3: Enhanced AdminReports Page
 
-**2. `src/components/admin/EventForm.tsx`** (admin event form)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
+Complete rewrite of `AdminReports.tsx` with:
 
-**3. `src/components/events/EventBuilderEdit.tsx`** (event builder edit tab)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
+**A. Stats cards** — keep existing (total, open, reviewing, resolved)
 
-### Validation Schema Update (in all 3 forms)
-```typescript
-payout_phone: z.string()
-  .regex(/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/, 
-    "Enter a valid Somali phone number (e.g. +252611234567)")
-  .optional()
-  .or(z.literal(""))
-```
+**B. Enriched report table**
+- Fetch reporter profile name via join: `profiles:reported_by(full_name)`
+- For event-type reports, fetch event title by doing a secondary lookup or storing it
+- Show: type icon, reason, description preview, reporter name, target name, date, status, report count badge (how many reports share the same target_id)
+- Filters: status, type (event/user/system/platform)
 
-With a `.refine()` to make it required when price > 0:
-```typescript
-.refine((data) => {
-  if (data.price > 0) {
-    return !!data.payout_phone && data.payout_phone.length > 0;
-  }
-  return true;
-}, {
-  message: "Payout phone number is required for paid events",
-  path: ["payout_phone"],
-})
-```
+**C. Report detail dialog** — enhanced with:
+- Full description text
+- Reporter info (name)
+- For event reports: link to view event, event title, organizer
+- Admin notes textarea (editable, saved on resolve/dismiss)
+- Status workflow buttons: Open → Under Review → Resolved/Dismissed
+- Quick admin actions for event reports: "Reject Event", "View Event"
+- Processing states on all action buttons
 
-### What This Does NOT Include (for later)
-- Attendee payment flow (how users pay for paid events)
-- WAAFI API integration
-- Admin dashboard paid event details view
-- Payout tracking system
+**D. Report count badges**
+- Group reports by `target_id` and show count next to each (e.g., "3 reports" badge)
+- Prioritize targets with multiple reports
+
+### Phase 4: Admin Actions from Reports
+
+When resolving an event report, provide inline actions:
+- **View Event** — link to `/events/{id}` in new tab
+- **Reject Event** — calls supabase update on events table, sets status to 'rejected' with reason
+- **Dismiss Report** — marks as dismissed with optional admin notes
+
+All actions use `useProcessingSet` for per-item loading states.
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| 1 migration | Add `description` and `admin_notes` columns |
+| `src/components/events/ReportEventDialog.tsx` | New — report submission form |
+| `src/pages/EventView.tsx` | Add Report button |
+| `src/pages/EventDetails.tsx` | Add Report button |
+| `src/pages/admin/AdminReports.tsx` | Full enhancement |
+
+**Total: 1 migration, 1 new component, 3 modified files.**
+
+## What Cannot Be Solved Here
+
+| Item | Reason |
+|------|--------|
+| Automated system alerts (registration spikes) | Requires `pg_cron` or scheduled edge function for anomaly detection |
+| User-to-user reporting (report a user profile) | No public user profile pages exist yet to attach a report button; can be added when profile pages are implemented |
+| Rate limiting on report submissions | Requires server-side rate limiting infrastructure |
+
