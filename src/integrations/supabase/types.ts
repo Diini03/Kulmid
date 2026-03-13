@@ -451,6 +451,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          priority: string
           reason: string
           reported_by: string | null
           resolved_at: string | null
@@ -464,6 +465,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          priority?: string
           reason: string
           reported_by?: string | null
           resolved_at?: string | null
@@ -477,6 +479,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          priority?: string
           reason?: string
           reported_by?: string | null
           resolved_at?: string | null
