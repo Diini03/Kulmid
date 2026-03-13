@@ -7,9 +7,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle2, XCircle, Clock, User, Mail, Phone, Building2, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, User, Mail, Phone, Building2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { sendRegistrationEmail, generateCheckInToken, isEmailJSConfigured } from "@/lib/emailjs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useProcessingSet } from "@/hooks/useAsyncAction";
 
 interface RegistrationsTabProps {
   eventId: string;
@@ -22,6 +24,8 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "registered" | "rejected">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { isProcessing, startProcessing, stopProcessing } = useProcessingSet();
+  const [bulkProcessing, setBulkProcessing] = useState(false);
 
   useEffect(() => {
     fetchRegistrations();
@@ -78,9 +82,13 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
   };
 
   const handleApprove = async (ids: string[]) => {
+    const processingBatch = ids.filter(id => !isProcessing(id));
+    if (processingBatch.length === 0) return;
+    
+    processingBatch.forEach(startProcessing);
+
     try {
-      for (const id of ids) {
-        // Get guest and event details
+      for (const id of processingBatch) {
         const { data: guest } = await supabase
           .from("event_guests")
           .select("*, events:event_id(title, date, location)")
@@ -89,10 +97,8 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
         if (!guest) continue;
 
-        // Generate check-in token
         const checkInToken = generateCheckInToken();
 
-        // Update guest status and token
         const { error } = await supabase
           .from("event_guests")
           .update({
@@ -104,7 +110,9 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
         if (error) throw error;
 
-        // Send approval email via EmailJS
+        // Update local state immediately
+        setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status: "registered", check_in_token: checkInToken } : r));
+
         if (isEmailJSConfigured() && guest.email) {
           const event = guest.events as any;
           await sendRegistrationEmail({
@@ -121,10 +129,9 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
       toast({
         title: "✅ Approved",
-        description: `${ids.length} registration(s) approved successfully`,
+        description: `${processingBatch.length} registration(s) approved successfully`,
       });
 
-      fetchRegistrations();
       setSelectedIds(new Set());
     } catch (error: any) {
       toast({
@@ -132,13 +139,19 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
         description: error.message || "Failed to approve registration",
         variant: "destructive",
       });
+    } finally {
+      processingBatch.forEach(stopProcessing);
     }
   };
 
   const handleReject = async (ids: string[]) => {
+    const processingBatch = ids.filter(id => !isProcessing(id));
+    if (processingBatch.length === 0) return;
+    
+    processingBatch.forEach(startProcessing);
+
     try {
-      for (const id of ids) {
-        // Get guest and event details
+      for (const id of processingBatch) {
         const { data: guest } = await supabase
           .from("event_guests")
           .select("*, events:event_id(title, date, location)")
@@ -147,7 +160,6 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
         if (!guest) continue;
 
-        // Update guest status
         const { error } = await supabase
           .from("event_guests")
           .update({ status: "rejected" })
@@ -155,7 +167,9 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
         if (error) throw error;
 
-        // Send rejection email via EmailJS
+        // Update local state immediately
+        setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status: "rejected" } : r));
+
         if (isEmailJSConfigured() && guest.email) {
           const event = guest.events as any;
           await sendRegistrationEmail({
@@ -172,10 +186,9 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
       toast({
         title: "Registration Rejected",
-        description: `${ids.length} registration(s) rejected`,
+        description: `${processingBatch.length} registration(s) rejected`,
       });
 
-      fetchRegistrations();
       setSelectedIds(new Set());
     } catch (error: any) {
       toast({
@@ -183,20 +196,22 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
         description: error.message || "Failed to reject registration",
         variant: "destructive",
       });
+    } finally {
+      processingBatch.forEach(stopProcessing);
     }
   };
 
   const handleBulkAction = async (action: "approve" | "reject") => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
+    setBulkProcessing(true);
 
-    for (const id of ids) {
-      if (action === "approve") {
-        await handleApprove([id]);
-      } else {
-        await handleReject([id]);
-      }
+    if (action === "approve") {
+      await handleApprove(ids);
+    } else {
+      await handleReject(ids);
     }
+    setBulkProcessing(false);
   };
 
   const toggleSelection = (id: string) => {
@@ -242,7 +257,29 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading registrations...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <div className="text-center space-y-2">
+                  <Skeleton className="h-8 w-8 mx-auto rounded-full" />
+                  <Skeleton className="h-8 w-12 mx-auto" />
+                  <Skeleton className="h-4 w-16 mx-auto" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Skeleton className="h-16 w-full" />
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -301,28 +338,16 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
       {/* Filter Tabs */}
       <div className="flex gap-2 flex-wrap">
-        <Button
-          variant={filterStatus === "all" ? "default" : "outline"}
-          onClick={() => setFilterStatus("all")}
-        >
+        <Button variant={filterStatus === "all" ? "default" : "outline"} onClick={() => setFilterStatus("all")}>
           All ({registrations.length})
         </Button>
-        <Button
-          variant={filterStatus === "pending" ? "default" : "outline"}
-          onClick={() => setFilterStatus("pending")}
-        >
+        <Button variant={filterStatus === "pending" ? "default" : "outline"} onClick={() => setFilterStatus("pending")}>
           Pending ({stats.pending})
         </Button>
-        <Button
-          variant={filterStatus === "registered" ? "default" : "outline"}
-          onClick={() => setFilterStatus("registered")}
-        >
+        <Button variant={filterStatus === "registered" ? "default" : "outline"} onClick={() => setFilterStatus("registered")}>
           Approved ({stats.registered})
         </Button>
-        <Button
-          variant={filterStatus === "rejected" ? "default" : "outline"}
-          onClick={() => setFilterStatus("rejected")}
-        >
+        <Button variant={filterStatus === "rejected" ? "default" : "outline"} onClick={() => setFilterStatus("rejected")}>
           Rejected ({stats.rejected})
         </Button>
       </div>
@@ -338,16 +363,18 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
                   size="sm"
                   variant="default"
                   onClick={() => handleBulkAction("approve")}
+                  disabled={bulkProcessing}
                 >
-                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                  {bulkProcessing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
                   Approve Selected
                 </Button>
                 <Button
                   size="sm"
                   variant="destructive"
                   onClick={() => handleBulkAction("reject")}
+                  disabled={bulkProcessing}
                 >
-                  <XCircle className="h-4 w-4 mr-1" />
+                  {bulkProcessing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <XCircle className="h-4 w-4 mr-1" />}
                   Reject Selected
                 </Button>
               </div>
@@ -377,140 +404,160 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredRegistrations.map((registration) => (
-                <Collapsible key={registration.id}>
-                  <div className="border border-border rounded-lg p-4">
-                    <div className="flex items-start gap-4">
-                      <Checkbox
-                        checked={selectedIds.has(registration.id)}
-                        onCheckedChange={() => toggleSelection(registration.id)}
-                      />
-                      
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-semibold">{registration.name}</p>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                              <span className="flex items-center gap-1">
-                                <Mail className="h-3 w-3" />
-                                {registration.email}
-                              </span>
-                              {registration.phone_number && (
+              {filteredRegistrations.map((registration) => {
+                const rowProcessing = isProcessing(registration.id);
+                return (
+                  <Collapsible key={registration.id}>
+                    <div className={`border border-border rounded-lg p-4 ${rowProcessing ? 'opacity-70' : ''}`}>
+                      <div className="flex items-start gap-4">
+                        <Checkbox
+                          checked={selectedIds.has(registration.id)}
+                          onCheckedChange={() => toggleSelection(registration.id)}
+                          disabled={rowProcessing}
+                        />
+                        
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="font-semibold">{registration.name}</p>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                                 <span className="flex items-center gap-1">
-                                  <Phone className="h-3 w-3" />
-                                  {registration.phone_number}
+                                  <Mail className="h-3 w-3" />
+                                  {registration.email}
                                 </span>
-                              )}
-                            </div>
-                            {(registration.organization || registration.job_title) && (
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                {registration.organization && (
+                                {registration.phone_number && (
                                   <span className="flex items-center gap-1">
-                                    <Building2 className="h-3 w-3" />
-                                    {registration.organization}
+                                    <Phone className="h-3 w-3" />
+                                    {registration.phone_number}
                                   </span>
                                 )}
-                                {registration.job_title && (
-                                  <span>• {registration.job_title}</span>
-                                )}
                               </div>
-                            )}
+                              {(registration.organization || registration.job_title) && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                  {registration.organization && (
+                                    <span className="flex items-center gap-1">
+                                      <Building2 className="h-3 w-3" />
+                                      {registration.organization}
+                                    </span>
+                                  )}
+                                  {registration.job_title && (
+                                    <span>• {registration.job_title}</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(registration.status)}
+                              <CollapsibleTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    setExpandedId(expandedId === registration.id ? null : registration.id)
+                                  }
+                                >
+                                  {expandedId === registration.id ? (
+                                    <ChevronUp className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </CollapsibleTrigger>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(registration.status)}
-                            <CollapsibleTrigger asChild>
+
+                          {registration.status === "pending" && (
+                            <div className="flex gap-2 pt-2">
                               <Button
-                                variant="ghost"
                                 size="sm"
-                                onClick={() =>
-                                  setExpandedId(expandedId === registration.id ? null : registration.id)
-                                }
+                                variant="default"
+                                onClick={() => handleApprove([registration.id])}
+                                disabled={rowProcessing}
                               >
-                                {expandedId === registration.id ? (
-                                  <ChevronUp className="h-4 w-4" />
+                                {rowProcessing ? (
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                                 ) : (
-                                  <ChevronDown className="h-4 w-4" />
+                                  <CheckCircle2 className="h-4 w-4 mr-1" />
                                 )}
+                                Approve
                               </Button>
-                            </CollapsibleTrigger>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleReject([registration.id])}
+                                disabled={rowProcessing}
+                              >
+                                {rowProcessing ? (
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                ) : (
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                )}
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <CollapsibleContent className="pt-4 mt-4 border-t">
+                        <div className="space-y-3 text-sm">
+                          {registration.degree && (
+                            <div>
+                              <span className="font-medium">Education:</span>
+                              <p className="text-muted-foreground">{registration.degree}</p>
+                            </div>
+                          )}
+                          {registration.why_interested && (
+                            <div>
+                              <span className="font-medium">Why interested:</span>
+                              <p className="text-muted-foreground">{registration.why_interested}</p>
+                            </div>
+                          )}
+                          {registration.what_to_gain && (
+                            <div>
+                              <span className="font-medium">What to gain:</span>
+                              <p className="text-muted-foreground">{registration.what_to_gain}</p>
+                            </div>
+                          )}
+                          {registration.about && (
+                            <div>
+                              <span className="font-medium">About:</span>
+                              <p className="text-muted-foreground">{registration.about}</p>
+                            </div>
+                          )}
+                          {registration.heard_from && (
+                            <div>
+                              <span className="font-medium">Heard from:</span>
+                              <p className="text-muted-foreground">{registration.heard_from}</p>
+                            </div>
+                          )}
+                          {registration.questions && (
+                            <div>
+                              <span className="font-medium">Questions:</span>
+                              <p className="text-muted-foreground">{registration.questions}</p>
+                            </div>
+                          )}
+                          {registration.dietary_restrictions && (
+                            <div>
+                              <span className="font-medium">Dietary restrictions:</span>
+                              <p className="text-muted-foreground">{registration.dietary_restrictions}</p>
+                            </div>
+                          )}
+                          {registration.special_requirements && (
+                            <div>
+                              <span className="font-medium">Special requirements:</span>
+                              <p className="text-muted-foreground">{registration.special_requirements}</p>
+                            </div>
+                          )}
+                          <div className="text-xs text-muted-foreground pt-2">
+                            Registered: {new Date(registration.created_at).toLocaleString()}
                           </div>
                         </div>
-
-                        {registration.status === "pending" && (
-                          <div className="flex gap-2 pt-2">
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => handleApprove([registration.id])}
-                            >
-                              <CheckCircle2 className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleReject([registration.id])}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+                      </CollapsibleContent>
                     </div>
-
-                    <CollapsibleContent className="pt-4 mt-4 border-t">
-                      <div className="space-y-3 text-sm">
-                        {registration.degree && (
-                          <div>
-                            <span className="font-medium">Education:</span>
-                            <p className="text-muted-foreground">{registration.degree}</p>
-                          </div>
-                        )}
-                        {registration.why_interested && (
-                          <div>
-                            <span className="font-medium">Why interested:</span>
-                            <p className="text-muted-foreground">{registration.why_interested}</p>
-                          </div>
-                        )}
-                        {registration.what_to_gain && (
-                          <div>
-                            <span className="font-medium">What to gain:</span>
-                            <p className="text-muted-foreground">{registration.what_to_gain}</p>
-                          </div>
-                        )}
-                        {registration.heard_from && (
-                          <div>
-                            <span className="font-medium">Heard from:</span>
-                            <p className="text-muted-foreground">{registration.heard_from}</p>
-                          </div>
-                        )}
-                        {registration.questions && (
-                          <div>
-                            <span className="font-medium">Questions:</span>
-                            <p className="text-muted-foreground">{registration.questions}</p>
-                          </div>
-                        )}
-                        {registration.dietary_restrictions && (
-                          <div>
-                            <span className="font-medium">Dietary restrictions:</span>
-                            <p className="text-muted-foreground">{registration.dietary_restrictions}</p>
-                          </div>
-                        )}
-                        {registration.special_requirements && (
-                          <div>
-                            <span className="font-medium">Special requirements:</span>
-                            <p className="text-muted-foreground">{registration.special_requirements}</p>
-                          </div>
-                        )}
-                        <div className="text-xs text-muted-foreground pt-2">
-                          Registered: {new Date(registration.created_at).toLocaleString()}
-                        </div>
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
-              ))}
+                  </Collapsible>
+                );
+              })}
             </div>
           )}
         </CardContent>

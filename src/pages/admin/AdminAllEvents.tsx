@@ -13,9 +13,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MoreHorizontal, Search, Trash2, Eye, Check, X, Calendar, MapPin, Users, Pencil, Star, Clock, Filter } from "lucide-react";
+import { MoreHorizontal, Search, Trash2, Eye, Check, X, Calendar, MapPin, Users, Clock, Filter, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorCard } from "@/components/common/ErrorCard";
+import { useProcessingSet } from "@/hooks/useAsyncAction";
 
 const STATUS_TABS = [
   { key: "all", label: "All Events" },
@@ -42,13 +45,15 @@ const AdminAllEvents = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [guestCounts, setGuestCounts] = useState<Record<string, number>>({});
   const [dataLoading, setDataLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [deleteEvent, setDeleteEvent] = useState<any>(null);
   const [rejectEvent, setRejectEvent] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
-  const [processing, setProcessing] = useState(false);
+  const { isProcessing, startProcessing, stopProcessing } = useProcessingSet();
+  const [dialogProcessing, setDialogProcessing] = useState(false);
 
   useEffect(() => {
     if (isAdmin && adminCheckComplete) fetchEvents();
@@ -56,25 +61,27 @@ const AdminAllEvents = () => {
 
   const fetchEvents = async () => {
     setDataLoading(true);
-    const [eventsRes, guestsRes] = await Promise.all([
-      supabase
-        .from("events")
-        .select("*, profiles:created_by(full_name)")
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("event_guests")
-        .select("event_id"),
-    ]);
+    setError(null);
+    try {
+      const [eventsRes, guestsRes] = await Promise.all([
+        supabase.from("events").select("*, profiles:created_by(full_name)").order("created_at", { ascending: false }),
+        supabase.from("event_guests").select("event_id"),
+      ]);
 
-    setEvents(eventsRes.data || []);
+      if (eventsRes.error) throw eventsRes.error;
 
-    // Count guests per event
-    const counts: Record<string, number> = {};
-    (guestsRes.data || []).forEach((g: any) => {
-      counts[g.event_id] = (counts[g.event_id] || 0) + 1;
-    });
-    setGuestCounts(counts);
-    setDataLoading(false);
+      setEvents(eventsRes.data || []);
+
+      const counts: Record<string, number> = {};
+      (guestsRes.data || []).forEach((g: any) => {
+        counts[g.event_id] = (counts[g.event_id] || 0) + 1;
+      });
+      setGuestCounts(counts);
+    } catch (err: any) {
+      setError(err.message || "Failed to load events");
+    } finally {
+      setDataLoading(false);
+    }
   };
 
   const categories = useMemo(() => {
@@ -107,20 +114,21 @@ const AdminAllEvents = () => {
   }, [events, activeTab, categoryFilter, search]);
 
   const handleStatusChange = async (eventId: string, status: string) => {
-    setProcessing(true);
+    if (isProcessing(eventId)) return;
+    startProcessing(eventId);
     const { error } = await supabase.from("events").update({ status }).eq("id", eventId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: `Event ${status}` });
-      fetchEvents();
+      setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status } : e));
     }
-    setProcessing(false);
+    stopProcessing(eventId);
   };
 
   const handleReject = async () => {
     if (!rejectEvent) return;
-    setProcessing(true);
+    setDialogProcessing(true);
     const { error } = await supabase
       .from("events")
       .update({ status: "rejected", rejection_reason: rejectionReason || null })
@@ -129,34 +137,77 @@ const AdminAllEvents = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Event rejected" });
+      setEvents(prev => prev.map(e => e.id === rejectEvent.id ? { ...e, status: "rejected", rejection_reason: rejectionReason || null } : e));
       setRejectEvent(null);
       setRejectionReason("");
-      fetchEvents();
     }
-    setProcessing(false);
+    setDialogProcessing(false);
   };
 
   const handleDelete = async () => {
     if (!deleteEvent) return;
-    setProcessing(true);
+    setDialogProcessing(true);
     const { error } = await supabase.from("events").delete().eq("id", deleteEvent.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Event deleted" });
+      setEvents(prev => prev.filter(e => e.id !== deleteEvent.id));
       setDeleteEvent(null);
-      fetchEvents();
     }
-    setProcessing(false);
+    setDialogProcessing(false);
   };
 
-  if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
+  if (dataLoading) {
+    return (
+      <>
+        <Seo title="All Events" canonical="/admin/events" />
+        <div className="space-y-6">
+          <div>
+            <div className="h-7 w-32 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-48 bg-muted rounded animate-pulse mt-2" />
+          </div>
+          <div className="flex gap-2">
+            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-9 w-24 rounded-lg" />)}
+          </div>
+          <Skeleton className="h-10 w-full max-w-md" />
+          <Card className="border">
+            <CardContent className="p-0">
+              <div className="space-y-0">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 border-b last:border-0">
+                    <Skeleton className="h-9 w-14 rounded" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Seo title="All Events" canonical="/admin/events" />
+        <div className="py-20">
+          <ErrorCard message={error} onRetry={fetchEvents} />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Seo title="All Events" canonical="/admin/events" />
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">All Events</h1>
@@ -166,7 +217,6 @@ const AdminAllEvents = () => {
           </div>
         </div>
 
-        {/* Status Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 -mb-1">
           {STATUS_TABS.map((tab) => {
             const count = statusCounts[tab.key] || 0;
@@ -196,16 +246,10 @@ const AdminAllEvents = () => {
           })}
         </div>
 
-        {/* Search & Filters */}
         <div className="flex flex-wrap gap-3 items-center">
           <div className="relative flex-1 min-w-[220px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search events, hosts, locations..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9"
-            />
+            <Input placeholder="Search events, hosts, locations..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9" />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[170px] h-9">
@@ -220,23 +264,15 @@ const AdminAllEvents = () => {
             </SelectContent>
           </Select>
           {(search || categoryFilter !== "all") && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 text-xs text-muted-foreground"
-              onClick={() => { setSearch(""); setCategoryFilter("all"); }}
-            >
+            <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={() => { setSearch(""); setCategoryFilter("all"); }}>
               Clear filters
             </Button>
           )}
         </div>
 
-        {/* Events Table */}
         <Card className="border">
           <CardContent className="p-0">
-            {dataLoading ? (
-              <div className="py-16 text-center text-muted-foreground">Loading events...</div>
-            ) : filtered.length === 0 ? (
+            {filtered.length === 0 ? (
               <div className="py-16 text-center">
                 <Calendar className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-muted-foreground text-sm">No events found</p>
@@ -253,10 +289,7 @@ const AdminAllEvents = () => {
                     <TableHead className="font-semibold">Date</TableHead>
                     <TableHead className="font-semibold">Category</TableHead>
                     <TableHead className="font-semibold">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5" />
-                        Guests
-                      </div>
+                      <div className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />Guests</div>
                     </TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
                     <TableHead className="font-semibold">Created</TableHead>
@@ -267,16 +300,13 @@ const AdminAllEvents = () => {
                   {filtered.map((event: any) => {
                     const guests = guestCounts[event.id] || 0;
                     const hostName = (event.profiles as any)?.full_name || "Unknown";
+                    const eventProcessing = isProcessing(event.id);
                     return (
                       <TableRow key={event.id} className="hover:bg-muted/50">
                         <TableCell>
                           <div className="flex items-center gap-3 min-w-0">
                             {event.image_url ? (
-                              <img
-                                src={event.image_url}
-                                alt=""
-                                className="h-9 w-14 rounded object-cover flex-shrink-0 bg-muted"
-                              />
+                              <img src={event.image_url} alt="" className="h-9 w-14 rounded object-cover flex-shrink-0 bg-muted" />
                             ) : (
                               <div className="h-9 w-14 rounded bg-muted flex-shrink-0" />
                             )}
@@ -309,11 +339,7 @@ const AdminAllEvents = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium capitalize border ${
-                              STATUS_STYLES[event.status] || STATUS_STYLES.draft
-                            }`}
-                          >
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium capitalize border ${STATUS_STYLES[event.status] || STATUS_STYLES.draft}`}>
                             {event.status}
                           </span>
                         </TableCell>
@@ -326,8 +352,8 @@ const AdminAllEvents = () => {
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
+                              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={eventProcessing}>
+                                {eventProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
@@ -339,10 +365,10 @@ const AdminAllEvents = () => {
                               <DropdownMenuSeparator />
                               {event.status === "pending" && (
                                 <>
-                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "approved")} disabled={processing}>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "approved")}>
                                     <Check className="h-4 w-4 mr-2 text-emerald-500" />Approve
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => { setRejectEvent(event); setRejectionReason(""); }} disabled={processing}>
+                                  <DropdownMenuItem onClick={() => { setRejectEvent(event); setRejectionReason(""); }}>
                                     <X className="h-4 w-4 mr-2 text-destructive" />Reject
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
@@ -350,7 +376,7 @@ const AdminAllEvents = () => {
                               )}
                               {event.status === "rejected" && (
                                 <>
-                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "approved")} disabled={processing}>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "approved")}>
                                     <Check className="h-4 w-4 mr-2 text-emerald-500" />Approve
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
@@ -358,16 +384,13 @@ const AdminAllEvents = () => {
                               )}
                               {event.status === "approved" && (
                                 <>
-                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "pending")} disabled={processing}>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "pending")}>
                                     <Clock className="h-4 w-4 mr-2" />Move to Pending
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                 </>
                               )}
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => setDeleteEvent(event)}
-                              >
+                              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteEvent(event)}>
                                 <Trash2 className="h-4 w-4 mr-2" />Delete Event
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -382,8 +405,7 @@ const AdminAllEvents = () => {
           </CardContent>
         </Card>
 
-        {/* Result count */}
-        {!dataLoading && filtered.length > 0 && (
+        {filtered.length > 0 && (
           <p className="text-xs text-muted-foreground text-center">
             Showing {filtered.length} of {events.length} events
           </p>
@@ -401,7 +423,14 @@ const AdminAllEvents = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={processing}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} disabled={dialogProcessing} className="bg-destructive text-destructive-foreground">
+              {dialogProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : "Delete"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -416,16 +445,18 @@ const AdminAllEvents = () => {
           <div className="space-y-4">
             <div>
               <Label>Rejection Reason (Optional)</Label>
-              <Textarea
-                placeholder="Let the creator know why this event was rejected..."
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                className="mt-2"
-              />
+              <Textarea placeholder="Let the creator know why this event was rejected..." value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} className="mt-2" />
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setRejectEvent(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleReject} disabled={processing}>Reject Event</Button>
+              <Button variant="destructive" onClick={handleReject} disabled={dialogProcessing}>
+                {dialogProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : "Reject Event"}
+              </Button>
             </div>
           </div>
         </DialogContent>

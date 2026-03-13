@@ -8,11 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { MoreHorizontal, Search, Shield, User, Eye } from "lucide-react";
+import { MoreHorizontal, Search, Shield, User, Eye, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorCard } from "@/components/common/ErrorCard";
+import { useProcessingSet } from "@/hooks/useAsyncAction";
 
 const AdminUsersPage = () => {
   const { isAdmin, loading, adminCheckComplete } = useAuth();
@@ -21,8 +25,11 @@ const AdminUsersPage = () => {
   const [roles, setRoles] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const [dataLoading, setDataLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userEvents, setUserEvents] = useState<any[]>([]);
+  const { isProcessing, startProcessing, stopProcessing } = useProcessingSet();
+  const [confirmAction, setConfirmAction] = useState<{ userId: string; action: 'promote' | 'remove'; userName: string } | null>(null);
 
   useEffect(() => {
     if (isAdmin && adminCheckComplete) fetchUsers();
@@ -30,16 +37,24 @@ const AdminUsersPage = () => {
 
   const fetchUsers = async () => {
     setDataLoading(true);
-    const [profilesRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-      supabase.from("user_roles").select("user_id, role"),
-    ]);
+    setError(null);
+    try {
+      const [profilesRes, rolesRes] = await Promise.all([
+        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("user_id, role"),
+      ]);
 
-    setUsers(profilesRes.data || []);
-    const roleMap: Record<string, string> = {};
-    (rolesRes.data || []).forEach((r: any) => { roleMap[r.user_id] = r.role; });
-    setRoles(roleMap);
-    setDataLoading(false);
+      if (profilesRes.error) throw profilesRes.error;
+
+      setUsers(profilesRes.data || []);
+      const roleMap: Record<string, string> = {};
+      (rolesRes.data || []).forEach((r: any) => { roleMap[r.user_id] = r.role; });
+      setRoles(roleMap);
+    } catch (err: any) {
+      setError(err.message || "Failed to load users");
+    } finally {
+      setDataLoading(false);
+    }
   };
 
   const viewUser = async (user: any) => {
@@ -48,27 +63,79 @@ const AdminUsersPage = () => {
     setUserEvents(data || []);
   };
 
-  const promoteToAdmin = async (userId: string) => {
-    const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" as any });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+  const handleConfirmAction = async () => {
+    if (!confirmAction) return;
+    const { userId, action } = confirmAction;
+    startProcessing(userId);
+
+    if (action === 'promote') {
+      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" as any });
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "User promoted to admin" });
+        setRoles(prev => ({ ...prev, [userId]: "admin" }));
+      }
     } else {
-      toast({ title: "User promoted to admin" });
-      fetchUsers();
+      const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin" as any);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Admin role removed" });
+        setRoles(prev => {
+          const next = { ...prev };
+          delete next[userId];
+          return next;
+        });
+      }
     }
+
+    stopProcessing(userId);
+    setConfirmAction(null);
   };
 
-  const removeAdmin = async (userId: string) => {
-    const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin" as any);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Admin role removed" });
-      fetchUsers();
-    }
-  };
+  if (dataLoading) {
+    return (
+      <>
+        <Seo title="User Management" canonical="/admin/users" />
+        <div className="space-y-6">
+          <div>
+            <div className="h-7 w-24 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-48 bg-muted rounded animate-pulse mt-2" />
+          </div>
+          <Skeleton className="h-10 w-full max-w-sm" />
+          <Card>
+            <CardContent className="p-0">
+              <div className="space-y-0">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 border-b last:border-0">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                    <Skeleton className="h-6 w-14 rounded-full" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
 
-  if (dataLoading) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
+  if (error) {
+    return (
+      <>
+        <Seo title="User Management" canonical="/admin/users" />
+        <div className="py-20">
+          <ErrorCard message={error} onRetry={fetchUsers} />
+        </div>
+      </>
+    );
+  }
 
   const filtered = users.filter((u: any) => {
     if (!search) return true;
@@ -92,75 +159,100 @@ const AdminUsersPage = () => {
 
         <Card>
           <CardContent className="p-0">
-            {dataLoading ? (
-              <p className="text-center text-muted-foreground py-12">Loading users...</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((user: any) => {
-                    const role = roles[user.user_id] || "user";
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={user.avatar_url || undefined} />
-                              <AvatarFallback className="text-xs">{user.full_name?.charAt(0) || "?"}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium text-sm">{user.full_name}</div>
-                              {user.username && <div className="text-xs text-muted-foreground">@{user.username}</div>}
-                            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((user: any) => {
+                  const role = roles[user.user_id] || "user";
+                  const userProcessing = isProcessing(user.user_id);
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.avatar_url || undefined} />
+                            <AvatarFallback className="text-xs">{user.full_name?.charAt(0) || "?"}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-sm">{user.full_name}</div>
+                            {user.username && <div className="text-xs text-muted-foreground">@{user.username}</div>}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={role === "admin" ? "default" : "outline"} className="text-xs capitalize">
-                            {role === "admin" && <Shield className="h-3 w-3 mr-1" />}
-                            {role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{user.location || "—"}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{format(new Date(user.created_at), "MMM d, yyyy")}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => viewUser(user)}>
-                                <Eye className="h-4 w-4 mr-2" />View Profile
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={role === "admin" ? "default" : "outline"} className="text-xs capitalize">
+                          {role === "admin" && <Shield className="h-3 w-3 mr-1" />}
+                          {role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{user.location || "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{format(new Date(user.created_at), "MMM d, yyyy")}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={userProcessing}>
+                              {userProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => viewUser(user)}>
+                              <Eye className="h-4 w-4 mr-2" />View Profile
+                            </DropdownMenuItem>
+                            {role !== "admin" && (
+                              <DropdownMenuItem onClick={() => setConfirmAction({ userId: user.user_id, action: 'promote', userName: user.full_name })}>
+                                <Shield className="h-4 w-4 mr-2" />Promote to Admin
                               </DropdownMenuItem>
-                              {role !== "admin" && (
-                                <DropdownMenuItem onClick={() => promoteToAdmin(user.user_id)}>
-                                  <Shield className="h-4 w-4 mr-2" />Promote to Admin
-                                </DropdownMenuItem>
-                              )}
-                              {role === "admin" && (
-                                <DropdownMenuItem onClick={() => removeAdmin(user.user_id)}>
-                                  <User className="h-4 w-4 mr-2" />Remove Admin
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
+                            )}
+                            {role === "admin" && (
+                              <DropdownMenuItem onClick={() => setConfirmAction({ userId: user.user_id, action: 'remove', userName: user.full_name })}>
+                                <User className="h-4 w-4 mr-2" />Remove Admin
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
+
+      {/* Confirm Role Change Dialog */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.action === 'promote' ? 'Promote to Admin' : 'Remove Admin Role'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.action === 'promote'
+                ? `Are you sure you want to promote "${confirmAction?.userName}" to admin? They will have full platform access.`
+                : `Are you sure you want to remove admin privileges from "${confirmAction?.userName}"?`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmAction}
+              className={confirmAction?.action === 'remove' ? 'bg-destructive text-destructive-foreground' : ''}
+            >
+              {confirmAction?.action === 'promote' ? 'Promote' : 'Remove Admin'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* User Detail Sheet */}
       <Sheet open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
