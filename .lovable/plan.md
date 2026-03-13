@@ -1,5 +1,37 @@
 
 
+## Notification System (Implemented)
+
+### Database Triggers
+All notification triggers are attached and active:
+
+| Trigger | Table | Event | Notification Type |
+|---------|-------|-------|-------------------|
+| `on_profile_created_welcome` | profiles | INSERT | `welcome` |
+| `on_event_created_milestone` | events | INSERT | `milestone` |
+| `on_guest_registered_notify` | event_guests | INSERT | `registration` |
+| `on_event_status_change` | events | UPDATE | `event_approved` / `event_rejected` |
+| `on_registration_status_change` | event_guests | UPDATE | `registration_confirmed` / `registration_rejected` |
+| `on_guest_checked_in` | event_guests | UPDATE | `check_in` |
+| `on_new_event_admin_notify` | events | INSERT | `admin_new_event` |
+
+### Settings Integration
+Triggers respect `notification_settings` table preferences:
+- `guest_alerts` → registration + check_in notifications for organizers
+- `registration_confirmations` → registration_confirmed/rejected for attendees
+
+### Frontend
+- NotificationsPanel groups same-type notifications within 10min window
+- Clickable notifications navigate to relevant event
+- Icons per type: green CheckCircle (approved), red XCircle (rejected), Ticket (registration), ScanLine (check-in), ShieldCheck (admin)
+
+### Not Yet Implemented
+- Event reminders (24h/1h) — requires pg_cron
+- Email notifications for new types — EmailJS free tier limited to 2 templates
+- Push notifications — requires service worker infrastructure
+
+---
+
 ## Add Free/Paid Toggle with Payout Phone Number
 
 ### Overview
