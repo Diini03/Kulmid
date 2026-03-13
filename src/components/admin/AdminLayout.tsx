@@ -98,14 +98,14 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             >
               <Icon className="h-[18px] w-[18px] flex-shrink-0" />
               {!collapsed && <span className="truncate">{item.label}</span>}
-              {item.badge && pendingCount > 0 && (
+              {item.badgeKey && badgeCounts[item.badgeKey] > 0 && (
                 <Badge
                   variant="destructive"
                   className={`text-[10px] px-1.5 py-0 h-5 min-w-5 flex items-center justify-center ${
                     collapsed ? "absolute -top-1 -right-1" : "ml-auto"
                   }`}
                 >
-                  {pendingCount}
+                  {badgeCounts[item.badgeKey] > 99 ? "99+" : badgeCounts[item.badgeKey]}
                 </Badge>
               )}
             </Link>

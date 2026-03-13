@@ -177,6 +177,7 @@ const App = () => (
                 </TooltipProvider>
               </ThemeProvider>
             </FavoritesProvider>
+              </AdminBadgesProvider>
           </PendingActionsProvider>
         </NotificationsProvider>
       </AuthProvider>
