@@ -105,6 +105,7 @@ const App = () => (
         <AuthProvider>
           <NotificationsProvider>
             <PendingActionsProvider>
+              <AdminBadgesProvider>
               <FavoritesProvider>
                 <ThemeProvider>
                 <TooltipProvider>
