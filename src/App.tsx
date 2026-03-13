@@ -9,6 +9,7 @@ import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { PendingActionsProvider } from "@/contexts/PendingActionsContext";
+import { AdminBadgesProvider } from "@/contexts/AdminBadgesContext";
 import { Layout } from "@/components/layout/Layout";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { lazy, Suspense } from "react";
@@ -104,6 +105,7 @@ const App = () => (
         <AuthProvider>
           <NotificationsProvider>
             <PendingActionsProvider>
+              <AdminBadgesProvider>
               <FavoritesProvider>
                 <ThemeProvider>
                 <TooltipProvider>
@@ -175,6 +177,7 @@ const App = () => (
                 </TooltipProvider>
               </ThemeProvider>
             </FavoritesProvider>
+              </AdminBadgesProvider>
           </PendingActionsProvider>
         </NotificationsProvider>
       </AuthProvider>
