@@ -358,6 +358,12 @@ const EventDetails = () => {
             </Button>
           </div>
         </section>
+
+        {!isCreator && (
+          <div className="flex justify-center">
+            <ReportEventDialog eventId={event.id} eventTitle={event.title} />
+          </div>
+        )}
       </div>
 
       <AuthRequiredModal 

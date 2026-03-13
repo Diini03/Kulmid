@@ -272,6 +272,10 @@ const EventView = () => {
           </div>
         </section>
 
+        <div className="flex justify-center pb-4">
+          <ReportEventDialog eventId={event.id} eventTitle={event.title} />
+        </div>
+
         <div className="h-8" />
       </main>
 
