@@ -85,10 +85,15 @@ const EventView = () => {
   if (!event) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Seo title="Event Not Found" />
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">Event not found</h1>
-          <p className="text-muted-foreground">This event may have been removed or doesn't exist.</p>
+        <Seo title="Event Not Available" />
+        <div className="text-center space-y-4 max-w-md mx-auto px-4">
+          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+            <CalendarDays className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h1 className="text-3xl font-bold">Event not available</h1>
+          <p className="text-muted-foreground">
+            This event may still be under review by our team, or it may have been removed. Events become visible once they are approved.
+          </p>
           <Button asChild size="lg">
             <a href={window.location.origin}>Visit Kulmid</a>
           </Button>
