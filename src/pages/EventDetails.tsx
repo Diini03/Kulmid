@@ -10,6 +10,7 @@ import { AuthRequiredModal } from "@/components/auth/AuthGuard";
 import { toast } from "@/hooks/use-toast";
 import { categories } from "@/constants/categories";
 import EventRegistrationDialog from "@/components/events/EventRegistrationDialog";
+import { ReportEventDialog } from "@/components/events/ReportEventDialog";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -357,6 +358,12 @@ const EventDetails = () => {
             </Button>
           </div>
         </section>
+
+        {!isCreator && (
+          <div className="flex justify-center">
+            <ReportEventDialog eventId={event.id} eventTitle={event.title} />
+          </div>
+        )}
       </div>
 
       <AuthRequiredModal 

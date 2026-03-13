@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { categories } from "@/constants/categories";
 import { toast } from "@/hooks/use-toast";
 import EventRegistrationDialog from "@/components/events/EventRegistrationDialog";
+import { ReportEventDialog } from "@/components/events/ReportEventDialog";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -270,6 +271,10 @@ const EventView = () => {
             </Button>
           </div>
         </section>
+
+        <div className="flex justify-center pb-4">
+          <ReportEventDialog eventId={event.id} eventTitle={event.title} />
+        </div>
 
         <div className="h-8" />
       </main>

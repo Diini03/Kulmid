@@ -447,7 +447,9 @@ export type Database = {
       }
       reports: {
         Row: {
+          admin_notes: string | null
           created_at: string | null
+          description: string | null
           id: string
           reason: string
           reported_by: string | null
@@ -458,7 +460,9 @@ export type Database = {
           type: string
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
           reason: string
           reported_by?: string | null
@@ -469,7 +473,9 @@ export type Database = {
           type: string
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
           reason?: string
           reported_by?: string | null
