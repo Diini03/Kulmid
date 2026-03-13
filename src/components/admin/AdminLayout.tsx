@@ -1,6 +1,7 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminBadges } from "@/contexts/AdminBadgesContext";
 import {
   LayoutDashboard,
   ShieldCheck,
@@ -20,22 +21,23 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import kulmidLogoNav from "@/assets/kulmid-logo-nav.png";
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
-const menuItems = [
+type BadgeKey = "pendingEvents" | "openReports" | "pendingRegistrations";
+
+const menuItems: { icon: typeof LayoutDashboard; label: string; path: string; badgeKey?: BadgeKey }[] = [
   { icon: LayoutDashboard, label: "Overview", path: "/admin" },
-  { icon: ShieldCheck, label: "Event Moderation", path: "/admin/events/pending", badge: true },
+  { icon: ShieldCheck, label: "Event Moderation", path: "/admin/events/pending", badgeKey: "pendingEvents" },
   { icon: Calendar, label: "All Events", path: "/admin/events" },
   { icon: Users, label: "Users", path: "/admin/users" },
-  { icon: ClipboardList, label: "Registrations", path: "/admin/registrations" },
+  { icon: ClipboardList, label: "Registrations", path: "/admin/registrations", badgeKey: "pendingRegistrations" },
   { icon: Tag, label: "Categories", path: "/admin/categories" },
   { icon: BarChart3, label: "Analytics", path: "/admin/analytics" },
-  { icon: Flag, label: "Reports", path: "/admin/reports" },
+  { icon: Flag, label: "Reports", path: "/admin/reports", badgeKey: "openReports" },
   { icon: Sliders, label: "Platform Settings", path: "/admin/settings/platform" },
   { icon: Shield, label: "Admin Settings", path: "/admin/settings/admin" },
 ];
@@ -46,18 +48,13 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { signOut, profile } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
+  const { pendingEventsCount, openReportsCount, pendingRegistrationsCount } = useAdminBadges();
 
-  useEffect(() => {
-    const fetchPending = async () => {
-      const { count } = await supabase
-        .from("events")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending");
-      setPendingCount(count || 0);
-    };
-    fetchPending();
-  }, [location.pathname]);
+  const badgeCounts: Record<BadgeKey, number> = {
+    pendingEvents: pendingEventsCount,
+    openReports: openReportsCount,
+    pendingRegistrations: pendingRegistrationsCount,
+  };
 
   const handleSignOut = async () => {
     await signOut();
