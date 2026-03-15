@@ -114,6 +114,7 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
     } : {
       title: "",
       date: "",
+      end_date: "",
       event_type: "in-person",
       location: "",
       meeting_link: "",
