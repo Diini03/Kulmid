@@ -240,6 +240,7 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
       const eventData = {
         title: data.title,
         date: new Date(data.date).toISOString(),
+        end_date: data.end_date ? new Date(data.end_date).toISOString() : null,
         event_type: data.event_type,
         location: data.location || null,
         meeting_link: data.meeting_link || null,
