@@ -62,6 +62,14 @@ const eventSchema = z.object({
 }, {
   message: "Payout phone number is required for paid events",
   path: ["payout_phone"],
+}).refine((data) => {
+  if (data.end_date && data.date) {
+    return new Date(data.end_date) > new Date(data.date);
+  }
+  return true;
+}, {
+  message: "End date must be after start date",
+  path: ["end_date"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
