@@ -475,28 +475,34 @@ const Create = () => {
                     )}
                   />
 
-                  {/* Category */}
+                  {/* Category - Horizontal Chips */}
                   <FormField
                     control={form.control}
                     name="category"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Seminar">Seminar</SelectItem>
-                            <SelectItem value="Workshop">Workshop</SelectItem>
-                            <SelectItem value="Conference">Conference</SelectItem>
-                            <SelectItem value="Festival">Festival</SelectItem>
-                            <SelectItem value="Webinar">Webinar</SelectItem>
-                            <SelectItem value="Meetup">Meetup</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex flex-wrap gap-2">
+                          {categories.map((cat) => {
+                            const Icon = cat.icon;
+                            const isSelected = field.value === cat.name;
+                            return (
+                              <button
+                                key={cat.name}
+                                type="button"
+                                onClick={() => field.onChange(cat.name)}
+                                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border-2 transition-all ${
+                                  isSelected
+                                    ? "border-primary bg-primary/10 text-primary"
+                                    : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                                }`}
+                              >
+                                <Icon className="h-4 w-4" />
+                                {cat.name}
+                              </button>
+                            );
+                          })}
+                        </div>
                         {selectedCategory === "Webinar" && (
                           <p className="text-xs text-muted-foreground">Webinars are automatically set as online events</p>
                         )}
