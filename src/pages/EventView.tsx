@@ -176,7 +176,9 @@ const EventView = () => {
             </div>
             <div className="min-w-0">
               <div className="text-sm font-medium truncate">{weekday}, {monthShort} {day}</div>
-              <div className="text-xs text-muted-foreground">{time}</div>
+              <div className="text-xs text-muted-foreground">
+                {time}{endDate ? ` – ${endDateStr !== `${monthShort} ${day}` ? `${endDateStr}, ` : ''}${endTime}` : ''}
+              </div>
             </div>
           </div>
 
