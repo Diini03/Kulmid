@@ -103,6 +103,7 @@ const EventView = () => {
   }
 
   const eventDate = new Date(event.date);
+  const endDate = event.end_date ? new Date(event.end_date) : null;
   const categoryConfig = categories.find(c => c.name === event.category);
   
   const monthShort = eventDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
@@ -110,6 +111,8 @@ const EventView = () => {
   const weekday = eventDate.toLocaleDateString('en-US', { weekday: 'long' });
   const time = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const fullDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const endTime = endDate ? endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : null;
+  const endDateStr = endDate ? endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : null;
 
   const getEventTypeDisplay = () => {
     switch (event.event_type) {
@@ -173,7 +176,9 @@ const EventView = () => {
             </div>
             <div className="min-w-0">
               <div className="text-sm font-medium truncate">{weekday}, {monthShort} {day}</div>
-              <div className="text-xs text-muted-foreground">{time}</div>
+              <div className="text-xs text-muted-foreground">
+                {time}{endDate ? ` – ${endDateStr !== `${monthShort} ${day}` ? `${endDateStr}, ` : ''}${endTime}` : ''}
+              </div>
             </div>
           </div>
 

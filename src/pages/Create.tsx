@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { categories } from "@/constants/categories";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2, Sparkles, ChevronDown, Check, X } from "lucide-react";
@@ -28,7 +29,8 @@ const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title must be less than 100 characters"),
   description: z.string().min(10, "Description must be at least 10 characters").max(2000, "Description must be less than 2000 characters"),
-  date: z.string().min(1, "Date is required"),
+  date: z.string().min(1, "Start date is required"),
+  end_date: z.string().optional(),
   event_type: z.enum(["in-person", "online", "hybrid"]),
   location: z.string().optional(),
   meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -66,6 +68,14 @@ const eventSchema = z.object({
 }, {
   message: "Payout phone number is required for paid events",
   path: ["payout_phone"],
+}).refine((data) => {
+  if (data.end_date && data.date) {
+    return new Date(data.end_date) > new Date(data.date);
+  }
+  return true;
+}, {
+  message: "End date must be after start date",
+  path: ["end_date"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -95,6 +105,7 @@ const Create = () => {
       title: "",
       description: "",
       date: "",
+      end_date: "",
       event_type: "in-person",
       location: "",
       meeting_link: "",
@@ -252,6 +263,7 @@ const Create = () => {
         title: data.title,
         description: data.description,
         date: new Date(data.date).toISOString(),
+        end_date: data.end_date ? new Date(data.end_date).toISOString() : null,
         event_type: data.event_type,
         location: data.location || null,
         meeting_link: data.meeting_link || null,
@@ -464,28 +476,34 @@ const Create = () => {
                     )}
                   />
 
-                  {/* Category */}
+                  {/* Category - Horizontal Chips */}
                   <FormField
                     control={form.control}
                     name="category"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Seminar">Seminar</SelectItem>
-                            <SelectItem value="Workshop">Workshop</SelectItem>
-                            <SelectItem value="Conference">Conference</SelectItem>
-                            <SelectItem value="Festival">Festival</SelectItem>
-                            <SelectItem value="Webinar">Webinar</SelectItem>
-                            <SelectItem value="Meetup">Meetup</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex flex-wrap gap-2">
+                          {categories.map((cat) => {
+                            const Icon = cat.icon;
+                            const isSelected = field.value === cat.name;
+                            return (
+                              <button
+                                key={cat.name}
+                                type="button"
+                                onClick={() => field.onChange(cat.name)}
+                                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border-2 transition-all ${
+                                  isSelected
+                                    ? "border-primary bg-primary/10 text-primary"
+                                    : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                                }`}
+                              >
+                                <Icon className="h-4 w-4" />
+                                {cat.name}
+                              </button>
+                            );
+                          })}
+                        </div>
                         {selectedCategory === "Webinar" && (
                           <p className="text-xs text-muted-foreground">Webinars are automatically set as online events</p>
                         )}
@@ -544,27 +562,50 @@ const Create = () => {
                   />
 
                   {/* Date & Time */}
-                  <FormField
-                    control={form.control}
-                    name="date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          Date & Time
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="datetime-local"
-                            min={new Date().toISOString().slice(0, 16)}
-                            className="text-base"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-3">
+                    <FormLabel className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Date & Time
+                    </FormLabel>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/30">
+                      <FormField
+                        control={form.control}
+                        name="date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground uppercase tracking-wide">Start</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="datetime-local"
+                                min={new Date().toISOString().slice(0, 16)}
+                                className="text-base"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="end_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground uppercase tracking-wide">End (Optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="datetime-local"
+                                min={form.watch("date") || new Date().toISOString().slice(0, 16)}
+                                className="text-base"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
 
                   {/* Event Type */}
                   <FormField
