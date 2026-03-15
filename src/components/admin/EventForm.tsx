@@ -22,7 +22,8 @@ const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|
 
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  date: z.string().min(1, "Date is required"),
+  date: z.string().min(1, "Start date is required"),
+  end_date: z.string().optional(),
   event_type: z.enum(["in-person", "online", "hybrid"]),
   location: z.string().optional(),
   meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
