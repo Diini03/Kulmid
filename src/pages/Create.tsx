@@ -561,27 +561,50 @@ const Create = () => {
                   />
 
                   {/* Date & Time */}
-                  <FormField
-                    control={form.control}
-                    name="date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          Date & Time
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="datetime-local"
-                            min={new Date().toISOString().slice(0, 16)}
-                            className="text-base"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-3">
+                    <FormLabel className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Date & Time
+                    </FormLabel>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/30">
+                      <FormField
+                        control={form.control}
+                        name="date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground uppercase tracking-wide">Start</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="datetime-local"
+                                min={new Date().toISOString().slice(0, 16)}
+                                className="text-base"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="end_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground uppercase tracking-wide">End (Optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="datetime-local"
+                                min={form.watch("date") || new Date().toISOString().slice(0, 16)}
+                                className="text-base"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
 
                   {/* Event Type */}
                   <FormField
