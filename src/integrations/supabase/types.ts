@@ -205,6 +205,7 @@ export type Database = {
           created_by: string
           date: string
           description: string | null
+          end_date: string | null
           event_type: string | null
           host_description: string | null
           host_email: string | null
@@ -230,6 +231,7 @@ export type Database = {
           created_by: string
           date: string
           description?: string | null
+          end_date?: string | null
           event_type?: string | null
           host_description?: string | null
           host_email?: string | null
@@ -255,6 +257,7 @@ export type Database = {
           created_by?: string
           date?: string
           description?: string | null
+          end_date?: string | null
           event_type?: string | null
           host_description?: string | null
           host_email?: string | null
