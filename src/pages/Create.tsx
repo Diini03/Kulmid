@@ -104,6 +104,7 @@ const Create = () => {
       title: "",
       description: "",
       date: "",
+      end_date: "",
       event_type: "in-person",
       location: "",
       meeting_link: "",
