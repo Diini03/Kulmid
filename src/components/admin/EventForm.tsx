@@ -99,6 +99,7 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
     defaultValues: event ? {
       title: event.title,
       date: new Date(event.date).toISOString().slice(0, 16),
+      end_date: event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : "",
       event_type: event.event_type || "in-person",
       location: event.location || "",
       meeting_link: event.meeting_link || "",
