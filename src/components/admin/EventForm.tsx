@@ -17,6 +17,7 @@ import { coverImages } from "@/constants/coverImages";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { StripeConnectDialog } from "@/components/events/StripeConnectDialog";
+import { categories } from "@/constants/categories";
 
 const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/;
 
