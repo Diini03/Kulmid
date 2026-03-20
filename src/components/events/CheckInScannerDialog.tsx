@@ -1,15 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
 import {
   Camera,
   CheckCircle2,
@@ -19,6 +15,7 @@ import {
   X,
   Users,
   ScanLine,
+  VideoOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -58,10 +55,13 @@ interface ManualGuest {
   check_in_token: string | null;
 }
 
+const SCANNER_ELEMENT_ID = "checkin-qr-reader";
+
 const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDialogProps) => {
   const { user } = useAuth();
-  const [scanning, setScanning] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
@@ -71,6 +71,8 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
   const [searching, setSearching] = useState(false);
   const processingRef = useRef(false);
   const lastTokenRef = useRef<string>("");
+  const closingRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const fetchStats = useCallback(async () => {
     const { data } = await supabase
@@ -79,7 +81,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
       .eq("event_id", eventId)
       .in("status", ["registered", "invited"]);
 
-    if (data) {
+    if (data && mountedRef.current) {
       setStats({
         total: data.length,
         checkedIn: data.filter((g) => g.checked_in).length,
@@ -87,60 +89,128 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
     }
   }, [eventId]);
 
+  // Track mount state
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // Fetch stats when dialog opens
   useEffect(() => {
     if (open) {
+      closingRef.current = false;
       fetchStats();
     }
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
-        scannerRef.current = null;
-      }
-      setScanning(false);
-    };
   }, [open, fetchStats]);
 
-  const startScanning = async () => {
+  // Cleanup scanner on unmount (safety net)
+  useEffect(() => {
+    return () => {
+      destroyScanner();
+    };
+  }, []);
+
+  const destroyScanner = async () => {
+    const scanner = scannerRef.current;
+    if (!scanner) return;
+
     try {
-      const html5QrCode = new Html5Qrcode("checkin-qr-reader");
+      const state = scanner.getState();
+      if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+        await scanner.stop();
+      }
+    } catch {
+      // Scanner may already be stopped or in bad state
+    }
+
+    try {
+      scanner.clear();
+    } catch {
+      // Container may already be cleared
+    }
+
+    scannerRef.current = null;
+  };
+
+  const startScanning = async () => {
+    setCameraError(null);
+
+    // Ensure any previous instance is fully cleaned
+    await destroyScanner();
+
+    // Wait a tick for the DOM element to be clean
+    await new Promise((r) => setTimeout(r, 100));
+
+    const container = document.getElementById(SCANNER_ELEMENT_ID);
+    if (!container) {
+      setCameraError("Scanner container not found. Please reopen the scanner.");
+      return;
+    }
+
+    // Clear any leftover children from previous scanner
+    container.innerHTML = "";
+
+    try {
+      const html5QrCode = new Html5Qrcode(SCANNER_ELEMENT_ID);
       scannerRef.current = html5QrCode;
 
       await html5QrCode.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 250, height: 250 } },
         handleScanSuccess,
-        () => {} // ignore not-found errors
+        () => {} // Ignore scan-not-found
       );
 
-      setScanning(true);
+      if (mountedRef.current && !closingRef.current) {
+        setScanning(true);
+      } else {
+        // Component unmounted or dialog closing during start
+        await destroyScanner();
+      }
     } catch (err: any) {
       console.error("Failed to start scanner:", err);
-      toast.error("Failed to start camera: " + err.message);
+      const message = err?.message || String(err);
+
+      if (message.includes("NotAllowedError") || message.includes("Permission")) {
+        setCameraError("Camera permission denied. Please allow camera access and try again.");
+      } else if (message.includes("NotFoundError") || message.includes("no camera")) {
+        setCameraError("No camera found on this device.");
+      } else {
+        setCameraError("Failed to start camera: " + message);
+      }
+
+      scannerRef.current = null;
     }
   };
 
   const stopScanning = async () => {
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current = null;
-        setScanning(false);
-      } catch (err) {
-        console.error("Failed to stop scanner:", err);
-      }
-    }
+    setScanning(false);
+    await destroyScanner();
+  };
+
+  const handleClose = async () => {
+    closingRef.current = true;
+    setScanning(false);
+    setScanResult(null);
+    setCameraError(null);
+    setSearchQuery("");
+    setSearchResults([]);
+
+    await destroyScanner();
+
+    onOpenChange(false);
   };
 
   const extractToken = (text: string): string => {
-    // Handle URL format: https://kulmid.lovable.app/check-in/{token}
     const checkInMatch = text.match(/\/check-in\/([a-f0-9-]+)/i);
     if (checkInMatch) return checkInMatch[1];
-    // Handle query param: ?token=...
     if (text.includes("token=")) {
       try {
         const url = new URL(text);
         return url.searchParams.get("token") || text;
-      } catch { return text; }
+      } catch {
+        return text;
+      }
     }
     return text;
   };
@@ -150,8 +220,14 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
     processingRef.current = true;
 
     try {
-      if (scannerRef.current) {
-        scannerRef.current.pause(true);
+      const scanner = scannerRef.current;
+      if (scanner) {
+        try {
+          const state = scanner.getState();
+          if (state === Html5QrcodeScannerState.SCANNING) {
+            scanner.pause(true);
+          }
+        } catch {}
       }
 
       const token = extractToken(decodedText);
@@ -163,20 +239,30 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
 
       if (error) throw error;
 
-      setScanResult(data as ScanResult);
+      if (mountedRef.current) {
+        setScanResult(data as ScanResult);
 
-      if (data.status === "already_checked_in") {
-        addRecentScan(data.guest?.name, data.guest?.email, "already");
+        if (data.status === "already_checked_in") {
+          addRecentScan(data.guest?.name, data.guest?.email, "already");
+        }
       }
     } catch (err: any) {
-      setScanResult({ status: "error", error: err.message || "Scan failed" });
-      addRecentScan(null, "", "invalid");
+      if (mountedRef.current) {
+        setScanResult({ status: "error", error: err.message || "Scan failed" });
+        addRecentScan(null, "", "invalid");
+      }
     } finally {
       processingRef.current = false;
-      // Resume scanner after a short delay
+      // Resume scanner after delay
       setTimeout(() => {
-        if (scannerRef.current) {
-          try { scannerRef.current.resume(); } catch {}
+        const scanner = scannerRef.current;
+        if (scanner) {
+          try {
+            const state = scanner.getState();
+            if (state === Html5QrcodeScannerState.PAUSED) {
+              scanner.resume();
+            }
+          } catch {}
         }
       }, 1500);
     }
@@ -187,11 +273,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
     setConfirming(true);
 
     try {
-      // For manual check-in, use the token directly
-      const checkInToken = token || "";
-      
       if (guestId && !token) {
-        // Manual check-in via direct DB update (for search results without token)
         const { error } = await supabase
           .from("event_guests")
           .update({
@@ -211,6 +293,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
         return;
       }
 
+      const checkInToken = token || "";
       const { data, error } = await supabase.functions.invoke("verify-check-in", {
         body: { token: checkInToken, eventId, organizerId: user?.id, action: "confirm" },
       });
@@ -243,7 +326,6 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
     setScanResult(null);
   };
 
-  // Manual search
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
@@ -263,7 +345,6 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
   const handleManualCheckIn = async (guest: ManualGuest) => {
     if (guest.check_in_token) {
       await handleConfirmCheckIn(guest.check_in_token);
-      // Refresh search results
       setSearchResults((prev) =>
         prev.map((g) => (g.id === guest.id ? { ...g, checked_in: true } : g))
       );
@@ -275,15 +356,27 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
 
   const progressPercent = stats.total > 0 ? (stats.checkedIn / stats.total) * 100 : 0;
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) stopScanning(); onOpenChange(v); }}>
-      <DialogContent className="max-w-2xl w-full max-h-[95vh] overflow-y-auto p-0 gap-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/80 animate-in fade-in-0 duration-200"
+        onClick={handleClose}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-2xl max-h-[95vh] overflow-y-auto bg-background border border-border rounded-lg shadow-lg mx-4 animate-in fade-in-0 zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-background z-10">
           <div className="flex items-center gap-3">
             <ScanLine className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">Event Check-In</h2>
           </div>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Stats bar */}
@@ -302,14 +395,33 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
         </div>
 
         <div className="p-4 space-y-4">
-          {/* Scanner area */}
-          <div className="rounded-xl overflow-hidden bg-muted border border-border">
+          {/* Scanner area — container is always in DOM when dialog open */}
+          <div className="rounded-xl overflow-hidden bg-black border border-border">
             <div
-              id="checkin-qr-reader"
+              id={SCANNER_ELEMENT_ID}
               className="w-full"
-              style={{ minHeight: scanning ? "280px" : "0px", display: scanning ? "block" : "none" }}
+              style={{ minHeight: scanning ? "300px" : "0px", display: scanning ? "block" : "none" }}
             />
-            {!scanning && (
+
+            {/* Camera error state */}
+            {cameraError && !scanning && (
+              <div className="p-8 text-center">
+                <VideoOff className="h-12 w-12 text-destructive mx-auto mb-3" />
+                <p className="text-destructive font-medium mb-2">Camera unavailable</p>
+                <p className="text-sm text-muted-foreground mb-4">{cameraError}</p>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={startScanning} variant="outline">
+                    Try Again
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  You can use manual search below as a fallback.
+                </p>
+              </div>
+            )}
+
+            {/* Idle state */}
+            {!scanning && !cameraError && (
               <div className="p-8 text-center">
                 <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground mb-4">Ready to scan QR codes</p>
@@ -329,15 +441,17 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
 
           {/* Scan result panel */}
           {scanResult && (
-            <div className={`rounded-xl border-2 p-4 relative ${
-              scanResult.status === "valid"
-                ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800"
-                : scanResult.status === "confirmed"
-                ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800"
-                : scanResult.status === "already_checked_in"
-                ? "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800"
-                : "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800"
-            }`}>
+            <div
+              className={`rounded-xl border-2 p-4 relative ${
+                scanResult.status === "valid"
+                  ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800"
+                  : scanResult.status === "confirmed"
+                  ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800"
+                  : scanResult.status === "already_checked_in"
+                  ? "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800"
+                  : "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800"
+              }`}
+            >
               <button
                 onClick={clearResult}
                 className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
@@ -360,7 +474,6 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                 )}
 
                 <div className="flex-1 min-w-0">
-                  {/* Valid — show guest + confirm button */}
                   {scanResult.status === "valid" && scanResult.guest && (
                     <>
                       <p className="font-semibold text-blue-900 dark:text-blue-200">
@@ -374,9 +487,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                         {scanResult.guest.registration_status}
                       </Badge>
                       <Button
-                        onClick={() => {
-                          handleConfirmCheckIn(lastTokenRef.current);
-                        }}
+                        onClick={() => handleConfirmCheckIn(lastTokenRef.current)}
                         className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white"
                         disabled={confirming}
                       >
@@ -385,7 +496,6 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                     </>
                   )}
 
-                  {/* Confirmed */}
                   {scanResult.status === "confirmed" && scanResult.guest && (
                     <>
                       <p className="font-semibold text-green-900 dark:text-green-200">
@@ -395,12 +505,9 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                     </>
                   )}
 
-                  {/* Already checked in */}
                   {scanResult.status === "already_checked_in" && scanResult.guest && (
                     <>
-                      <p className="font-semibold text-amber-900 dark:text-amber-200">
-                        Already checked in
-                      </p>
+                      <p className="font-semibold text-amber-900 dark:text-amber-200">Already checked in</p>
                       <p className="text-sm text-amber-700 dark:text-amber-300">
                         {scanResult.guest.name} — {scanResult.guest.email}
                       </p>
@@ -412,7 +519,6 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                     </>
                   )}
 
-                  {/* Invalid / Error */}
                   {(scanResult.status === "invalid" || scanResult.status === "error") && (
                     <>
                       <p className="font-semibold text-red-900 dark:text-red-200">
@@ -461,11 +567,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                         Checked in
                       </Badge>
                     ) : (
-                      <Button
-                        size="sm"
-                        className="flex-shrink-0"
-                        onClick={() => handleManualCheckIn(guest)}
-                      >
+                      <Button size="sm" className="flex-shrink-0" onClick={() => handleManualCheckIn(guest)}>
                         Check In
                       </Button>
                     )}
@@ -488,15 +590,9 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                     <span className="truncate">{scan.name || scan.email || "Unknown"}</span>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-xs text-muted-foreground">{scan.time}</span>
-                      {scan.status === "confirmed" && (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      )}
-                      {scan.status === "already" && (
-                        <AlertTriangle className="h-4 w-4 text-amber-500" />
-                      )}
-                      {scan.status === "invalid" && (
-                        <XCircle className="h-4 w-4 text-red-500" />
-                      )}
+                      {scan.status === "confirmed" && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+                      {scan.status === "already" && <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                      {scan.status === "invalid" && <XCircle className="h-4 w-4 text-red-500" />}
                     </div>
                   </div>
                 ))}
@@ -504,8 +600,8 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
