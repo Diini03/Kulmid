@@ -55,6 +55,7 @@ interface SendInvitationParams {
   customTitle?: string;
   customMessage?: string;
   eventId: string;
+  checkInToken?: string;
 }
 
 export const sendEventInvitation = async (params: SendInvitationParams): Promise<boolean> => {
