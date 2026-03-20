@@ -98,6 +98,7 @@ interface SendRegistrationEmailParams {
   toName: string;
   eventTitle: string;
   eventDate: string;
+  eventTime?: string;
   eventLocation: string;
   status: "registered" | "pending" | "rejected";
   guestId?: string;
@@ -110,7 +111,6 @@ export const sendRegistrationEmail = async (params: SendRegistrationEmailParams)
   initEmailJS();
   
   try {
-    // Only send email for confirmed registrations (2 template limit on free plan)
     if (params.status === "registered") {
       const templateId = EMAILJS_CONFIG.TEMPLATES.REGISTRATION_CONFIRMED;
       if (!templateId) {
@@ -118,18 +118,20 @@ export const sendRegistrationEmail = async (params: SendRegistrationEmailParams)
         return true;
       }
       
-      // Use provided token (already saved to DB) or generate fallback
       const checkInToken = params.checkInToken || generateCheckInToken();
       const qrCodeUrl = generateQRCodeUrl(checkInToken);
+      const eventUrl = `${window.location.origin}/events/${params.eventId}`;
       
       await emailjs.send(EMAILJS_CONFIG.SERVICE_ID, templateId, {
         to_email: params.toEmail,
         to_name: params.toName,
         event_title: params.eventTitle,
         event_date: params.eventDate,
+        event_time: params.eventTime || "",
         event_location: params.eventLocation,
-        qr_code_url: qrCodeUrl,
-        check_in_token: checkInToken,
+        qr_code: qrCodeUrl,
+        event_url: eventUrl,
+        support_email: "kulmid@gmail.com",
       });
       return true;
     }
