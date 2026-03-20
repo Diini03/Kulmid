@@ -155,6 +155,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
       }
 
       const token = extractToken(decodedText);
+      lastTokenRef.current = token;
 
       const { data, error } = await supabase.functions.invoke("verify-check-in", {
         body: { token, eventId, action: "verify" },
