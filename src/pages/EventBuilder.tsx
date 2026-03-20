@@ -127,6 +127,12 @@ const EventBuilder = () => {
               Guests
             </TabsTrigger>
             <TabsTrigger 
+              value="registration"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
+            >
+              Registration
+            </TabsTrigger>
+            <TabsTrigger 
               value="edit"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
             >
@@ -146,6 +152,10 @@ const EventBuilder = () => {
 
           <TabsContent value="guests" className="mt-6">
             <EventBuilderGuests eventId={event.id} />
+          </TabsContent>
+
+          <TabsContent value="registration" className="mt-6">
+            <EventBuilderRegistration eventId={event.id} />
           </TabsContent>
 
           <TabsContent value="edit" className="mt-6">
