@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, XCircle, Clock, User, Mail, Phone, Building2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { sendRegistrationEmail, generateCheckInToken, isEmailJSConfigured } from "@/lib/emailjs";
+import { sendRegistrationEmail, isEmailJSConfigured } from "@/lib/emailjs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProcessingSet } from "@/hooks/useAsyncAction";
 
