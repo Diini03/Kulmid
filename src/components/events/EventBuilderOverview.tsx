@@ -334,7 +334,7 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
                           )}
                         </div>
                         <Badge 
-                          variant={guest.status === "confirmed" ? "default" : "secondary"}
+                          variant={guest.status === "confirmed" || guest.status === "registered" ? "success" : guest.status === "pending" ? "warning" : "secondary"}
                           className="text-xs flex-shrink-0"
                         >
                           {guest.status}

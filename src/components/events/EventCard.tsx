@@ -80,7 +80,7 @@ export const EventCard = ({ event, basePath = "/events" }: Props) => {
         action={authAction}
       />
       <Card 
-        className="overflow-hidden border bg-card cursor-pointer"
+        className="overflow-hidden border border-border/50 bg-card shadow-sm cursor-pointer"
         onClick={handleCardClick}
       >
         {/* Image Container */}
