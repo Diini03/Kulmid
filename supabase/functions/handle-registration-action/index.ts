@@ -78,7 +78,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const token = authHeader.replace('Bearer ', '');
     
-    // Create a client with the user's JWT to verify their identity
     const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: `Bearer ${token}` } }
     });
@@ -98,7 +97,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { guestId, action, rejectionReason }: ActionRequest = await req.json();
     
-    // Input validation
     if (!guestId || typeof guestId !== 'string') {
       return new Response(
         JSON.stringify({ error: "Invalid guestId" }),
@@ -115,10 +113,8 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`Processing ${action} for guest:`, guestId);
 
-    // Use service role for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get guest and event details
     const { data: guest, error: guestError } = await supabase
       .from("event_guests")
       .select("*, events!inner(id, title, date, location, created_by)")
@@ -134,7 +130,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // ============ AUTHORIZATION CHECK ============
-    // Verify the authenticated user owns this event OR is an admin
     const { data: userRole } = await supabase
       .from("user_roles")
       .select("role")
@@ -159,26 +154,20 @@ const handler = async (req: Request): Promise<Response> => {
     let subject = "";
     let htmlContent = "";
 
-    // Escape user-provided content for HTML
     const safeGuestName = escapeHtml(guest.name);
     const safeEventTitle = escapeHtml(guest.events.title);
     const safeEventLocation = escapeHtml(guest.events.location);
     const safeRejectionReason = escapeHtml(rejectionReason);
 
     if (action === "approve") {
-      // Generate check-in token and QR code
       const checkInToken = generateCheckInToken();
       const checkInUrl = `https://kulmid.lovable.app/check-in/${checkInToken}`;
       const qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
         width: 300,
         margin: 2,
-        color: {
-          dark: "#000000",
-          light: "#FFFFFF",
-        },
+        color: { dark: "#000000", light: "#FFFFFF" },
       });
 
-      // Update status with token
       const { error: updateError } = await supabase
         .from("event_guests")
         .update({
@@ -190,109 +179,91 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (updateError) throw updateError;
 
-      const eventDate = new Date(guest.events.date).toLocaleString();
+      const eventDateObj = new Date(guest.events.date);
+      const eventDate = eventDateObj.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+      const eventTime = eventDateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const eventUrl = `https://kulmid.lovable.app/events/${guest.events.id}`;
 
-      subject = `✅ You're confirmed for ${safeEventTitle}`;
-      htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-          <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 20px;">
-            <tr>
-              <td align="center">
-                <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                  
-                  <tr>
-                    <td style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); padding: 30px 40px; text-align: center;">
-                      <img src="${supabaseUrl}/storage/v1/object/public/event-images/kulmid-logo-text.png" alt="Kulmid" style="height: 40px; margin-bottom: 10px;">
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="padding: 40px 40px 20px; text-align: center;">
-                      <div style="display: inline-block; background-color: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px;">
-                        ✓ Confirmed
-                      </div>
-                      <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #111827; line-height: 1.3;">
-                        You've got a spot!
-                      </h1>
-                      <p style="margin: 0; font-size: 18px; color: #6b7280;">
-                        ${safeEventTitle}
-                      </p>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="padding: 0 40px 30px;">
-                      <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
-                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
-                          <tr>
-                            <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">📅 Date:</span> ${eventDate}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">📍 Location:</span> ${safeEventLocation}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">👤 Guest:</span> ${safeGuestName}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td style="padding: 8px 0; font-size: 15px; color: #374151;">
-                              <span style="font-weight: 600;">🎟️ Ticket:</span> 1× Standard
-                            </td>
-                          </tr>
-                        </table>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="padding: 0 40px 30px; text-align: center;">
-                      <p style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #111827;">Your Check-In Code</p>
-                      <div style="background-color: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; display: inline-block;">
-                        <img src="${qrCodeDataUrl}" alt="Check-in QR Code" style="display: block; width: 250px; height: 250px;">
-                      </div>
-                      <p style="margin: 15px 0 0; font-size: 13px; color: #6b7280;">
-                        Show this QR code at the event entrance
-                      </p>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="padding: 0 40px 40px; text-align: center;">
-                      <a href="${supabaseUrl}" style="display: inline-block; background-color: #06b6d4; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 0 8px 12px;">
-                        View Event Details
-                      </a>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="background-color: #f9fafb; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
-                      <p style="margin: 0 0 10px; font-size: 13px; color: #6b7280;">
-                        Powered by <strong style="color: #06b6d4;">Kulmid</strong>
-                      </p>
-                      <p style="margin: 0; font-size: 12px; color: #9ca3af;">
-                        You're receiving this because you registered for this event.
-                      </p>
-                    </td>
-                  </tr>
-
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>
-      `;
+      subject = `✅ Registration confirmed — ${safeEventTitle}`;
+      htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0; padding:0; background-color:#0b0d10; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#ffffff;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#0b0d10; margin:0; padding:0; width:100%;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px; margin:0 auto; background-color:#111418; border:1px solid #1f242b; border-radius:20px; overflow:hidden;">
+          <tr>
+            <td style="padding:24px 28px 12px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td align="left" style="font-size:20px; line-height:28px; font-weight:700; color:#ffffff;">Kulmid</td>
+                  <td align="right"><span style="display:inline-block; padding:6px 10px; border-radius:999px; background-color:#0f2f2b; color:#6ee7d8; font-size:12px; line-height:12px; font-weight:600; letter-spacing:0.2px;">Confirmed</span></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 0 28px;">
+              <h1 style="margin:0 0 10px 0; font-size:30px; line-height:36px; font-weight:700; color:#ffffff;">Registration confirmed</h1>
+              <p style="margin:0 0 24px 0; font-size:15px; line-height:24px; color:#9aa4b2;">Hi ${safeGuestName}, your spot has been confirmed for the event below.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 24px 28px;">
+              <div style="font-size:20px; line-height:28px; font-weight:700; color:#ffffff;">${safeEventTitle}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 20px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#171b21; border:1px solid #262c35; border-radius:16px;">
+                <tr><td style="padding:20px 20px 8px 20px; font-size:15px; line-height:22px; font-weight:600; color:#ffffff;">Event details</td></tr>
+                <tr>
+                  <td style="padding:0 20px 18px 20px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr><td style="padding:8px 0; font-size:13px; line-height:20px; color:#7f8a99;">Date</td><td align="right" style="padding:8px 0; font-size:14px; line-height:20px; color:#e5e7eb;">${eventDate}</td></tr>
+                      <tr><td style="padding:8px 0; font-size:13px; line-height:20px; color:#7f8a99;">Time</td><td align="right" style="padding:8px 0; font-size:14px; line-height:20px; color:#e5e7eb;">${eventTime}</td></tr>
+                      <tr><td style="padding:8px 0; font-size:13px; line-height:20px; color:#7f8a99;">Location</td><td align="right" style="padding:8px 0; font-size:14px; line-height:20px; color:#e5e7eb;">${safeEventLocation}</td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 24px 28px;">
+              <p style="margin:0; font-size:15px; line-height:25px; color:#9aa4b2;">Save your QR pass below. You'll need it for a smooth check-in at the event.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 24px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#14181d; border:1px solid #262c35; border-radius:18px;">
+                <tr><td align="center" style="padding:20px 20px 10px 20px;"><div style="font-size:12px; line-height:18px; letter-spacing:0.8px; text-transform:uppercase; color:#6ee7d8; font-weight:700;">Check-in pass</div></td></tr>
+                <tr><td align="center" style="padding:6px 20px 12px 20px;"><img src="${qrCodeDataUrl}" alt="QR Code" width="170" height="170" style="display:block; width:170px; height:170px; border-radius:12px; background:#ffffff; padding:8px;" /></td></tr>
+                <tr><td align="center" style="padding:0 20px 22px 20px; font-size:13px; line-height:21px; color:#7f8a99;">Present this code when you arrive.</td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 32px 28px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr><td align="center" style="border-radius:12px; background-color:#14b8a6;"><a href="${eventUrl}" target="_blank" style="display:inline-block; padding:14px 22px; font-size:14px; line-height:14px; font-weight:700; color:#08110f; text-decoration:none; border-radius:12px;">View event</a></td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr><td style="padding:0 28px;"><div style="height:1px; background-color:#1f242b;"></div></td></tr>
+          <tr>
+            <td style="padding:20px 28px 28px 28px;">
+              <p style="margin:0 0 8px 0; font-size:12px; line-height:20px; color:#6b7280;">You received this email because you registered for an event on Kulmid.</p>
+              <p style="margin:0; font-size:12px; line-height:20px; color:#6b7280;">Need help? Contact support at kulmid@gmail.com</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
     } else {
       // Rejection
       const { error: updateError } = await supabase
@@ -305,79 +276,57 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (updateError) throw updateError;
 
-      const eventDate = new Date(guest.events.date).toLocaleString();
-
-      subject = `❌ Registration Not Approved - ${safeEventTitle}`;
-      htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-          <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 20px;">
-            <tr>
-              <td align="center">
-                <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                  
-                  <tr>
-                    <td style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); padding: 30px 40px; text-align: center;">
-                      <img src="${supabaseUrl}/storage/v1/object/public/event-images/kulmid-logo-text.png" alt="Kulmid" style="height: 40px;">
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="padding: 40px 40px 20px; text-align: center;">
-                      <div style="display: inline-block; background-color: #fee2e2; color: #991b1b; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px;">
-                        ❌ Not Approved
-                      </div>
-                      <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #111827;">
-                        Registration Not Approved
-                      </h1>
-                      <p style="margin: 0; font-size: 18px; color: #6b7280;">
-                        ${safeEventTitle}
-                      </p>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="padding: 0 40px 30px;">
-                      <p style="margin: 0 0 20px; font-size: 15px; color: #374151; line-height: 1.6;">
-                        Hi ${safeGuestName},
-                      </p>
-                      <p style="margin: 0 0 20px; font-size: 15px; color: #374151; line-height: 1.6;">
-                        Unfortunately, your registration for this event was not approved.
-                      </p>
-                      ${safeRejectionReason ? `
-                      <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
-                        <p style="margin: 0; font-size: 14px; color: #991b1b;">
-                          <strong>Reason:</strong><br>
-                          <span style="color: #dc2626;">${safeRejectionReason}</span>
-                        </p>
-                      </div>
-                      ` : ''}
-                      <p style="margin: 0; font-size: 15px; color: #374151; line-height: 1.6;">
-                        If you have any questions, please contact the event organizer.
-                      </p>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="background-color: #f9fafb; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
-                      <p style="margin: 0 0 10px; font-size: 13px; color: #6b7280;">
-                        Powered by <strong style="color: #06b6d4;">Kulmid</strong>
-                      </p>
-                    </td>
-                  </tr>
-
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>
-      `;
+      subject = `Registration update — ${safeEventTitle}`;
+      htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0; padding:0; background-color:#0b0d10; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#ffffff;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#0b0d10; margin:0; padding:0; width:100%;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px; margin:0 auto; background-color:#111418; border:1px solid #1f242b; border-radius:20px; overflow:hidden;">
+          <tr>
+            <td style="padding:24px 28px 12px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td align="left" style="font-size:20px; line-height:28px; font-weight:700; color:#ffffff;">Kulmid</td>
+                  <td align="right"><span style="display:inline-block; padding:6px 10px; border-radius:999px; background-color:#2f1f1f; color:#f87171; font-size:12px; line-height:12px; font-weight:600; letter-spacing:0.2px;">Not Approved</span></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 0 28px;">
+              <h1 style="margin:0 0 10px 0; font-size:30px; line-height:36px; font-weight:700; color:#ffffff;">Registration not approved</h1>
+              <p style="margin:0 0 24px 0; font-size:15px; line-height:24px; color:#9aa4b2;">Hi ${safeGuestName}, unfortunately your registration for <strong style="color:#ffffff;">${safeEventTitle}</strong> was not approved.</p>
+            </td>
+          </tr>
+          ${safeRejectionReason ? `
+          <tr>
+            <td style="padding:0 28px 24px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#1c1517; border:1px solid #3b2020; border-radius:16px;">
+                <tr><td style="padding:16px 20px; font-size:14px; line-height:22px; color:#fca5a5;"><strong style="color:#f87171;">Reason:</strong><br/>${safeRejectionReason}</td></tr>
+              </table>
+            </td>
+          </tr>` : ''}
+          <tr>
+            <td style="padding:0 28px 32px 28px;">
+              <p style="margin:0; font-size:15px; line-height:25px; color:#9aa4b2;">If you have any questions, please contact the event organizer.</p>
+            </td>
+          </tr>
+          <tr><td style="padding:0 28px;"><div style="height:1px; background-color:#1f242b;"></div></td></tr>
+          <tr>
+            <td style="padding:20px 28px 28px 28px;">
+              <p style="margin:0 0 8px 0; font-size:12px; line-height:20px; color:#6b7280;">You received this email because you registered for an event on Kulmid.</p>
+              <p style="margin:0; font-size:12px; line-height:20px; color:#6b7280;">Need help? Contact support at kulmid@gmail.com</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
     }
 
     await sendEmailWithMailjet(guest.email, subject, htmlContent);
