@@ -1,114 +1,69 @@
 
 
-## Notification System (Implemented)
+# Refactor QR Code System: Unique Per-Registration
 
-### Database Triggers
-All notification triggers are attached and active:
+## Current Problems
 
-| Trigger | Table | Event | Notification Type |
-|---------|-------|-------|-------------------|
-| `on_profile_created_welcome` | profiles | INSERT | `welcome` |
-| `on_event_created_milestone` | events | INSERT | `milestone` |
-| `on_guest_registered_notify` | event_guests | INSERT | `registration` |
-| `on_event_status_change` | events | UPDATE | `event_approved` / `event_rejected` |
-| `on_registration_status_change` | event_guests | UPDATE | `registration_confirmed` / `registration_rejected` |
-| `on_guest_checked_in` | event_guests | UPDATE | `check_in` |
-| `on_new_event_admin_notify` | events | INSERT | `admin_new_event` |
+1. **Client-side (emailjs.ts)**: Token generated with `Date.now()-random` — weak and NOT saved to DB before sending the email. The QR and DB token are disconnected.
+2. **Edge functions** (handle-registration-action, send-registration-confirmation, send-event-invitation): Token uses `guestId-eventId-crypto.randomUUID()` and IS saved to DB — this is the correct pattern but inconsistent with client-side.
+3. **QR URL inconsistency**: Client-side generates `/check-in/{eventId}/{token}`, edge functions generate `supabase.co/functions/v1/verify-check-in?token={token}`. Two different formats.
+4. **Auto-approve flow** (EventRegistrationDialog): Generates token in emailjs.ts (not saved) AND separately in the dialog (saved) — two different tokens for the same registration.
 
-### Settings Integration
-Triggers respect `notification_settings` table preferences:
-- `guest_alerts` → registration + check_in notifications for organizers
-- `registration_confirmations` → registration_confirmed/rejected for attendees
+## What Changes
 
-### Frontend
-- NotificationsPanel groups same-type notifications within 10min window
-- Clickable notifications navigate to relevant event
-- Icons per type: green CheckCircle (approved), red XCircle (rejected), Ticket (registration), ScanLine (check-in), ShieldCheck (admin)
+### 1. Fix token generation in `src/lib/emailjs.ts`
 
-### Not Yet Implemented
-- Event reminders (24h/1h) — requires pg_cron
-- Email notifications for new types — EmailJS free tier limited to 2 templates
-- Push notifications — requires service worker infrastructure
+- Make `generateCheckInToken()` accept the guest's `check_in_token` as a parameter instead of generating its own
+- Update `generateQRCodeUrl()` to use the standard check-in URL format: `https://kulmid.lovable.app/check-in/{token}`
+- Both `sendRegistrationEmail` and `sendEventInvitation` will receive the already-saved token and pass it to the QR generator
 
----
+### 2. Fix `src/components/events/EventRegistrationDialog.tsx`
 
-## Add Free/Paid Toggle with Payout Phone Number
+- Generate token using `crypto.randomUUID()` (browser API, cryptographically secure)
+- Save token to DB first, then pass it to the email function
+- Ensure the same token is used in both DB and email QR
 
-### Overview
-Replace the plain price input with a **Free/Paid toggle button**. Default is "Free". When "Paid" is selected, reveal a price field and a payout phone number field (where creators receive their earnings). Phone numbers are validated for Somali format.
+### 3. Fix `src/components/events/RegistrationsTab.tsx`
 
-### Database Change
-Add a `payout_phone` column to the `events` table:
-```sql
-ALTER TABLE public.events ADD COLUMN payout_phone text;
-```
-This keeps `host_phone` for contact purposes and `payout_phone` for payment/earnings.
+- Update token generation to use `crypto.randomUUID()`
+- Pass the saved token to the email function
 
-### UI Design
+### 4. Standardize QR URL format across edge functions
 
-```text
-Ticket Pricing
-+----------+----------+
-|   Free   |   Paid   |   (toggle buttons, "Free" selected by default)
-+----------+----------+
+Update `handle-registration-action/index.ts`, `send-registration-confirmation/index.ts`, and `send-event-invitation/index.ts`:
+- QR URL becomes `https://kulmid.lovable.app/check-in/{token}` (user-facing URL, not raw Supabase function URL)
+- Token generation uses `crypto.randomUUID()` (already cryptographically secure in Deno)
 
--- When "Paid" is clicked: --
+### 5. No database changes needed
 
-Price ($)        [__________]
-Payout Phone     [+252 _________]
-  "We'll send your earnings to this number"
-```
+The `event_guests` table already has:
+- `id` (registration ID)
+- `event_id`
+- `name`, `email`
+- `status`
+- `check_in_token`
+- `checked_in`, `checked_in_at`
 
-### Phone Validation
-Somali mobile numbers must start with `+252` followed by valid prefixes:
-- `61, 62, 63, 68` (Hormuud/EVC Plus)
-- `71, 77` (Telesom/Zaad)
-- Other valid: `65, 66, 69, 70, 73, 74, 76, 78, 79, 90`
+All required fields exist.
 
-Regex pattern: `/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/`
+## Summary of Changes
 
-### Files to Change
+| File | Change |
+|------|--------|
+| `src/lib/emailjs.ts` | Token passed in, not generated; QR URL uses `/check-in/{token}` |
+| `src/components/events/EventRegistrationDialog.tsx` | Use `crypto.randomUUID()`, save to DB before email, pass token to email fn |
+| `src/components/events/RegistrationsTab.tsx` | Use `crypto.randomUUID()`, pass saved token to email fn |
+| `supabase/functions/handle-registration-action/index.ts` | QR URL → `kulmid.lovable.app/check-in/{token}`, use `crypto.randomUUID()` |
+| `supabase/functions/send-registration-confirmation/index.ts` | Same QR URL change |
+| `supabase/functions/send-event-invitation/index.ts` | Same QR URL change |
 
-**1. `src/pages/Create.tsx`** (user event creation form)
-- Add `isPaid` state (default `false`)
-- Replace the price input with a Free/Paid toggle (two styled buttons)
-- When "Free": set price to 0, hide price + payout phone fields
-- When "Paid": show price input + payout phone input with Somali validation
-- Add `payout_phone` to the Zod schema (required when price > 0)
-- Save `payout_phone` to the database on submit
+**No database migration needed. 6 files changed. 0 new files.**
 
-**2. `src/components/admin/EventForm.tsx`** (admin event form)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
+## Result
 
-**3. `src/components/events/EventBuilderEdit.tsx`** (event builder edit tab)
-- Same Free/Paid toggle pattern
-- Same payout phone field with validation
+- Every registration gets one cryptographically random token
+- Token is saved to DB before QR is generated
+- QR encodes `https://kulmid.lovable.app/check-in/{token}` — unique per guest
+- Public event sharing QR (event page URL) remains separate and unchanged
+- System is ready for a check-in verification page at `/check-in/:token`
 
-### Validation Schema Update (in all 3 forms)
-```typescript
-payout_phone: z.string()
-  .regex(/^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/, 
-    "Enter a valid Somali phone number (e.g. +252611234567)")
-  .optional()
-  .or(z.literal(""))
-```
-
-With a `.refine()` to make it required when price > 0:
-```typescript
-.refine((data) => {
-  if (data.price > 0) {
-    return !!data.payout_phone && data.payout_phone.length > 0;
-  }
-  return true;
-}, {
-  message: "Payout phone number is required for paid events",
-  path: ["payout_phone"],
-})
-```
-
-### What This Does NOT Include (for later)
-- Attendee payment flow (how users pay for paid events)
-- WAAFI API integration
-- Admin dashboard paid event details view
-- Payout tracking system
