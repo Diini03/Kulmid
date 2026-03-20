@@ -197,6 +197,139 @@ export type Database = {
           },
         ]
       }
+      event_registration_answers: {
+        Row: {
+          answer_boolean: boolean | null
+          answer_option: string | null
+          answer_text: string | null
+          created_at: string
+          id: string
+          question_id: string
+          registration_id: string
+        }
+        Insert: {
+          answer_boolean?: boolean | null
+          answer_option?: string | null
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          question_id: string
+          registration_id: string
+        }
+        Update: {
+          answer_boolean?: boolean | null
+          answer_option?: string | null
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string
+          registration_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registration_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "event_registration_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registration_answers_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "event_guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_registration_fields: {
+        Row: {
+          created_at: string
+          event_id: string
+          field_key: string
+          id: string
+          is_enabled: boolean
+          is_required: boolean
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          field_key: string
+          id?: string
+          is_enabled?: boolean
+          is_required?: boolean
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          field_key?: string
+          id?: string
+          is_enabled?: boolean
+          is_required?: boolean
+          label?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registration_fields_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_registration_questions: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          is_active: boolean
+          is_required: boolean
+          options: Json | null
+          question_text: string
+          question_type: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          question_text: string
+          question_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          question_text?: string
+          question_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registration_questions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           auto_approve_registrations: boolean | null

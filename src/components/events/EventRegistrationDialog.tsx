@@ -25,7 +25,10 @@ const EventRegistrationDialog = ({
 }: EventRegistrationDialogProps) => {
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (
+    formData: any,
+    customAnswers: { question_id: string; answer_text?: string; answer_boolean?: boolean; answer_option?: string }[]
+  ) => {
     if (loading) return;
     
     setLoading(true);
@@ -52,20 +55,16 @@ const EventRegistrationDialog = ({
       }
 
       // Insert registration
-      const { error } = await supabase.from("event_guests").insert({
+      const { data: registration, error } = await supabase.from("event_guests").insert({
         event_id: eventId,
-        name: formData.name.trim(),
+        name: formData.name?.trim() || null,
         email: email,
-        phone_number: formData.phone_number.trim(),
+        phone_number: formData.phone_number?.trim() || null,
         organization: formData.organization?.trim() || null,
-        why_interested: formData.why_interested.trim(),
-        heard_from: formData.heard_from || null,
-        questions: formData.questions?.trim() || null,
-        special_requirements: formData.address?.trim() || null, // Store address in special_requirements
         registration_type: "registration",
         status: autoApprove ? "registered" : "pending",
         rsvp_at: autoApprove ? new Date().toISOString() : null,
-      });
+      }).select("id").single();
 
       if (error) {
         if (error.code === '23505') {
@@ -78,6 +77,25 @@ const EventRegistrationDialog = ({
           return;
         }
         throw error;
+      }
+
+      // Insert custom answers
+      if (registration && customAnswers.length > 0) {
+        const answersToInsert = customAnswers.map((a) => ({
+          registration_id: registration.id,
+          question_id: a.question_id,
+          answer_text: a.answer_text || null,
+          answer_boolean: a.answer_boolean ?? null,
+          answer_option: a.answer_option || null,
+        }));
+
+        const { error: answersError } = await supabase
+          .from("event_registration_answers")
+          .insert(answersToInsert);
+
+        if (answersError) {
+          console.error("Failed to save custom answers:", answersError);
+        }
       }
 
       // Get event details for email
@@ -111,7 +129,6 @@ const EventRegistrationDialog = ({
           checkInToken: savedToken,
         });
 
-        // Send notification to organizer
         if (event?.host_email) {
           await sendOrganizerNotification({
             organizerEmail: event.host_email,
@@ -120,8 +137,6 @@ const EventRegistrationDialog = ({
             eventTitle,
           });
         }
-      } else {
-        console.warn("EmailJS not configured - skipping email notifications");
       }
 
       const description = autoApprove
@@ -187,6 +202,7 @@ const EventRegistrationDialog = ({
         </DialogHeader>
 
         <SimpleRegistrationForm
+          eventId={eventId}
           onSubmit={handleSubmit}
           loading={loading}
           onCancel={() => onOpenChange(false)}
