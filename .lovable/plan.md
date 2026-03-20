@@ -1,69 +1,60 @@
 
 
-# Refactor QR Code System: Unique Per-Registration
+# QR Check-In & Confirmation System
 
-## Current Problems
+## Current State
 
-1. **Client-side (emailjs.ts)**: Token generated with `Date.now()-random` — weak and NOT saved to DB before sending the email. The QR and DB token are disconnected.
-2. **Edge functions** (handle-registration-action, send-registration-confirmation, send-event-invitation): Token uses `guestId-eventId-crypto.randomUUID()` and IS saved to DB — this is the correct pattern but inconsistent with client-side.
-3. **QR URL inconsistency**: Client-side generates `/check-in/{eventId}/{token}`, edge functions generate `supabase.co/functions/v1/verify-check-in?token={token}`. Two different formats.
-4. **Auto-approve flow** (EventRegistrationDialog): Generates token in emailjs.ts (not saved) AND separately in the dialog (saved) — two different tokens for the same registration.
+- **Scanner page** exists at `/event/:eventId/scanner` (EventScanner.tsx) — standalone page, navigates away from Guests
+- **Edge function** `verify-check-in` exists but has a bug (reads `req.json()` twice) and is missing from `config.toml`
+- **Guests page** has 2 tabs: Invitations, Registrations — no Checked In tab
+- **Scanner auto-checks-in** on scan — no confirmation step
+- **QR token URL**: `https://kulmid.lovable.app/check-in/{token}`
 
-## What Changes
+## Changes
 
-### 1. Fix token generation in `src/lib/emailjs.ts`
+### 1. Fix `verify-check-in` edge function
+- Fix double `req.json()` bug — parse body once
+- Add `verify_jwt = false` to `config.toml`
+- Split into two modes: `action: "verify"` (lookup only, no check-in) and `action: "confirm"` (perform check-in)
+- This enables the two-step scan → confirm flow
 
-- Make `generateCheckInToken()` accept the guest's `check_in_token` as a parameter instead of generating its own
-- Update `generateQRCodeUrl()` to use the standard check-in URL format: `https://kulmid.lovable.app/check-in/{token}`
-- Both `sendRegistrationEmail` and `sendEventInvitation` will receive the already-saved token and pass it to the QR generator
+### 2. Add "Checked In" tab to EventBuilderGuests
+- Third tab alongside Invitations and Registrations
+- Shows checked-in guests with: name, email, check-in time, status badge
+- Badge counter showing checked-in count
+- Real-time subscription to `event_guests` for live updates
 
-### 2. Fix `src/components/events/EventRegistrationDialog.tsx`
+### 3. Replace scanner page with full-screen dialog
+- New `CheckInScannerDialog.tsx` component opened from Guests page
+- Full-screen dialog overlay (stays in context, no navigation)
+- Contains: camera scanner, stats bar, result panel, recent scans list
 
-- Generate token using `crypto.randomUUID()` (browser API, cryptographically secure)
-- Save token to DB first, then pass it to the email function
-- Ensure the same token is used in both DB and email QR
+### 4. Two-step scan → confirm flow
+- **Step 1**: Scan QR → extract token from URL → call `verify-check-in` with `action: "verify"`
+- **Step 2**: Show result card with guest info + "Confirm Check-In" button
+- **Step 3**: On confirm → call `verify-check-in` with `action: "confirm"` → green success feedback
+- Scanner stays active, result panel updates inline
+- Three result states: valid (show confirm button), already checked-in (warning), invalid (error)
 
-### 3. Fix `src/components/events/RegistrationsTab.tsx`
+### 5. Manual search fallback
+- Search input in scanner dialog — search by name or email
+- Shows matching guests with manual "Check In" button
+- Uses direct Supabase query (no edge function needed)
 
-- Update token generation to use `crypto.randomUUID()`
-- Pass the saved token to the email function
+### 6. Check-in stats bar
+- Inside scanner dialog: "12 / 45 checked in" progress indicator
+- Updates in real-time after each confirmation
 
-### 4. Standardize QR URL format across edge functions
-
-Update `handle-registration-action/index.ts`, `send-registration-confirmation/index.ts`, and `send-event-invitation/index.ts`:
-- QR URL becomes `https://kulmid.lovable.app/check-in/{token}` (user-facing URL, not raw Supabase function URL)
-- Token generation uses `crypto.randomUUID()` (already cryptographically secure in Deno)
-
-### 5. No database changes needed
-
-The `event_guests` table already has:
-- `id` (registration ID)
-- `event_id`
-- `name`, `email`
-- `status`
-- `check_in_token`
-- `checked_in`, `checked_in_at`
-
-All required fields exist.
-
-## Summary of Changes
+## Files
 
 | File | Change |
 |------|--------|
-| `src/lib/emailjs.ts` | Token passed in, not generated; QR URL uses `/check-in/{token}` |
-| `src/components/events/EventRegistrationDialog.tsx` | Use `crypto.randomUUID()`, save to DB before email, pass token to email fn |
-| `src/components/events/RegistrationsTab.tsx` | Use `crypto.randomUUID()`, pass saved token to email fn |
-| `supabase/functions/handle-registration-action/index.ts` | QR URL → `kulmid.lovable.app/check-in/{token}`, use `crypto.randomUUID()` |
-| `supabase/functions/send-registration-confirmation/index.ts` | Same QR URL change |
-| `supabase/functions/send-event-invitation/index.ts` | Same QR URL change |
+| `supabase/config.toml` | Add `verify-check-in` with `verify_jwt = false` |
+| `supabase/functions/verify-check-in/index.ts` | Fix double-read bug, add verify/confirm modes |
+| `src/components/events/CheckInScannerDialog.tsx` | **New** — full-screen scanner dialog with two-step flow |
+| `src/components/events/CheckedInTab.tsx` | **New** — Checked In tab content |
+| `src/components/events/EventBuilderGuests.tsx` | Add Checked In tab, open scanner dialog instead of navigating |
+| `src/pages/EventScanner.tsx` | Keep for backward compat, but redirect to manage page |
 
-**No database migration needed. 6 files changed. 0 new files.**
-
-## Result
-
-- Every registration gets one cryptographically random token
-- Token is saved to DB before QR is generated
-- QR encodes `https://kulmid.lovable.app/check-in/{token}` — unique per guest
-- Public event sharing QR (event page URL) remains separate and unchanged
-- System is ready for a check-in verification page at `/check-in/:token`
+**6 files changed. 2 new components. 0 migrations.**
 
