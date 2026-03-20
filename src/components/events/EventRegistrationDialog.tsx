@@ -88,11 +88,12 @@ const EventRegistrationDialog = ({
         .single();
 
       // Generate and store check-in token for approved registrations
+      let savedToken: string | undefined;
       if (autoApprove) {
-        const checkInToken = generateCheckInToken();
+        savedToken = crypto.randomUUID();
         await supabase
           .from("event_guests")
-          .update({ check_in_token: checkInToken })
+          .update({ check_in_token: savedToken })
           .eq("event_id", eventId)
           .eq("email", email);
       }
