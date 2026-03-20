@@ -1,77 +1,98 @@
 
 
-# UX Refinement Plan — Edit Flow, Guests UX, Identity Adjustments
+# Custom Registration Questions — Plan
 
-## 1. Edit Flow — Edit Lock System (Option B)
+## Overview
 
-Replace the always-editable "Edit" tab with a locked-by-default pattern.
+Add organizer-configurable registration forms: toggle built-in fields, add custom questions, render them dynamically on the attendee form, and store answers separately.
 
-**In `EventBuilder.tsx`:**
-- Keep the "Edit" tab but rename it to "Edit"
-- Pass a new `locked` prop to `EventBuilderEdit`
+## Database Changes (3 new tables via migration)
 
-**In `EventBuilderEdit.tsx`:**
-- Add a lock state (`editing = false` by default)
-- When locked: show all fields as read-only with a prominent "Unlock Editing" button + lock icon
-- When unlocked: show fields as editable (current behavior)
-- Unlocking shows a brief confirmation toast: "Editing enabled — remember to save"
-- All form inputs get `disabled={!editing}` with reduced opacity styling
+### `event_registration_fields`
+Stores per-event configuration of built-in fields (name, email, phone, organization).
 
-## 2. Guests Section — Summary Stats Bar
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid PK | default gen_random_uuid() |
+| event_id | text NOT NULL | references events(id) on delete cascade |
+| field_key | text NOT NULL | e.g. 'name', 'email', 'phone_number', 'organization' |
+| label | text NOT NULL | display label |
+| is_enabled | boolean | default true |
+| is_required | boolean | default false |
+| sort_order | integer | default 0 |
+| created_at | timestamptz | default now() |
 
-**In `EventBuilderGuests.tsx`:**
-- Add a stats bar above the tabs showing: Total Guests | Registered | Checked In | Pending
-- Fetch total registration count alongside existing queries
-- Stats update when scanner dialog closes or tab data refreshes
+RLS: event owner can SELECT/INSERT/UPDATE/DELETE. Admins can SELECT all. Public can SELECT (needed for registration form rendering).
 
-```text
-┌─────────────────────────────────────────────┐
-│  Total: 120   Registered: 85   Checked In: 45   Pending: 35  │
-└─────────────────────────────────────────────┘
-[ Invitations | Registrations | Checked In ]
-```
+### `event_registration_questions`
+Organizer-created custom questions.
 
-## 3. Guests — Filters Inside Checked In Tab
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid PK | |
+| event_id | text NOT NULL | references events(id) on delete cascade |
+| question_text | text NOT NULL | |
+| question_type | text NOT NULL | 'short_text', 'long_text', 'single_select', 'boolean' |
+| is_required | boolean | default false |
+| options | jsonb | for single_select choices |
+| sort_order | integer | default 0 |
+| is_active | boolean | default true |
+| created_at / updated_at | timestamptz | |
 
-**In `CheckedInTab.tsx`:**
-- Already has data. Add a search/filter input at top to filter by name or email
-- Show initials avatar circle for each guest row (first letter of name, colored)
+RLS: same pattern — owner manages, public can read.
 
-**In `RegistrationsTab.tsx`:**
-- Already has filter buttons (All / Pending / Approved / Rejected) — no change needed
+### `event_registration_answers`
+Stores attendee answers to custom questions.
 
-## 4. Visual Identity Adjustments
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid PK | |
+| registration_id | uuid NOT NULL | references event_guests(id) on delete cascade |
+| question_id | uuid NOT NULL | references event_registration_questions(id) |
+| answer_text | text | for short/long text |
+| answer_boolean | boolean | for yes/no |
+| answer_option | text | for single_select |
+| created_at | timestamptz | |
 
-**A. Status badges consistency** — in `RegistrationsTab.tsx` and `EventBuilderOverview.tsx`:
-- Pending → `warning` variant (yellow)
-- Approved/Registered → `success` variant (green)  
-- Rejected → `destructive` variant (red)
-- Use existing badge variants from `badge.tsx` which already has `warning` and `success`
+RLS: public can INSERT (registration flow). Event owner can SELECT.
 
-**B. Button hierarchy** — in `EventBuilderOverview.tsx`:
-- "View Event Page" → primary button (default variant)
-- "Copy Link" → secondary/outline button
-- Swap the order so primary action comes first
+### Seed defaults
+A database function `initialize_event_registration_fields()` that inserts default field config rows when an event is created (via trigger on `events` insert).
 
-**C. Card styling refinements:**
-- Add slightly more padding to guest list rows
-- Use `border-border/60` for softer borders on cards
+## New Components
 
-**D. EventCard.tsx:**
-- Soften the card border: `border-border/50`
-- Add `shadow-sm` for subtle depth instead of flat border
+### `EventBuilderRegistration.tsx` — Organizer settings UI
+New tab "Registration" in EventBuilder between Guests and Edit.
 
-## 5. Files to Change
+**Built-in fields section:**
+- List of 4 fields with toggle switches (enabled/disabled, required/optional)
+- Name and Email always enabled+required (disabled toggles)
 
-| File | Changes |
-|------|---------|
-| `src/pages/EventBuilder.tsx` | Rename Edit tab label, no structural change |
-| `src/components/events/EventBuilderEdit.tsx` | Add edit lock state, disabled fields, unlock button |
-| `src/components/events/EventBuilderGuests.tsx` | Add summary stats bar above tabs |
-| `src/components/events/CheckedInTab.tsx` | Add search filter, initials avatar |
-| `src/components/events/EventBuilderOverview.tsx` | Swap button order, use primary for "View Event", softer borders |
-| `src/components/events/EventCard.tsx` | Soften border, add subtle shadow |
-| `src/components/events/RegistrationsTab.tsx` | Use `success`/`warning` badge variants |
+**Custom questions section:**
+- "Add Question" button → inline form: question text, type selector, required toggle
+- For `single_select`: editable options list
+- Each question shows as a card with edit/delete/reorder controls
+- Drag handle or up/down arrows for ordering
 
-**7 files modified. 0 new files. 0 migrations.**
+### Update `SimpleRegistrationForm.tsx` — Dynamic attendee form
+- Accept `eventId` prop, fetch field config + custom questions on mount
+- Render only enabled built-in fields
+- Render custom questions after built-in fields using appropriate input types
+- Validate required fields dynamically
+
+### Update `EventRegistrationDialog.tsx` — Submission logic
+- After inserting into `event_guests`, insert answers into `event_registration_answers`
+- Pass `eventId` to `SimpleRegistrationForm` for dynamic field fetching
+
+## Files to Change
+
+| File | Change |
+|------|--------|
+| **Migration** | Create 3 tables + trigger for default field seeding |
+| `src/pages/EventBuilder.tsx` | Add "Registration" tab |
+| `src/components/events/EventBuilderRegistration.tsx` | **New** — organizer form config UI |
+| `src/components/events/registration/SimpleRegistrationForm.tsx` | Make dynamic — fetch config, render conditionally |
+| `src/components/events/EventRegistrationDialog.tsx` | Pass eventId, handle custom answer submission |
+
+**5 files modified/created. 1 migration. 0 edge functions.**
 
