@@ -96,6 +96,7 @@ interface SendRegistrationEmailParams {
   guestId?: string;
   eventId: string;
   rejectionReason?: string;
+  checkInToken?: string;
 }
 
 export const sendRegistrationEmail = async (params: SendRegistrationEmailParams): Promise<boolean> => {
