@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { categories } from "@/constants/categories";
-import { Save, Sparkles } from "lucide-react";
+import { Save, Sparkles, Lock, Unlock } from "lucide-react";
 import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
 import { StripeConnectDialog } from "@/components/events/StripeConnectDialog";
 
@@ -56,6 +56,7 @@ interface EventBuilderEditProps {
 
 const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
   const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(event.image_url || "");
@@ -84,11 +85,22 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
 
   const eventType = watch("event_type");
 
+  const handleUnlock = () => {
+    setEditing(true);
+    toast({
+      title: "Editing enabled",
+      description: "You can now modify event details — remember to save.",
+    });
+  };
+
+  const handleLock = () => {
+    setEditing(false);
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size
     if (file.size > MAX_IMAGE_SIZE) {
       toast({
         title: "File too large",
@@ -99,7 +111,6 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
       return;
     }
 
-    // Validate MIME type
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       toast({
         title: "Invalid file type",
@@ -159,6 +170,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
         description: "Event updated successfully",
       });
 
+      setEditing(false);
       onUpdate();
     } catch (error: any) {
       toast({
@@ -172,169 +184,205 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Event Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="title">Event Title</Label>
-            <Input id="title" {...register("title")} />
-            {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label htmlFor="description">Description</Label>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setAiDialogOpen(true)} className="h-8 gap-1">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span className="text-xs">Suggest with AI</span>
-              </Button>
-            </div>
-            <Textarea id="description" {...register("description")} rows={5} />
-          </div>
-
-          <AIDescriptionDialog
-            open={aiDialogOpen}
-            onOpenChange={setAiDialogOpen}
-            eventContext={{
-              title: watch("title") || event.title,
-              category: watch("category"),
-              date: watch("date"),
-              event_type: watch("event_type"),
-              location: watch("location"),
-            }}
-            onAccept={(description) => setValue("description", description)}
-          />
-
-          <div className="grid gap-4 md:grid-cols-2">
+    <div className="space-y-6">
+      {/* Edit Lock Banner */}
+      {!editing ? (
+        <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
+          <div className="flex items-center gap-3">
+            <Lock className="h-4 w-4 text-muted-foreground" />
             <div>
-              <Label htmlFor="date">Date & Time</Label>
-              <Input id="date" type="datetime-local" {...register("date")} />
-              {errors.date && <p className="text-sm text-destructive mt-1">{errors.date.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select value={watch("category")} onValueChange={(value) => setValue("category", value)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.name} value={cat.name}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <p className="text-sm font-medium">Editing is locked</p>
+              <p className="text-xs text-muted-foreground">Unlock to make changes to this event</p>
             </div>
           </div>
+          <Button variant="outline" size="sm" onClick={handleUnlock}>
+            <Unlock className="h-3.5 w-3.5 mr-2" />
+            Unlock Editing
+          </Button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between p-4 rounded-lg border border-primary/30 bg-primary/5">
+          <div className="flex items-center gap-3">
+            <Unlock className="h-4 w-4 text-primary" />
+            <p className="text-sm font-medium">Editing unlocked — make your changes and save</p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleLock}>
+            <Lock className="h-3.5 w-3.5 mr-2" />
+            Lock
+          </Button>
+        </div>
+      )}
 
-          <div className="grid gap-4 md:grid-cols-2">
+      <form onSubmit={handleSubmit(onSubmit)} className={`space-y-6 ${!editing ? 'opacity-60 pointer-events-none select-none' : ''}`}>
+        <Card className="border-border/60">
+          <CardHeader>
+            <CardTitle>Event Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="event_type">Event Type</Label>
-              <Select value={eventType} onValueChange={(value: any) => setValue("event_type", value)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="in-person">In-Person</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="title">Event Title</Label>
+              <Input id="title" {...register("title")} disabled={!editing} />
+              {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
             </div>
-            <div className="space-y-3">
-              <Label>Ticket Pricing</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => { setIsPaid(false); setValue("price", 0); setValue("payout_phone", ""); }}
-                  className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
-                    !isPaid ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
-                  }`}
-                >Free</button>
-                <button
-                  type="button"
-                  onClick={() => setStripeDialogOpen(true)}
-                  className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
-                    isPaid ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
-                  }`}
-                >Paid</button>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="description">Description</Label>
+                {editing && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setAiDialogOpen(true)} className="h-8 gap-1">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span className="text-xs">Suggest with AI</span>
+                  </Button>
+                )}
               </div>
-              {isPaid && (
-                <div className="space-y-4 pt-2">
-                  <div>
-                    <Label htmlFor="price">Price ($)</Label>
-                    <Input id="price" type="number" step="0.01" min="0.01" {...register("price", { valueAsNumber: true })} />
-                    {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="payout_phone">Payout Phone Number</Label>
-                    <Input id="payout_phone" type="tel" placeholder="+252611234567" {...register("payout_phone")} />
-                    <p className="text-xs text-muted-foreground mt-1">We'll send your earnings to this number</p>
-                    {errors.payout_phone && <p className="text-sm text-destructive mt-1">{errors.payout_phone.message}</p>}
-                  </div>
+              <Textarea id="description" {...register("description")} rows={5} disabled={!editing} />
+            </div>
+
+            <AIDescriptionDialog
+              open={aiDialogOpen}
+              onOpenChange={setAiDialogOpen}
+              eventContext={{
+                title: watch("title") || event.title,
+                category: watch("category"),
+                date: watch("date"),
+                event_type: watch("event_type"),
+                location: watch("location"),
+              }}
+              onAccept={(description) => setValue("description", description)}
+            />
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="date">Date & Time</Label>
+                <Input id="date" type="datetime-local" {...register("date")} disabled={!editing} />
+                {errors.date && <p className="text-sm text-destructive mt-1">{errors.date.message}</p>}
+              </div>
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select value={watch("category")} onValueChange={(value) => setValue("category", value)} disabled={!editing}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.name} value={cat.name}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="event_type">Event Type</Label>
+                <Select value={eventType} onValueChange={(value: any) => setValue("event_type", value)} disabled={!editing}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="in-person">In-Person</SelectItem>
+                    <SelectItem value="online">Online</SelectItem>
+                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-3">
+                <Label>Ticket Pricing</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    disabled={!editing}
+                    onClick={() => { setIsPaid(false); setValue("price", 0); setValue("payout_phone", ""); }}
+                    className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
+                      !isPaid ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                    }`}
+                  >Free</button>
+                  <button
+                    type="button"
+                    disabled={!editing}
+                    onClick={() => setStripeDialogOpen(true)}
+                    className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
+                      isPaid ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                    }`}
+                  >Paid</button>
                 </div>
+                {isPaid && (
+                  <div className="space-y-4 pt-2">
+                    <div>
+                      <Label htmlFor="price">Price ($)</Label>
+                      <Input id="price" type="number" step="0.01" min="0.01" {...register("price", { valueAsNumber: true })} disabled={!editing} />
+                      {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="payout_phone">Payout Phone Number</Label>
+                      <Input id="payout_phone" type="tel" placeholder="+252611234567" {...register("payout_phone")} disabled={!editing} />
+                      <p className="text-xs text-muted-foreground mt-1">We'll send your earnings to this number</p>
+                      {errors.payout_phone && <p className="text-sm text-destructive mt-1">{errors.payout_phone.message}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {(eventType === "in-person" || eventType === "hybrid") && (
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input id="location" {...register("location")} placeholder="Event venue address" disabled={!editing} />
+              </div>
+            )}
+
+            {(eventType === "online" || eventType === "hybrid") && (
+              <div>
+                <Label htmlFor="meeting_link">Meeting Link</Label>
+                <Input id="meeting_link" {...register("meeting_link")} placeholder="https://..." disabled={!editing} />
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="image">Event Image</Label>
+              <Input id="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageChange} disabled={!editing} />
+              <p className="text-xs text-muted-foreground mt-1">Max 5MB. JPEG, PNG, WebP, or GIF.</p>
+              {imagePreview && (
+                <img src={imagePreview} alt="Preview" className="mt-2 w-full h-48 object-cover rounded" loading="lazy" />
               )}
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {(eventType === "in-person" || eventType === "hybrid") && (
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" {...register("location")} placeholder="Event venue address" />
-            </div>
-          )}
-
-          {(eventType === "online" || eventType === "hybrid") && (
-            <div>
-              <Label htmlFor="meeting_link">Meeting Link</Label>
-              <Input id="meeting_link" {...register("meeting_link")} placeholder="https://..." />
-            </div>
-          )}
-
-          <div>
-            <Label htmlFor="image">Event Image</Label>
-            <Input id="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageChange} />
-            <p className="text-xs text-muted-foreground mt-1">Max 5MB. JPEG, PNG, WebP, or GIF.</p>
-            {imagePreview && (
-              <img src={imagePreview} alt="Preview" className="mt-2 w-full h-48 object-cover rounded" loading="lazy" />
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Host Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="host_name">Host Name</Label>
-              <Input id="host_name" {...register("host_name")} />
+        <Card className="border-border/60">
+          <CardHeader>
+            <CardTitle>Host Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="host_name">Host Name</Label>
+                <Input id="host_name" {...register("host_name")} disabled={!editing} />
+              </div>
+              <div>
+                <Label htmlFor="host_email">Host Email</Label>
+                <Input id="host_email" type="email" {...register("host_email")} disabled={!editing} />
+              </div>
             </div>
             <div>
-              <Label htmlFor="host_email">Host Email</Label>
-              <Input id="host_email" type="email" {...register("host_email")} />
+              <Label htmlFor="host_description">Host Bio</Label>
+              <Textarea id="host_description" {...register("host_description")} rows={3} disabled={!editing} />
             </div>
-          </div>
-          <div>
-            <Label htmlFor="host_description">Host Bio</Label>
-            <Textarea id="host_description" {...register("host_description")} rows={3} />
-          </div>
-          <div>
-            <Label htmlFor="host_phone">Host Phone</Label>
-            <Input id="host_phone" {...register("host_phone")} />
-          </div>
-        </CardContent>
-      </Card>
+            <div>
+              <Label htmlFor="host_phone">Host Phone</Label>
+              <Input id="host_phone" {...register("host_phone")} disabled={!editing} />
+            </div>
+          </CardContent>
+        </Card>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={saving}>
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? "Saving..." : "Save Changes"}
-        </Button>
-      </div>
+        {editing && (
+          <div className="flex justify-end">
+            <Button type="submit" disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        )}
 
-      <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
-    </form>
+        <StripeConnectDialog isOpen={stripeDialogOpen} onClose={() => setStripeDialogOpen(false)} />
+      </form>
+    </div>
   );
 };
 

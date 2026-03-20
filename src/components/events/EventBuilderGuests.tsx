@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, UserPlus, QrCode } from "lucide-react";
+import { Mail, UserPlus, QrCode, Users, CheckCircle2, Clock } from "lucide-react";
 import InviteGuestsDialog from "./InviteGuestsDialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,14 +20,14 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
   const [invitations, setInvitations] = useState<any[]>([]);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showScannerDialog, setShowScannerDialog] = useState(false);
-  const [checkedInCount, setCheckedInCount] = useState(0);
+  const [totalStats, setTotalStats] = useState({ total: 0, registered: 0, checkedIn: 0, pending: 0 });
   const { getPendingCountForEvent } = usePendingActions();
   const pendingCount = getPendingCountForEvent(eventId);
 
   useEffect(() => {
     fetchGuests();
     fetchInvitations();
-    fetchCheckedInCount();
+    fetchTotalStats();
   }, [eventId]);
 
   const fetchGuests = async () => {
@@ -51,33 +51,71 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
     if (data) setInvitations(data);
   };
 
-  const fetchCheckedInCount = async () => {
-    const { count } = await supabase
+  const fetchTotalStats = async () => {
+    const { data } = await supabase
       .from("event_guests")
-      .select("id", { count: "exact", head: true })
-      .eq("event_id", eventId)
-      .eq("checked_in", true);
+      .select("status, checked_in")
+      .eq("event_id", eventId);
 
-    setCheckedInCount(count || 0);
+    if (data) {
+      setTotalStats({
+        total: data.length,
+        registered: data.filter(g => g.status === "registered" || g.status === "confirmed").length,
+        checkedIn: data.filter(g => g.checked_in).length,
+        pending: data.filter(g => g.status === "pending").length,
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed":
-        return "default";
+        return "success" as const;
       case "declined":
-        return "destructive";
+        return "destructive" as const;
       case "invited":
-        return "secondary";
+        return "secondary" as const;
       default:
-        return "outline";
+        return "outline" as const;
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Summary Stats Bar */}
+      <div className="grid grid-cols-4 gap-3">
+        <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-3">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <p className="text-lg font-bold leading-none">{totalStats.total}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Total Guests</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-3">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <div>
+            <p className="text-lg font-bold leading-none">{totalStats.registered}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Registered</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-3">
+          <QrCode className="h-4 w-4 text-primary" />
+          <div>
+            <p className="text-lg font-bold leading-none">{totalStats.checkedIn}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Checked In</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-3">
+          <Clock className="h-4 w-4 text-yellow-600" />
+          <div>
+            <p className="text-lg font-bold leading-none">{totalStats.pending}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Pending</p>
+          </div>
+        </div>
+      </div>
+
       {/* QR Scanner Button */}
-      <Card>
+      <Card className="border-border/60">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -107,16 +145,16 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
           </TabsTrigger>
           <TabsTrigger value="checked-in" className="relative">
             Checked In
-            {checkedInCount > 0 && (
+            {totalStats.checkedIn > 0 && (
               <Badge className="absolute -top-1 -right-1 bg-green-600 hover:bg-green-600 text-white text-[9px] h-4 min-w-4 px-1 flex items-center justify-center">
-                {checkedInCount}
+                {totalStats.checkedIn}
               </Badge>
             )}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="invitations" className="space-y-6">
-          <Card>
+          <Card className="border-border/60">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Invited Guests ({guests.length})</CardTitle>
@@ -144,11 +182,16 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
                   {guests.map((guest) => (
                     <div
                       key={guest.id}
-                      className="flex items-center justify-between p-4 border border-border rounded-lg"
+                      className="flex items-center justify-between p-4 border border-border/60 rounded-lg"
                     >
-                      <div>
-                        <p className="font-medium">{guest.name || guest.email}</p>
-                        {guest.name && <p className="text-sm text-muted-foreground">{guest.email}</p>}
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                          {(guest.name || guest.email).charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium">{guest.name || guest.email}</p>
+                          {guest.name && <p className="text-sm text-muted-foreground">{guest.email}</p>}
+                        </div>
                       </div>
                       <Badge variant={getStatusColor(guest.status)}>
                         {guest.status}
@@ -160,7 +203,7 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/60">
             <CardHeader>
               <CardTitle>Invitation History ({invitations.length})</CardTitle>
             </CardHeader>
@@ -172,7 +215,7 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
                   {invitations.map((invitation) => (
                     <div
                       key={invitation.id}
-                      className="flex items-center justify-between p-4 border border-border rounded-lg"
+                      className="flex items-center justify-between p-4 border border-border/60 rounded-lg"
                     >
                       <div>
                         <p className="font-medium">{invitation.email}</p>
@@ -218,7 +261,7 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
         open={showScannerDialog}
         onOpenChange={(open) => {
           setShowScannerDialog(open);
-          if (!open) fetchCheckedInCount();
+          if (!open) fetchTotalStats();
         }}
       />
     </div>

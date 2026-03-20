@@ -247,9 +247,9 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "registered":
-        return <Badge className="bg-green-500">Approved</Badge>;
+        return <Badge variant="success">Approved</Badge>;
       case "pending":
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="warning">Pending</Badge>;
       case "rejected":
         return <Badge variant="destructive">Rejected</Badge>;
       default:
