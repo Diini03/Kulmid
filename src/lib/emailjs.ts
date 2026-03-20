@@ -62,8 +62,8 @@ export const sendEventInvitation = async (params: SendInvitationParams): Promise
   initEmailJS();
   
   try {
-    const checkInToken = generateCheckInToken();
-    const qrCodeUrl = generateQRCodeUrl(`${window.location.origin}/check-in/${params.eventId}/${checkInToken}`);
+    const token = params.checkInToken || generateCheckInToken();
+    const qrCodeUrl = generateQRCodeUrl(token);
     
     await emailjs.send(
       EMAILJS_CONFIG.SERVICE_ID,
