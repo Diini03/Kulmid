@@ -51,7 +51,9 @@ interface SendInvitationParams {
   toName?: string;
   eventTitle: string;
   eventDate: string;
+  eventTime?: string;
   eventLocation: string;
+  organizerName?: string;
   customTitle?: string;
   customMessage?: string;
   eventId: string;
