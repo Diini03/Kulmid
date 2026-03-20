@@ -8,6 +8,7 @@ import { Seo } from "@/components/Seo";
 import EventBuilderOverview from "@/components/events/EventBuilderOverview";
 import EventBuilderEdit from "@/components/events/EventBuilderEdit";
 import EventBuilderGuests from "@/components/events/EventBuilderGuests";
+import EventBuilderRegistration from "@/components/events/EventBuilderRegistration";
 import EventBuilderSettings from "@/components/events/EventBuilderSettings";
 import { ChevronRight, ExternalLink, ArrowLeft } from "lucide-react";
 
