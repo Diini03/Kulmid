@@ -70,6 +70,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
   const [searchResults, setSearchResults] = useState<ManualGuest[]>([]);
   const [searching, setSearching] = useState(false);
   const processingRef = useRef(false);
+  const lastTokenRef = useRef<string>("");
 
   const fetchStats = useCallback(async () => {
     const { data } = await supabase
