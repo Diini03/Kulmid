@@ -97,7 +97,7 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
         if (!guest) continue;
 
-        const checkInToken = generateCheckInToken();
+        const checkInToken = crypto.randomUUID();
 
         const { error } = await supabase
           .from("event_guests")
