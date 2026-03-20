@@ -177,17 +177,7 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
             <span className="text-sm font-mono truncate flex-1">{eventLink}</span>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1"
-              onClick={handleCopyLink}
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              {linkCopied ? "Copied!" : "Copy Link"}
-            </Button>
             <Button
-              variant="outline"
               size="sm"
               className="flex-1"
               asChild
@@ -196,6 +186,15 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
                 <ExternalLink className="h-4 w-4 mr-2" />
                 View Event Page
               </a>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleCopyLink}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              {linkCopied ? "Copied!" : "Copy Link"}
             </Button>
           </div>
         </div>
