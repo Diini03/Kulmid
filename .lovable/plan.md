@@ -1,60 +1,77 @@
 
 
-# QR Check-In & Confirmation System
+# UX Refinement Plan — Edit Flow, Guests UX, Identity Adjustments
 
-## Current State
+## 1. Edit Flow — Edit Lock System (Option B)
 
-- **Scanner page** exists at `/event/:eventId/scanner` (EventScanner.tsx) — standalone page, navigates away from Guests
-- **Edge function** `verify-check-in` exists but has a bug (reads `req.json()` twice) and is missing from `config.toml`
-- **Guests page** has 2 tabs: Invitations, Registrations — no Checked In tab
-- **Scanner auto-checks-in** on scan — no confirmation step
-- **QR token URL**: `https://kulmid.lovable.app/check-in/{token}`
+Replace the always-editable "Edit" tab with a locked-by-default pattern.
 
-## Changes
+**In `EventBuilder.tsx`:**
+- Keep the "Edit" tab but rename it to "Edit"
+- Pass a new `locked` prop to `EventBuilderEdit`
 
-### 1. Fix `verify-check-in` edge function
-- Fix double `req.json()` bug — parse body once
-- Add `verify_jwt = false` to `config.toml`
-- Split into two modes: `action: "verify"` (lookup only, no check-in) and `action: "confirm"` (perform check-in)
-- This enables the two-step scan → confirm flow
+**In `EventBuilderEdit.tsx`:**
+- Add a lock state (`editing = false` by default)
+- When locked: show all fields as read-only with a prominent "Unlock Editing" button + lock icon
+- When unlocked: show fields as editable (current behavior)
+- Unlocking shows a brief confirmation toast: "Editing enabled — remember to save"
+- All form inputs get `disabled={!editing}` with reduced opacity styling
 
-### 2. Add "Checked In" tab to EventBuilderGuests
-- Third tab alongside Invitations and Registrations
-- Shows checked-in guests with: name, email, check-in time, status badge
-- Badge counter showing checked-in count
-- Real-time subscription to `event_guests` for live updates
+## 2. Guests Section — Summary Stats Bar
 
-### 3. Replace scanner page with full-screen dialog
-- New `CheckInScannerDialog.tsx` component opened from Guests page
-- Full-screen dialog overlay (stays in context, no navigation)
-- Contains: camera scanner, stats bar, result panel, recent scans list
+**In `EventBuilderGuests.tsx`:**
+- Add a stats bar above the tabs showing: Total Guests | Registered | Checked In | Pending
+- Fetch total registration count alongside existing queries
+- Stats update when scanner dialog closes or tab data refreshes
 
-### 4. Two-step scan → confirm flow
-- **Step 1**: Scan QR → extract token from URL → call `verify-check-in` with `action: "verify"`
-- **Step 2**: Show result card with guest info + "Confirm Check-In" button
-- **Step 3**: On confirm → call `verify-check-in` with `action: "confirm"` → green success feedback
-- Scanner stays active, result panel updates inline
-- Three result states: valid (show confirm button), already checked-in (warning), invalid (error)
+```text
+┌─────────────────────────────────────────────┐
+│  Total: 120   Registered: 85   Checked In: 45   Pending: 35  │
+└─────────────────────────────────────────────┘
+[ Invitations | Registrations | Checked In ]
+```
 
-### 5. Manual search fallback
-- Search input in scanner dialog — search by name or email
-- Shows matching guests with manual "Check In" button
-- Uses direct Supabase query (no edge function needed)
+## 3. Guests — Filters Inside Checked In Tab
 
-### 6. Check-in stats bar
-- Inside scanner dialog: "12 / 45 checked in" progress indicator
-- Updates in real-time after each confirmation
+**In `CheckedInTab.tsx`:**
+- Already has data. Add a search/filter input at top to filter by name or email
+- Show initials avatar circle for each guest row (first letter of name, colored)
 
-## Files
+**In `RegistrationsTab.tsx`:**
+- Already has filter buttons (All / Pending / Approved / Rejected) — no change needed
 
-| File | Change |
-|------|--------|
-| `supabase/config.toml` | Add `verify-check-in` with `verify_jwt = false` |
-| `supabase/functions/verify-check-in/index.ts` | Fix double-read bug, add verify/confirm modes |
-| `src/components/events/CheckInScannerDialog.tsx` | **New** — full-screen scanner dialog with two-step flow |
-| `src/components/events/CheckedInTab.tsx` | **New** — Checked In tab content |
-| `src/components/events/EventBuilderGuests.tsx` | Add Checked In tab, open scanner dialog instead of navigating |
-| `src/pages/EventScanner.tsx` | Keep for backward compat, but redirect to manage page |
+## 4. Visual Identity Adjustments
 
-**6 files changed. 2 new components. 0 migrations.**
+**A. Status badges consistency** — in `RegistrationsTab.tsx` and `EventBuilderOverview.tsx`:
+- Pending → `warning` variant (yellow)
+- Approved/Registered → `success` variant (green)  
+- Rejected → `destructive` variant (red)
+- Use existing badge variants from `badge.tsx` which already has `warning` and `success`
+
+**B. Button hierarchy** — in `EventBuilderOverview.tsx`:
+- "View Event Page" → primary button (default variant)
+- "Copy Link" → secondary/outline button
+- Swap the order so primary action comes first
+
+**C. Card styling refinements:**
+- Add slightly more padding to guest list rows
+- Use `border-border/60` for softer borders on cards
+
+**D. EventCard.tsx:**
+- Soften the card border: `border-border/50`
+- Add `shadow-sm` for subtle depth instead of flat border
+
+## 5. Files to Change
+
+| File | Changes |
+|------|---------|
+| `src/pages/EventBuilder.tsx` | Rename Edit tab label, no structural change |
+| `src/components/events/EventBuilderEdit.tsx` | Add edit lock state, disabled fields, unlock button |
+| `src/components/events/EventBuilderGuests.tsx` | Add summary stats bar above tabs |
+| `src/components/events/CheckedInTab.tsx` | Add search filter, initials avatar |
+| `src/components/events/EventBuilderOverview.tsx` | Swap button order, use primary for "View Event", softer borders |
+| `src/components/events/EventCard.tsx` | Soften border, add subtle shadow |
+| `src/components/events/RegistrationsTab.tsx` | Use `success`/`warning` badge variants |
+
+**7 files modified. 0 new files. 0 migrations.**
 
