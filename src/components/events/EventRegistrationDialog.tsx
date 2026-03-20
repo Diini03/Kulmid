@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { SimpleRegistrationForm } from "./registration/SimpleRegistrationForm";
-import { sendRegistrationEmail, sendOrganizerNotification, generateCheckInToken, isEmailJSConfigured } from "@/lib/emailjs";
+import { sendRegistrationEmail, sendOrganizerNotification, isEmailJSConfigured } from "@/lib/emailjs";
 
 interface EventRegistrationDialogProps {
   open: boolean;
@@ -88,11 +88,12 @@ const EventRegistrationDialog = ({
         .single();
 
       // Generate and store check-in token for approved registrations
+      let savedToken: string | undefined;
       if (autoApprove) {
-        const checkInToken = generateCheckInToken();
+        savedToken = crypto.randomUUID();
         await supabase
           .from("event_guests")
-          .update({ check_in_token: checkInToken })
+          .update({ check_in_token: savedToken })
           .eq("event_id", eventId)
           .eq("email", email);
       }
@@ -107,6 +108,7 @@ const EventRegistrationDialog = ({
           eventLocation: event?.location || "",
           status: autoApprove ? "registered" : "pending",
           eventId,
+          checkInToken: savedToken,
         });
 
         // Send notification to organizer

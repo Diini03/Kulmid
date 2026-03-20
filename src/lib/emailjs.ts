@@ -31,14 +31,15 @@ export const initEmailJS = () => {
   }
 };
 
-// Generate a unique check-in token
+// Generate a unique check-in token (cryptographically secure)
 export const generateCheckInToken = (): string => {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  return crypto.randomUUID();
 };
 
-// Generate QR code URL using a free API
-export const generateQRCodeUrl = (data: string): string => {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data)}`;
+// Generate QR code URL from a check-in token
+export const generateQRCodeUrl = (checkInToken: string): string => {
+  const checkInUrl = `https://kulmid.lovable.app/check-in/${checkInToken}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(checkInUrl)}`;
 };
 
 // ============================================
@@ -54,14 +55,15 @@ interface SendInvitationParams {
   customTitle?: string;
   customMessage?: string;
   eventId: string;
+  checkInToken?: string;
 }
 
 export const sendEventInvitation = async (params: SendInvitationParams): Promise<boolean> => {
   initEmailJS();
   
   try {
-    const checkInToken = generateCheckInToken();
-    const qrCodeUrl = generateQRCodeUrl(`${window.location.origin}/check-in/${params.eventId}/${checkInToken}`);
+    const token = params.checkInToken || generateCheckInToken();
+    const qrCodeUrl = generateQRCodeUrl(token);
     
     await emailjs.send(
       EMAILJS_CONFIG.SERVICE_ID,
@@ -94,6 +96,7 @@ interface SendRegistrationEmailParams {
   guestId?: string;
   eventId: string;
   rejectionReason?: string;
+  checkInToken?: string;
 }
 
 export const sendRegistrationEmail = async (params: SendRegistrationEmailParams): Promise<boolean> => {
@@ -108,9 +111,9 @@ export const sendRegistrationEmail = async (params: SendRegistrationEmailParams)
         return true;
       }
       
-      // Generate QR code for confirmed registrations
-      const checkInToken = generateCheckInToken();
-      const qrCodeUrl = generateQRCodeUrl(`${window.location.origin}/check-in/${params.eventId}/${checkInToken}`);
+      // Use provided token (already saved to DB) or generate fallback
+      const checkInToken = params.checkInToken || generateCheckInToken();
+      const qrCodeUrl = generateQRCodeUrl(checkInToken);
       
       await emailjs.send(EMAILJS_CONFIG.SERVICE_ID, templateId, {
         to_email: params.toEmail,

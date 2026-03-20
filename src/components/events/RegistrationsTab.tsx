@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, XCircle, Clock, User, Mail, Phone, Building2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { sendRegistrationEmail, generateCheckInToken, isEmailJSConfigured } from "@/lib/emailjs";
+import { sendRegistrationEmail, isEmailJSConfigured } from "@/lib/emailjs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProcessingSet } from "@/hooks/useAsyncAction";
 
@@ -97,7 +97,7 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
         if (!guest) continue;
 
-        const checkInToken = generateCheckInToken();
+        const checkInToken = crypto.randomUUID();
 
         const { error } = await supabase
           .from("event_guests")
@@ -123,6 +123,7 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
             eventLocation: event?.location || "",
             status: "registered",
             eventId: guest.event_id,
+            checkInToken,
           });
         }
       }

@@ -29,8 +29,8 @@ const escapeHtml = (text: string): string => {
   return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
 };
 
-const generateCheckInToken = (guestId: string, eventId: string): string => {
-  return `${guestId}-${eventId}-${crypto.randomUUID()}`;
+const generateCheckInToken = (): string => {
+  return crypto.randomUUID();
 };
 
 // Send email using Mailjet API
@@ -153,8 +153,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // Generate QR code
-        const checkInToken = generateCheckInToken(guestData.id, eventId);
-        const checkInUrl = `${supabaseUrl}/functions/v1/verify-check-in?token=${checkInToken}`;
+        const checkInToken = generateCheckInToken();
+        const checkInUrl = `https://kulmid.lovable.app/check-in/${checkInToken}`;
         const qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
           width: 300,
           margin: 2,
