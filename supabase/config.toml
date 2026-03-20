@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.validate-email-domain]
 verify_jwt = false
+
+[functions.verify-check-in]
+verify_jwt = false
