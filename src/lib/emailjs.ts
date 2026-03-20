@@ -31,14 +31,15 @@ export const initEmailJS = () => {
   }
 };
 
-// Generate a unique check-in token
+// Generate a unique check-in token (cryptographically secure)
 export const generateCheckInToken = (): string => {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  return crypto.randomUUID();
 };
 
-// Generate QR code URL using a free API
-export const generateQRCodeUrl = (data: string): string => {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data)}`;
+// Generate QR code URL from a check-in token
+export const generateQRCodeUrl = (checkInToken: string): string => {
+  const checkInUrl = `https://kulmid.lovable.app/check-in/${checkInToken}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(checkInUrl)}`;
 };
 
 // ============================================
