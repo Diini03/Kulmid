@@ -26,8 +26,8 @@ const escapeHtml = (str: string | null | undefined): string => {
     .replace(/'/g, '&#039;');
 };
 
-const generateCheckInToken = (guestId: string, eventId: string): string => {
-  return `${guestId}-${eventId}-${crypto.randomUUID()}`;
+const generateCheckInToken = (): string => {
+  return crypto.randomUUID();
 };
 
 // Send email using Mailjet API
