@@ -64,6 +64,7 @@ export const sendEventInvitation = async (params: SendInvitationParams): Promise
   try {
     const token = params.checkInToken || generateCheckInToken();
     const qrCodeUrl = generateQRCodeUrl(token);
+    const eventUrl = `${window.location.origin}/events/${params.eventId}`;
     
     await emailjs.send(
       EMAILJS_CONFIG.SERVICE_ID,
@@ -73,10 +74,14 @@ export const sendEventInvitation = async (params: SendInvitationParams): Promise
         to_name: params.toName || "Guest",
         event_title: params.eventTitle,
         event_date: params.eventDate,
+        event_time: params.eventTime || "",
         event_location: params.eventLocation,
-        custom_title: params.customTitle || `You're Invited to ${params.eventTitle}`,
-        custom_message: params.customMessage || "",
-        qr_code_url: qrCodeUrl,
+        organizer_name: params.organizerName || "Event Organizer",
+        custom_title: params.customTitle || `You're invited to ${params.eventTitle}`,
+        invitation_message: params.customMessage || "You've been personally invited to join this event. We'd love to see you there!",
+        qr_code: qrCodeUrl,
+        event_url: eventUrl,
+        support_email: "kulmid@gmail.com",
       }
     );
     return true;
