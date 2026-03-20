@@ -61,6 +61,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
   const { user } = useAuth();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [startingScanner, setStartingScanner] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -133,13 +134,18 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
   };
 
   const startScanning = async () => {
+    if (scanning || startingScanner) return;
+
     setCameraError(null);
+    setStartingScanner(true);
+    setScanning(true);
 
     // Ensure any previous instance is fully cleaned
     await destroyScanner();
 
-    // Wait a tick for the DOM element to be clean
-    await new Promise((r) => setTimeout(r, 100));
+    // Wait for React to render scanner container before initializing camera
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
     const container = document.getElementById(SCANNER_ELEMENT_ID);
     if (!container) {
@@ -161,6 +167,14 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
         () => {} // Ignore scan-not-found
       );
 
+      // html5-qrcode can render video with width: 0px if container was hidden during mount
+      const videoElement = container.querySelector("video") as HTMLVideoElement | null;
+      if (videoElement) {
+        videoElement.style.width = "100%";
+        videoElement.style.height = "100%";
+        videoElement.style.objectFit = "cover";
+      }
+
       if (mountedRef.current && !closingRef.current) {
         setScanning(true);
       } else {
@@ -179,17 +193,26 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
         setCameraError("Failed to start camera: " + message);
       }
 
+      if (mountedRef.current) {
+        setScanning(false);
+      }
       scannerRef.current = null;
+    } finally {
+      if (mountedRef.current) {
+        setStartingScanner(false);
+      }
     }
   };
 
   const stopScanning = async () => {
+    setStartingScanner(false);
     setScanning(false);
     await destroyScanner();
   };
 
   const handleClose = async () => {
     closingRef.current = true;
+    setStartingScanner(false);
     setScanning(false);
     setScanResult(null);
     setCameraError(null);
@@ -400,11 +423,21 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
             <div
               id={SCANNER_ELEMENT_ID}
               className="w-full"
-              style={{ minHeight: scanning ? "300px" : "0px", display: scanning ? "block" : "none" }}
+              style={{
+                minHeight: scanning || startingScanner ? "300px" : "0px",
+                height: scanning || startingScanner ? "300px" : "0px",
+                display: scanning || startingScanner ? "block" : "none",
+              }}
             />
 
+            {startingScanner && (
+              <div className="p-8 text-center text-muted-foreground">
+                Initializing camera preview...
+              </div>
+            )}
+
             {/* Camera error state */}
-            {cameraError && !scanning && (
+            {cameraError && !scanning && !startingScanner && (
               <div className="p-8 text-center">
                 <VideoOff className="h-12 w-12 text-destructive mx-auto mb-3" />
                 <p className="text-destructive font-medium mb-2">Camera unavailable</p>
@@ -421,7 +454,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
             )}
 
             {/* Idle state */}
-            {!scanning && !cameraError && (
+            {!scanning && !startingScanner && !cameraError && (
               <div className="p-8 text-center">
                 <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground mb-4">Ready to scan QR codes</p>
@@ -433,7 +466,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
             )}
           </div>
 
-          {scanning && (
+          {scanning && !startingScanner && (
             <Button onClick={stopScanning} variant="outline" className="w-full">
               Stop Scanner
             </Button>
