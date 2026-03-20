@@ -375,9 +375,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                       </Badge>
                       <Button
                         onClick={() => {
-                          // We need the token — re-extract from last scan
-                          // The confirm needs the same token, so we store it
-                          handleConfirmCheckIn(undefined, scanResult.guest!.id);
+                          handleConfirmCheckIn(lastTokenRef.current);
                         }}
                         className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white"
                         disabled={confirming}
