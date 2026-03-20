@@ -189,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Generate QR code for approved registrations
     if (isApproved) {
-      const checkInToken = generateCheckInToken(guestId, guest.event_id);
+      const checkInToken = generateCheckInToken();
       
       // Store token in database
       await supabase
@@ -197,8 +197,8 @@ const handler = async (req: Request): Promise<Response> => {
         .update({ check_in_token: checkInToken })
         .eq("id", guestId);
 
-      // Generate QR code
-      checkInUrl = `https://txjglujklpxsfhedwwkl.supabase.co/functions/v1/verify-check-in?token=${checkInToken}`;
+      // Generate QR code with user-facing URL
+      checkInUrl = `https://kulmid.lovable.app/check-in/${checkInToken}`;
       qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
         width: 300,
         margin: 2,

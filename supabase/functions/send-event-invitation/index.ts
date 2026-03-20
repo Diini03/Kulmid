@@ -153,8 +153,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // Generate QR code
-        const checkInToken = generateCheckInToken(guestData.id, eventId);
-        const checkInUrl = `${supabaseUrl}/functions/v1/verify-check-in?token=${checkInToken}`;
+        const checkInToken = generateCheckInToken();
+        const checkInUrl = `https://kulmid.lovable.app/check-in/${checkInToken}`;
         const qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
           width: 300,
           margin: 2,

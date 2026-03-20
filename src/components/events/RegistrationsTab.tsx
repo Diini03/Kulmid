@@ -123,6 +123,7 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
             eventLocation: event?.location || "",
             status: "registered",
             eventId: guest.event_id,
+            checkInToken,
           });
         }
       }

@@ -111,9 +111,9 @@ export const sendRegistrationEmail = async (params: SendRegistrationEmailParams)
         return true;
       }
       
-      // Generate QR code for confirmed registrations
-      const checkInToken = generateCheckInToken();
-      const qrCodeUrl = generateQRCodeUrl(`${window.location.origin}/check-in/${params.eventId}/${checkInToken}`);
+      // Use provided token (already saved to DB) or generate fallback
+      const checkInToken = params.checkInToken || generateCheckInToken();
+      const qrCodeUrl = generateQRCodeUrl(checkInToken);
       
       await emailjs.send(EMAILJS_CONFIG.SERVICE_ID, templateId, {
         to_email: params.toEmail,

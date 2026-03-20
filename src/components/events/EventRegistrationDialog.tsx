@@ -108,6 +108,7 @@ const EventRegistrationDialog = ({
           eventLocation: event?.location || "",
           status: autoApprove ? "registered" : "pending",
           eventId,
+          checkInToken: savedToken,
         });
 
         // Send notification to organizer
