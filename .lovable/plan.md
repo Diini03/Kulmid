@@ -1,98 +1,68 @@
 
 
-# Custom Registration Questions — Plan
+# Fix: RLS violation on event registration
 
-## Overview
+## Root Cause
 
-Add organizer-configurable registration forms: toggle built-in fields, add custom questions, render them dynamically on the attendee form, and store answers separately.
+The insert at line 58 of `EventRegistrationDialog.tsx` uses `.insert({...}).select("id").single()`. In Supabase, `.select()` after `.insert()` requires **SELECT permission** on the inserted row. The RLS policies on `event_guests` only grant SELECT to the event owner and admins — not to the public user who is registering.
 
-## Database Changes (3 new tables via migration)
+Additionally, the duplicate-check SELECT query (line 40-45) silently returns empty for non-owners due to RLS, so it doesn't actually detect duplicates (the unique constraint fallback on line 70 handles that, but it's fragile).
 
-### `event_registration_fields`
-Stores per-event configuration of built-in fields (name, email, phone, organization).
+## Fix Strategy
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | default gen_random_uuid() |
-| event_id | text NOT NULL | references events(id) on delete cascade |
-| field_key | text NOT NULL | e.g. 'name', 'email', 'phone_number', 'organization' |
-| label | text NOT NULL | display label |
-| is_enabled | boolean | default true |
-| is_required | boolean | default false |
-| sort_order | integer | default 0 |
-| created_at | timestamptz | default now() |
+**Generate the registration UUID client-side** and pass it in the insert payload. This eliminates the need for `.select("id").single()` after insert, so no SELECT permission is required.
 
-RLS: event owner can SELECT/INSERT/UPDATE/DELETE. Admins can SELECT all. Public can SELECT (needed for registration form rendering).
+### Changes in `EventRegistrationDialog.tsx`:
 
-### `event_registration_questions`
-Organizer-created custom questions.
+1. Generate `const registrationId = crypto.randomUUID()` before the insert
+2. Include `id: registrationId` in the insert payload
+3. Change `.insert({...}).select("id").single()` to just `.insert({...})`
+4. Use `registrationId` directly for the custom answers insert and the check-in token update
+5. Remove the duplicate-check SELECT query (lines 40-45) — rely on the unique constraint error (code `23505`) which already works and is already handled
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| event_id | text NOT NULL | references events(id) on delete cascade |
-| question_text | text NOT NULL | |
-| question_type | text NOT NULL | 'short_text', 'long_text', 'single_select', 'boolean' |
-| is_required | boolean | default false |
-| options | jsonb | for single_select choices |
-| sort_order | integer | default 0 |
-| is_active | boolean | default true |
-| created_at / updated_at | timestamptz | |
+### Code change (single file):
 
-RLS: same pattern — owner manages, public can read.
+```typescript
+// Before
+const { data: existing } = await supabase
+  .from("event_guests")
+  .select("id, status")
+  .eq("event_id", eventId)
+  .eq("email", email)
+  .maybeSingle();
 
-### `event_registration_answers`
-Stores attendee answers to custom questions.
+if (existing) { ... }
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| registration_id | uuid NOT NULL | references event_guests(id) on delete cascade |
-| question_id | uuid NOT NULL | references event_registration_questions(id) |
-| answer_text | text | for short/long text |
-| answer_boolean | boolean | for yes/no |
-| answer_option | text | for single_select |
-| created_at | timestamptz | |
+const { data: registration, error } = await supabase.from("event_guests").insert({
+  event_id: eventId,
+  ...
+}).select("id").single();
 
-RLS: public can INSERT (registration flow). Event owner can SELECT.
+// After
+const registrationId = crypto.randomUUID();
 
-### Seed defaults
-A database function `initialize_event_registration_fields()` that inserts default field config rows when an event is created (via trigger on `events` insert).
+const { error } = await supabase.from("event_guests").insert({
+  id: registrationId,
+  event_id: eventId,
+  ...
+});
 
-## New Components
+// Then use registrationId directly for answers and token update
+```
 
-### `EventBuilderRegistration.tsx` — Organizer settings UI
-New tab "Registration" in EventBuilder between Guests and Edit.
+## Why this is the correct fix
 
-**Built-in fields section:**
-- List of 4 fields with toggle switches (enabled/disabled, required/optional)
-- Name and Email always enabled+required (disabled toggles)
+- No new RLS policies needed (adding public SELECT to event_guests would expose guest data)
+- No schema changes needed
+- The INSERT policy already allows public inserts with `registration_type = 'registration'`
+- Duplicate registrations are caught by the `23505` unique constraint error which is already handled
+- Client-generated UUIDs are standard practice with Supabase
 
-**Custom questions section:**
-- "Add Question" button → inline form: question text, type selector, required toggle
-- For `single_select`: editable options list
-- Each question shows as a card with edit/delete/reorder controls
-- Drag handle or up/down arrows for ordering
-
-### Update `SimpleRegistrationForm.tsx` — Dynamic attendee form
-- Accept `eventId` prop, fetch field config + custom questions on mount
-- Render only enabled built-in fields
-- Render custom questions after built-in fields using appropriate input types
-- Validate required fields dynamically
-
-### Update `EventRegistrationDialog.tsx` — Submission logic
-- After inserting into `event_guests`, insert answers into `event_registration_answers`
-- Pass `eventId` to `SimpleRegistrationForm` for dynamic field fetching
-
-## Files to Change
+## Files to change
 
 | File | Change |
 |------|--------|
-| **Migration** | Create 3 tables + trigger for default field seeding |
-| `src/pages/EventBuilder.tsx` | Add "Registration" tab |
-| `src/components/events/EventBuilderRegistration.tsx` | **New** — organizer form config UI |
-| `src/components/events/registration/SimpleRegistrationForm.tsx` | Make dynamic — fetch config, render conditionally |
-| `src/components/events/EventRegistrationDialog.tsx` | Pass eventId, handle custom answer submission |
+| `src/components/events/EventRegistrationDialog.tsx` | Generate client-side UUID, remove `.select()` chain, remove pre-check SELECT query |
 
-**5 files modified/created. 1 migration. 0 edge functions.**
+**1 file modified. 0 migrations. 0 new files.**
 
