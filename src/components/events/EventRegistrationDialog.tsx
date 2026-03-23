@@ -36,26 +36,12 @@ const EventRegistrationDialog = ({
     try {
       const email = formData.email.trim().toLowerCase();
       
-      // Check if user already registered
-      const { data: existing } = await supabase
-        .from("event_guests")
-        .select("id, status")
-        .eq("event_id", eventId)
-        .eq("email", email)
-        .maybeSingle();
-
-      if (existing) {
-        toast({
-          title: "Already Registered",
-          description: `You have already registered for this event. Status: ${existing.status}`,
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
+      // Generate registration ID client-side to avoid needing SELECT after INSERT (RLS restriction)
+      const registrationId = crypto.randomUUID();
 
       // Insert registration
-      const { data: registration, error } = await supabase.from("event_guests").insert({
+      const { error } = await supabase.from("event_guests").insert({
+        id: registrationId,
         event_id: eventId,
         name: formData.name?.trim() || null,
         email: email,
@@ -64,7 +50,7 @@ const EventRegistrationDialog = ({
         registration_type: "registration",
         status: autoApprove ? "registered" : "pending",
         rsvp_at: autoApprove ? new Date().toISOString() : null,
-      }).select("id").single();
+      });
 
       if (error) {
         if (error.code === '23505') {
@@ -80,9 +66,9 @@ const EventRegistrationDialog = ({
       }
 
       // Insert custom answers
-      if (registration && customAnswers.length > 0) {
+      if (customAnswers.length > 0) {
         const answersToInsert = customAnswers.map((a) => ({
-          registration_id: registration.id,
+          registration_id: registrationId,
           question_id: a.question_id,
           answer_text: a.answer_text || null,
           answer_boolean: a.answer_boolean ?? null,
