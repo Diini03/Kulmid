@@ -108,6 +108,7 @@ const App = () => (
             <PendingActionsProvider>
               <AdminBadgesProvider>
               <FavoritesProvider>
+                <LanguageProvider>
                 <ThemeProvider>
                 <TooltipProvider>
                   <Toaster />
