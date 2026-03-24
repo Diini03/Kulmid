@@ -74,7 +74,7 @@ export const Footer = () => {
           {/* Copyright */}
           <div className="text-center pt-6 border-t border-border w-full">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Kulmid. All rights reserved.
+              {t("footer_rights", { year: String(new Date().getFullYear()) })}
             </p>
           </div>
         </div>

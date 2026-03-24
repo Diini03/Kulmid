@@ -155,7 +155,7 @@ export const EventCard = ({ event, basePath = "/events" }: Props) => {
             onClick={handleBookClick}
             className="w-full mt-2"
           >
-            Register
+            {t("card_register")}
           </Button>
         </CardContent>
       </Card>

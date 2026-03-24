@@ -238,7 +238,7 @@ const Discover = () => {
         {!showAll && allEvents.length > 6 && (
           <div className="text-center mt-14">
             <Button onClick={handleViewAll} size="lg" variant="outline" className="px-10">
-              View all {allEvents.length} events
+              {t("btn_view_all_count", { count: allEvents.length })}
             </Button>
           </div>
         )}

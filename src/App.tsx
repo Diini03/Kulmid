@@ -178,6 +178,7 @@ const App = () => (
                 </Routes>
                 </TooltipProvider>
               </ThemeProvider>
+                </LanguageProvider>
             </FavoritesProvider>
               </AdminBadgesProvider>
           </PendingActionsProvider>

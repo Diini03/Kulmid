@@ -10,9 +10,11 @@ import { Calendar, Moon, Sun, Menu, User, LogOut, Compass, Search, Bell, Plus, S
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { usePendingActions } from "@/contexts/PendingActionsContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { Badge } from "@/components/ui/badge";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import kulmidLogoNav from "@/assets/kulmid-logo-nav.png";
 
 interface NavbarProps {
@@ -24,6 +26,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
   const { user, profile, signOut, isAdmin } = useAuth();
   const { unreadCount } = useNotifications();
   const { totalPendingCount } = usePendingActions();
+  const { t } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -92,11 +95,11 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             <div className="hidden md:flex items-center ml-4">
               <NavLink to="/events" className={linkCls}>
                 <Calendar className="h-4 w-4" />
-                Events
+                {t("nav_events")}
               </NavLink>
               <NavLink to="/discover" className={linkCls}>
                 <Compass className="h-4 w-4" />
-                Discover
+                {t("nav_discover")}
               </NavLink>
             </div>
           )}
@@ -112,12 +115,12 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           {/* Create Event Button */}
           {user && !isAdmin && (
             <Button asChild size="sm" variant="default" className="hidden md:flex">
-              <Link to="/create">Create Event</Link>
+              <Link to="/create">{t("nav_create_event")}</Link>
             </Button>
           )}
 
           {/* Search Button */}
-          <Button variant="ghost" size="icon" onClick={onOpenSearch} aria-label="Search" className="rounded-xl">
+          <Button variant="ghost" size="icon" onClick={onOpenSearch} aria-label={t("nav_search")} className="rounded-xl">
             <Search className="h-4 w-4" />
           </Button>
 
@@ -125,7 +128,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           {user && !isAdmin && (
             <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Notifications" className="relative rounded-xl">
+                <Button variant="ghost" size="icon" aria-label={t("nav_notifications")} className="relative rounded-xl">
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center animate-pulse-glow">
@@ -140,7 +143,12 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             </Popover>
           )}
 
-          {/* Theme Toggle - Simple switch */}
+          {/* Language Switcher */}
+          <div className="hidden md:flex">
+            <LanguageSwitcher />
+          </div>
+
+          {/* Theme Toggle */}
           <Button variant="ghost" size="icon" className="hidden md:flex rounded-xl" aria-label="Toggle theme" onClick={toggleTheme}>
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
@@ -172,14 +180,14 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 <DropdownMenuItem asChild className="rounded-xl">
                   <Link to={`/profile/${user.id}`} className="flex items-center gap-3">
                     <User className="h-4 w-4" />
-                    My Profile
+                    {t("nav_my_profile")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="rounded-xl">
                   <Link to="/events" className="flex items-center gap-3 justify-between w-full">
                     <span className="flex items-center gap-3">
                       <Calendar className="h-4 w-4" />
-                      My Events
+                      {t("nav_my_events")}
                     </span>
                     {totalPendingCount > 0 && (
                       <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-[10px] h-5 px-2">
@@ -192,7 +200,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                   <DropdownMenuItem asChild className="rounded-xl">
                     <Link to="/admin" className="flex items-center gap-3">
                       <Sparkles className="h-4 w-4" />
-                      Admin
+                      {t("nav_admin")}
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -200,22 +208,22 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 <DropdownMenuItem asChild className="rounded-xl">
                   <Link to="/settings" className="flex items-center gap-3">
                     <Settings className="h-4 w-4" />
-                    Settings
+                    {t("nav_settings")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-3 rounded-xl text-destructive focus:text-destructive">
                   <LogOut className="h-4 w-4" />
-                  Sign Out
+                  {t("nav_sign_out")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <>
               <Button variant="ghost" size="sm" className="hidden md:flex rounded-xl" onClick={() => openAuthModal("signin")}>
-                Sign In
+                {t("nav_sign_in")}
               </Button>
               <Button size="sm" variant="default" className="hidden md:flex" onClick={() => openAuthModal("signup")}>
-                Sign Up
+                {t("nav_sign_up")}
               </Button>
             </>
           )}
@@ -224,7 +232,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           <div className="md:hidden">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Menu" className="rounded-xl">
+                <Button variant="ghost" size="icon" aria-label={t("nav_menu")} className="rounded-xl">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -232,7 +240,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
                     <img src={kulmidLogoNav} alt="Kulmid" className="h-8 w-8" />
-                    Menu
+                    {t("nav_menu")}
                   </SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col gap-4 mt-8">
@@ -250,7 +258,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                       }
                     >
                       <Calendar className="h-5 w-5" />
-                      <span className="font-medium">Events</span>
+                      <span className="font-medium">{t("nav_events")}</span>
                     </NavLink>
                     <NavLink 
                       to="/discover" 
@@ -264,7 +272,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                       }
                     >
                       <Compass className="h-5 w-5" />
-                      <span className="font-medium">Discover</span>
+                      <span className="font-medium">{t("nav_discover")}</span>
                     </NavLink>
                   </div>
 
@@ -284,7 +292,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                           }
                         >
                           <Plus className="h-5 w-5" />
-                          <span className="font-medium">Create Event</span>
+                          <span className="font-medium">{t("nav_create_event")}</span>
                         </NavLink>
                         <NavLink 
                           to="/events" 
@@ -299,7 +307,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                         >
                           <span className="flex items-center gap-3">
                             <Calendar className="h-5 w-5" />
-                            <span className="font-medium">My Events</span>
+                            <span className="font-medium">{t("nav_my_events")}</span>
                           </span>
                           {totalPendingCount > 0 && (
                             <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-[10px] h-5 px-2">
@@ -320,7 +328,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                             }
                           >
                             <Sparkles className="h-5 w-5" />
-                            <span className="font-medium">Admin</span>
+                            <span className="font-medium">{t("nav_admin")}</span>
                           </NavLink>
                         )}
                       </div>
@@ -334,7 +342,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                           className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                           <LogOut className="h-5 w-5" />
-                          <span className="font-medium">Sign Out</span>
+                          <span className="font-medium">{t("nav_sign_out")}</span>
                         </Button>
                       </div>
                     </>
@@ -349,7 +357,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                         }}
                       >
                         <User className="h-5 w-5" />
-                        <span className="font-medium">Sign In</span>
+                        <span className="font-medium">{t("nav_sign_in")}</span>
                       </Button>
                       <Button 
                         variant="default"
@@ -360,14 +368,18 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                         }}
                       >
                         <Plus className="h-5 w-5" />
-                        <span className="font-medium">Sign Up</span>
+                        <span className="font-medium">{t("nav_sign_up")}</span>
                       </Button>
                     </div>
                   )}
 
-                  {/* Theme Toggle - Simple switch */}
-                  <div className="border-t pt-4">
-                    <div className="px-4 mb-2 text-sm text-muted-foreground font-medium">Theme</div>
+                  {/* Language & Theme */}
+                  <div className="border-t pt-4 space-y-3">
+                    <div className="px-4 mb-2 text-sm text-muted-foreground font-medium">{t("nav_language")}</div>
+                    <div className="px-4">
+                      <LanguageSwitcher />
+                    </div>
+                    <div className="px-4 mb-2 text-sm text-muted-foreground font-medium">{t("nav_theme")}</div>
                     <div className="px-4">
                       <Button
                         variant="outline"
@@ -376,7 +388,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                         className="rounded-xl gap-2"
                       >
                         {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                        {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                        {theme === "dark" ? t("nav_light_mode") : t("nav_dark_mode")}
                       </Button>
                     </div>
                   </div>
