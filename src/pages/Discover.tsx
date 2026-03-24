@@ -134,10 +134,10 @@ const Discover = () => {
             )}
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance animate-slide-up stagger-1">
-              Discover events
+              {t("discover_title")}
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground text-balance animate-slide-up stagger-2">
-              Explore experiences that inspire you
+              {t("discover_subtitle")}
             </p>
 
             {user && hasPreferences && (
