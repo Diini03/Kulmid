@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useLanguage } from "@/contexts/LanguageContext";
 import kulmidLogoDark from "@/assets/kulmid-logo-dark.png";
 import kulmidLogoWhite from "@/assets/kulmid-logo-white.png";
 
 export const Footer = () => {
   const { resolvedTheme } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <footer className="bg-card border-t mt-24">
