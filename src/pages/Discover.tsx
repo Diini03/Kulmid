@@ -128,7 +128,7 @@ const Discover = () => {
               <div className="animate-slide-up">
                 <span className="personalized-badge">
                   <Sparkles className="h-4 w-4" />
-                  Personalized for you
+                  {t("discover_personalized")}
                 </span>
               </div>
             )}
