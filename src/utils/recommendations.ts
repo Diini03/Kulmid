@@ -9,6 +9,7 @@ export interface UserPreferences {
   preferred_format: string;
   topics: string[];
   allow_recommendations: boolean;
+  location_city?: string;
 }
 
 async function fetchUserFavorites(userId: string): Promise<string[]> {
@@ -89,6 +90,13 @@ function calculateRecommendationScore(
     score += SCORING_WEIGHTS.FORMAT_MATCH;
   }
 
+  // Location matching
+  if (prefs.location_city && event.location) {
+    if (event.location.toLowerCase().includes(prefs.location_city.toLowerCase())) {
+      score += SCORING_WEIGHTS.LOCATION_MATCH;
+    }
+  }
+
   if (favoriteCategories.includes(event.category)) {
     score += SCORING_WEIGHTS.FAVORITE_SIMILARITY;
   }
@@ -156,11 +164,10 @@ export async function getPersonalizedEvents(
   const { MINIMUM_EVENTS_THRESHOLD } = RECOMMENDATION_CONFIG;
 
   try {
-    // Call update_event_status once per session
     const statusKey = 'kulmid_status_updated';
     const prefsPromise = supabase
       .from("user_preferences")
-      .select("event_categories, preferred_format, topics, allow_recommendations")
+      .select("event_categories, preferred_format, topics, allow_recommendations, location_city")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -188,7 +195,6 @@ export async function getPersonalizedEvents(
       };
     }
 
-    // Resolve email if not passed
     const email = userEmail || (await supabase.auth.getUser()).data.user?.email || "";
 
     const [favoriteCategories, registrationCategories, { data: allEvents }, popularityCounts] = 
@@ -275,12 +281,12 @@ export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
   try {
     const { data, error } = await supabase
       .from("user_preferences")
-      .select("id")
+      .select("onboarding_completed")
       .eq("user_id", userId)
       .maybeSingle();
 
     if (error) return false;
-    return !!data;
+    return !!data?.onboarding_completed;
   } catch {
     return false;
   }

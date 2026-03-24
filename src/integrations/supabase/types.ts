@@ -656,6 +656,8 @@ export type Database = {
           event_categories: string[] | null
           event_mode: string | null
           id: string
+          location_city: string | null
+          onboarding_completed: boolean
           preferred_format: string | null
           source: string | null
           topics: string[] | null
@@ -670,6 +672,8 @@ export type Database = {
           event_categories?: string[] | null
           event_mode?: string | null
           id?: string
+          location_city?: string | null
+          onboarding_completed?: boolean
           preferred_format?: string | null
           source?: string | null
           topics?: string[] | null
@@ -684,6 +688,8 @@ export type Database = {
           event_categories?: string[] | null
           event_mode?: string | null
           id?: string
+          location_city?: string | null
+          onboarding_completed?: boolean
           preferred_format?: string | null
           source?: string | null
           topics?: string[] | null
