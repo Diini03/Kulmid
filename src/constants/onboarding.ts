@@ -1,79 +1,134 @@
-import { GraduationCap, Wrench, Users, Music, Monitor, Handshake, Calendar, Code, TrendingUp, Heart, Briefcase, Palette } from "lucide-react";
+import {
+  Sparkles,
+  Lightbulb,
+  Briefcase,
+  GraduationCap,
+  Heart,
+  Palette,
+  Users,
+  Music,
+  Building2,
+  Rocket,
+  Wrench,
+  Monitor,
+  Handshake,
+  Calendar,
+  MapPin,
+  CheckCircle2,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export interface OnboardingQuestion {
+export interface OnboardingStep {
   id: string;
-  question: string;
-  type: "multi-select" | "single-select" | "toggle";
+  key: string;
+  type: "intro" | "multi_select" | "single_select" | "city_input" | "completion";
+  title: string;
+  subtitle: string;
+  required: boolean;
+  field?: string;
   options?: { value: string; label: string; icon?: LucideIcon }[];
-  field: keyof UserPreferences;
 }
 
-export interface UserPreferences {
-  event_categories: string[];
-  attendance_frequency: string;
-  preferred_format: string;
+export interface OnboardingPreferences {
   topics: string[];
+  location_city: string;
+  event_categories: string[];
   event_mode: string;
-  age_range: string;
-  source: string;
-  allow_recommendations: boolean;
+  attendance_frequency: string;
 }
 
-export const onboardingQuestions: OnboardingQuestion[] = [
+export const SOMALIA_CITIES = [
+  "Mogadishu",
+  "Hargeisa",
+  "Garowe",
+  "Bosaso",
+  "Kismayo",
+  "Berbera",
+  "Baidoa",
+  "Marka",
+  "Beledweyne",
+  "Galkayo",
+  "Burao",
+  "Jowhar",
+  "Las Anod",
+];
+
+export const onboardingSteps: OnboardingStep[] = [
   {
-    id: "categories",
-    question: "What types of events interest you?",
-    type: "multi-select",
-    field: "event_categories",
-    options: [
-      { value: "Seminar", label: "Seminar", icon: GraduationCap },
-      { value: "Workshop", label: "Workshop", icon: Wrench },
-      { value: "Conference", label: "Conference", icon: Users },
-      { value: "Festival", label: "Festival", icon: Music },
-      { value: "Webinar", label: "Webinar", icon: Monitor },
-      { value: "Meetup", label: "Meetup", icon: Handshake },
-    ],
+    id: "welcome",
+    key: "welcome",
+    type: "intro",
+    title: "Welcome to Kulmid",
+    subtitle: "Let's personalize your event experience.",
+    required: false,
   },
   {
-    id: "frequency",
-    question: "How often do you attend events?",
-    type: "single-select",
-    field: "attendance_frequency",
-    options: [
-      { value: "weekly", label: "Weekly", icon: Calendar },
-      { value: "monthly", label: "Monthly", icon: Calendar },
-      { value: "occasionally", label: "Occasionally", icon: Calendar },
-    ],
-  },
-  {
-    id: "format",
-    question: "Which format do you prefer?",
-    type: "single-select",
-    field: "preferred_format",
-    options: [
-      { value: "Seminar", label: "Seminars", icon: GraduationCap },
-      { value: "Workshop", label: "Workshops", icon: Wrench },
-      { value: "Conference", label: "Conferences", icon: Users },
-    ],
-  },
-  {
-    id: "topics",
-    question: "What topics are you most interested in?",
-    type: "multi-select",
+    id: "interests",
+    key: "interests",
+    type: "multi_select",
+    title: "What are you interested in?",
+    subtitle: "Choose a few topics so we can recommend better events.",
+    required: true,
     field: "topics",
     options: [
-      { value: "Technology", label: "Technology", icon: Code },
+      { value: "Technology", label: "Technology", icon: Monitor },
       { value: "Business", label: "Business", icon: Briefcase },
-      { value: "Personal Development", label: "Personal Development", icon: TrendingUp },
-      { value: "Health & Wellness", label: "Health & Wellness", icon: Heart },
-      { value: "Arts & Culture", label: "Arts & Culture", icon: Palette },
+      { value: "Education", label: "Education", icon: GraduationCap },
+      { value: "Health", label: "Health", icon: Heart },
+      { value: "Design", label: "Design", icon: Palette },
+      { value: "Networking", label: "Networking", icon: Users },
+      { value: "Entertainment", label: "Entertainment", icon: Music },
+      { value: "Community", label: "Community", icon: Building2 },
+      { value: "Startup", label: "Startup", icon: Rocket },
+      { value: "Workshop", label: "Workshop", icon: Wrench },
     ],
   },
   {
-    id: "recommendations",
-    question: "May we personalize event recommendations for you?",
-    type: "toggle",
-    field: "allow_recommendations",
+    id: "location",
+    key: "location",
+    type: "city_input",
+    title: "Where are you based?",
+    subtitle: "We'll prioritize nearby and relevant events.",
+    required: false,
+    field: "location_city",
+  },
+  {
+    id: "event_types",
+    key: "event_types",
+    type: "multi_select",
+    title: "What kind of events do you prefer?",
+    subtitle: "Choose the formats you're most likely to attend.",
+    required: false,
+    field: "event_categories",
+    options: [
+      { value: "Workshop", label: "Workshops", icon: Wrench },
+      { value: "Conference", label: "Conferences", icon: Users },
+      { value: "Meetup", label: "Meetups", icon: Handshake },
+      { value: "Seminar", label: "Seminars", icon: GraduationCap },
+      { value: "Webinar", label: "Online Events", icon: Monitor },
+      { value: "In-Person", label: "In-Person Events", icon: MapPin },
+    ],
+  },
+  {
+    id: "attendance_intent",
+    key: "attendance_intent",
+    type: "single_select",
+    title: "How often do you attend events?",
+    subtitle: "This helps us balance recommendations.",
+    required: false,
+    field: "attendance_frequency",
+    options: [
+      { value: "often", label: "Often", icon: Calendar },
+      { value: "sometimes", label: "Sometimes", icon: Calendar },
+      { value: "rarely", label: "Rarely", icon: Calendar },
+    ],
+  },
+  {
+    id: "finish",
+    key: "finish",
+    type: "completion",
+    title: "You're all set!",
+    subtitle: "We'll use your preferences to improve Discover.",
+    required: false,
   },
 ];
