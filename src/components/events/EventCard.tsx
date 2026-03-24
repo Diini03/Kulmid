@@ -105,7 +105,7 @@ export const EventCard = ({ event, basePath = "/events" }: Props) => {
           <button
             onClick={toggleFavorite}
             className="absolute right-3 top-3 p-2 rounded-full bg-background/90 border cursor-pointer"
-            aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
+            aria-label={isLiked ? t("card_remove_favorite") : t("card_add_favorite")}
           >
             <Heart 
               className={`h-4 w-4 ${
