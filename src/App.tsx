@@ -178,12 +178,12 @@ const App = () => (
                 </Routes>
                 </TooltipProvider>
               </ThemeProvider>
-                </LanguageProvider>
             </FavoritesProvider>
               </AdminBadgesProvider>
           </PendingActionsProvider>
         </NotificationsProvider>
       </AuthProvider>
+        </LanguageProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </HelmetProvider>
