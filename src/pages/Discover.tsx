@@ -5,6 +5,7 @@ import { EventCard } from "@/components/events/EventCard";
 import { smartShuffleEvents, fetchRegistrationCounts } from "@/utils/eventSorting";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate, Link } from "react-router-dom";
 import { categories } from "@/constants/categories";
 import { Sparkles, Settings, ArrowRight } from "lucide-react";
@@ -12,6 +13,7 @@ import { ErrorCard } from "@/components/common/ErrorCard";
 import { EventItem, EVENT_LIST_COLUMNS } from "@/types/event";
 
 const Discover = () => {
+  const { t } = useLanguage();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [showAll, setShowAll] = useState(false);
@@ -126,16 +128,16 @@ const Discover = () => {
               <div className="animate-slide-up">
                 <span className="personalized-badge">
                   <Sparkles className="h-4 w-4" />
-                  Personalized for you
+                  {t("discover_personalized")}
                 </span>
               </div>
             )}
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance animate-slide-up stagger-1">
-              Discover events
+              {t("discover_title")}
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground text-balance animate-slide-up stagger-2">
-              Explore experiences that inspire you
+              {t("discover_subtitle")}
             </p>
 
             {user && hasPreferences && (
@@ -144,8 +146,8 @@ const Discover = () => {
                   <Link to="/home">
                     <Sparkles className="h-5 w-5" />
                     {preferenceCount > 0 
-                      ? `View ${preferenceCount} matched events`
-                      : "View personalized recommendations"
+                      ? t("discover_view_matched", { count: preferenceCount })
+                      : t("discover_view_recommendations")
                     }
                     <ArrowRight className="h-5 w-5" />
                   </Link>
@@ -158,7 +160,7 @@ const Discover = () => {
                 <Button asChild size="lg" variant="outline" className="gap-2">
                   <Link to="/onboarding">
                     <Settings className="h-5 w-5" />
-                    Set your preferences for personalized events
+                    {t("discover_set_preferences")}
                   </Link>
                 </Button>
               </div>
@@ -170,7 +172,7 @@ const Discover = () => {
       {/* Browse by Category */}
       <section className="border-b">
         <div className="container max-w-5xl px-4 py-16">
-          <h2 className="text-2xl font-bold mb-8">Browse by category</h2>
+          <h2 className="text-2xl font-bold mb-8">{t("discover_browse_category")}</h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {categories.map((category, index) => {
@@ -187,7 +189,7 @@ const Discover = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="font-semibold text-base">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground">{count} events</p>
+                    <p className="text-sm text-muted-foreground">{t("discover_events_count", { count })}</p>
                   </div>
                 </button>
               );
@@ -199,10 +201,10 @@ const Discover = () => {
       {/* Featured Events */}
       <section className="container max-w-5xl px-4 py-16 md:py-20">
         <div className="flex items-center justify-between mb-10">
-          <h2 className="text-2xl font-bold">{showAll ? "All events" : "Featured events"}</h2>
+          <h2 className="text-2xl font-bold">{showAll ? t("discover_all_events") : t("discover_featured")}</h2>
           {!showAll && allEvents.length > 6 && (
             <Button onClick={handleViewAll} variant="ghost" className="gap-2">
-              View all
+              {t("btn_view_all")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           )}
@@ -236,7 +238,7 @@ const Discover = () => {
         {!showAll && allEvents.length > 6 && (
           <div className="text-center mt-14">
             <Button onClick={handleViewAll} size="lg" variant="outline" className="px-10">
-              View all {allEvents.length} events
+              {t("btn_view_all_count", { count: allEvents.length })}
             </Button>
           </div>
         )}

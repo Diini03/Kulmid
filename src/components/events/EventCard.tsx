@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 import { AuthRequiredModal } from "@/components/auth/AuthGuard";
 
@@ -28,6 +29,7 @@ interface Props {
 export const EventCard = ({ event, basePath = "/events" }: Props) => {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const isLiked = isFavorite(event.id);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -103,7 +105,7 @@ export const EventCard = ({ event, basePath = "/events" }: Props) => {
           <button
             onClick={toggleFavorite}
             className="absolute right-3 top-3 p-2 rounded-full bg-background/90 border cursor-pointer"
-            aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
+            aria-label={isLiked ? t("card_remove_favorite") : t("card_add_favorite")}
           >
             <Heart 
               className={`h-4 w-4 ${
@@ -118,7 +120,7 @@ export const EventCard = ({ event, basePath = "/events" }: Props) => {
           <div className="absolute bottom-3 right-3">
             {event.price === 0 ? (
               <Badge className="bg-foreground text-background text-xs px-3 py-1">
-                Free
+                {t("card_free")}
               </Badge>
             ) : (
               <Badge variant="secondary" className="bg-background text-foreground text-xs px-3 py-1">
@@ -153,7 +155,7 @@ export const EventCard = ({ event, basePath = "/events" }: Props) => {
             onClick={handleBookClick}
             className="w-full mt-2"
           >
-            Register
+            {t("card_register")}
           </Button>
         </CardContent>
       </Card>

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
@@ -107,6 +108,7 @@ const App = () => (
             <PendingActionsProvider>
               <AdminBadgesProvider>
               <FavoritesProvider>
+                <LanguageProvider>
                 <ThemeProvider>
                 <TooltipProvider>
                   <Toaster />
@@ -176,6 +178,7 @@ const App = () => (
                 </Routes>
                 </TooltipProvider>
               </ThemeProvider>
+                </LanguageProvider>
             </FavoritesProvider>
               </AdminBadgesProvider>
           </PendingActionsProvider>

@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Welcome = () => {
+  const { t } = useLanguage();
   return (
     <>
       <Seo
@@ -58,28 +60,26 @@ const Welcome = () => {
             {/* Content */}
             <div className="space-y-6 lg:space-y-8 text-center lg:text-left">
               <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight animate-fade-in">
-                <span className="text-foreground">Create and</span>
+                <span className="text-foreground">{t("hero_title_1")}</span>
                 <br />
-                <span className="text-foreground">discover</span>
+                <span className="text-foreground">{t("hero_title_2")}</span>
                 <br />
-                <span className="text-primary">
-                  events.
-                </span>
+                <span className="text-primary">{t("hero_title_3")}</span>
               </h1>
               
               <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                Create, manage, and discover events all in one place.
+                {t("hero_subtitle")}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 <Button asChild size="lg" className="w-full sm:w-auto text-lg px-8 group">
                   <Link to="/discover">
-                    Browse Events
+                    {t("hero_browse_events")}
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-lg px-8">
-                  <Link to="/signup">Create Your First Event</Link>
+                  <Link to="/signup">{t("hero_create_first")}</Link>
                 </Button>
               </div>
             </div>

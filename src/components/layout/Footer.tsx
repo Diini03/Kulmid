@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useLanguage } from "@/contexts/LanguageContext";
 import kulmidLogoDark from "@/assets/kulmid-logo-dark.png";
 import kulmidLogoWhite from "@/assets/kulmid-logo-white.png";
 
 export const Footer = () => {
   const { resolvedTheme } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <footer className="bg-card border-t mt-24">
@@ -22,36 +24,11 @@ export const Footer = () => {
 
           {/* Navigation Links */}
           <nav className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm">
-            <Link 
-              to="/events" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Events
-            </Link>
-            <Link 
-              to="/about" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              About
-            </Link>
-            <Link 
-              to="/our-team" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Team
-            </Link>
-            <Link 
-              to="/contact" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Contact
-            </Link>
-            <Link 
-              to="/help" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Help
-            </Link>
+            <Link to="/events" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_events")}</Link>
+            <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_about")}</Link>
+            <Link to="/our-team" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_team")}</Link>
+            <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_contact")}</Link>
+            <Link to="/help" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_help")}</Link>
           </nav>
 
           {/* Social Media Links */}
@@ -97,7 +74,7 @@ export const Footer = () => {
           {/* Copyright */}
           <div className="text-center pt-6 border-t border-border w-full">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Kulmid. All rights reserved.
+              {t("footer_rights", { year: String(new Date().getFullYear()) })}
             </p>
           </div>
         </div>
