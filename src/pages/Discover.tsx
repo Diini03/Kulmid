@@ -189,7 +189,7 @@ const Discover = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="font-semibold text-base">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground">{count} events</p>
+                    <p className="text-sm text-muted-foreground">{t("discover_events_count", { count })}</p>
                   </div>
                 </button>
               );
