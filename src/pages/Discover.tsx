@@ -204,7 +204,7 @@ const Discover = () => {
           <h2 className="text-2xl font-bold">{showAll ? t("discover_all_events") : t("discover_featured")}</h2>
           {!showAll && allEvents.length > 6 && (
             <Button onClick={handleViewAll} variant="ghost" className="gap-2">
-              View all
+              {t("btn_view_all")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           )}
