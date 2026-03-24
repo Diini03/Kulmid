@@ -5,6 +5,7 @@ import { EventCard } from "@/components/events/EventCard";
 import { smartShuffleEvents, fetchRegistrationCounts } from "@/utils/eventSorting";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate, Link } from "react-router-dom";
 import { categories } from "@/constants/categories";
 import { Sparkles, Settings, ArrowRight } from "lucide-react";
@@ -12,6 +13,7 @@ import { ErrorCard } from "@/components/common/ErrorCard";
 import { EventItem, EVENT_LIST_COLUMNS } from "@/types/event";
 
 const Discover = () => {
+  const { t } = useLanguage();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [showAll, setShowAll] = useState(false);
