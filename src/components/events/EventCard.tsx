@@ -120,7 +120,7 @@ export const EventCard = ({ event, basePath = "/events" }: Props) => {
           <div className="absolute bottom-3 right-3">
             {event.price === 0 ? (
               <Badge className="bg-foreground text-background text-xs px-3 py-1">
-                Free
+                {t("card_free")}
               </Badge>
             ) : (
               <Badge variant="secondary" className="bg-background text-foreground text-xs px-3 py-1">
