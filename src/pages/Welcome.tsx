@@ -58,17 +58,17 @@ const Welcome = () => {
             {/* Content */}
             <div className="space-y-6 lg:space-y-8 text-center lg:text-left">
               <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight animate-fade-in">
-                <span className="text-foreground">Delightful</span>
+                <span className="text-foreground">Plan events.</span>
                 <br />
-                <span className="text-foreground">events</span>
+                <span className="text-foreground">Share them.</span>
                 <br />
                 <span className="bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
-                  start here.
+                  Fill every seat.
                 </span>
               </h1>
               
               <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                Set up an event page, invite friends and sell tickets.
+                Create, manage, and discover events all in one place.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start animate-fade-in" style={{ animationDelay: '0.2s' }}>
