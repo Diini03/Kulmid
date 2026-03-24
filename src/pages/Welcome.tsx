@@ -58,12 +58,12 @@ const Welcome = () => {
             {/* Content */}
             <div className="space-y-6 lg:space-y-8 text-center lg:text-left">
               <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight animate-fade-in">
-                <span className="text-foreground">Plan events.</span>
+                <span className="text-foreground">Create and</span>
                 <br />
-                <span className="text-foreground">Share them.</span>
+                <span className="text-foreground">discover</span>
                 <br />
-                <span className="bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
-                  Fill every seat.
+                <span className="text-primary">
+                  events.
                 </span>
               </h1>
               
