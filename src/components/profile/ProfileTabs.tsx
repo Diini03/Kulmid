@@ -43,7 +43,7 @@ const EmptyTab = ({ message }: { message: string }) => (
 
 export const ProfileTabs = ({ hostedEvents, attendedEvents, favoriteEvents, activities, stats, isOwner }: ProfileTabsProps) => (
   <Tabs defaultValue="hosted" className="mt-8">
-    <TabsList className="w-full justify-start bg-secondary/50 rounded-xl p-1 h-auto flex-wrap">
+    <TabsList className="w-full justify-start bg-secondary/50 rounded-xl p-1 h-auto overflow-x-auto scrollbar-hide flex-nowrap">
       <TabsTrigger value="hosted" className="rounded-lg gap-1.5 data-[state=active]:bg-background">
         <Calendar className="h-4 w-4" />Hosted
         <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{hostedEvents.length}</Badge>
