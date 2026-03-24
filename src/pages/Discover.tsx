@@ -146,8 +146,8 @@ const Discover = () => {
                   <Link to="/home">
                     <Sparkles className="h-5 w-5" />
                     {preferenceCount > 0 
-                      ? `View ${preferenceCount} matched events`
-                      : "View personalized recommendations"
+                      ? t("discover_view_matched", { count: preferenceCount })
+                      : t("discover_view_recommendations")
                     }
                     <ArrowRight className="h-5 w-5" />
                   </Link>
