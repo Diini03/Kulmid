@@ -1,68 +1,36 @@
 
 
-# Fix: RLS violation on event registration
+# Fix: Tab Overflow on Mobile
 
-## Root Cause
+## Problem
+The EventBuilder page has 5 tabs (Overview, Guests, Registration, Edit, Settings) that overflow on mobile screens because the `TabsList` doesn't allow horizontal scrolling. The same issue may affect ProfileTabs which uses `flex-wrap` (works but can look cramped).
 
-The insert at line 58 of `EventRegistrationDialog.tsx` uses `.insert({...}).select("id").single()`. In Supabase, `.select()` after `.insert()` requires **SELECT permission** on the inserted row. The RLS policies on `event_guests` only grant SELECT to the event owner and admins — not to the public user who is registering.
+## Fix
 
-Additionally, the duplicate-check SELECT query (line 40-45) silently returns empty for non-owners due to RLS, so it doesn't actually detect duplicates (the unique constraint fallback on line 70 handles that, but it's fragile).
+### `src/pages/EventBuilder.tsx` (line 116)
+Add `overflow-x-auto scrollbar-hide` to the TabsList so tabs scroll horizontally on mobile instead of overflowing off-screen. Also add `flex-nowrap` to prevent wrapping.
 
-## Fix Strategy
+```
+Before:
+<TabsList className="w-full justify-start bg-transparent border-b border-border rounded-none h-auto p-0 gap-0">
 
-**Generate the registration UUID client-side** and pass it in the insert payload. This eliminates the need for `.select("id").single()` after insert, so no SELECT permission is required.
-
-### Changes in `EventRegistrationDialog.tsx`:
-
-1. Generate `const registrationId = crypto.randomUUID()` before the insert
-2. Include `id: registrationId` in the insert payload
-3. Change `.insert({...}).select("id").single()` to just `.insert({...})`
-4. Use `registrationId` directly for the custom answers insert and the check-in token update
-5. Remove the duplicate-check SELECT query (lines 40-45) — rely on the unique constraint error (code `23505`) which already works and is already handled
-
-### Code change (single file):
-
-```typescript
-// Before
-const { data: existing } = await supabase
-  .from("event_guests")
-  .select("id, status")
-  .eq("event_id", eventId)
-  .eq("email", email)
-  .maybeSingle();
-
-if (existing) { ... }
-
-const { data: registration, error } = await supabase.from("event_guests").insert({
-  event_id: eventId,
-  ...
-}).select("id").single();
-
-// After
-const registrationId = crypto.randomUUID();
-
-const { error } = await supabase.from("event_guests").insert({
-  id: registrationId,
-  event_id: eventId,
-  ...
-});
-
-// Then use registrationId directly for answers and token update
+After:
+<TabsList className="w-full justify-start bg-transparent border-b border-border rounded-none h-auto p-0 gap-0 overflow-x-auto scrollbar-hide flex-nowrap">
 ```
 
-## Why this is the correct fix
+### `src/components/profile/ProfileTabs.tsx` (line 46)
+Replace `flex-wrap` with `overflow-x-auto scrollbar-hide flex-nowrap` so on small screens tabs scroll instead of wrapping into multiple rows.
 
-- No new RLS policies needed (adding public SELECT to event_guests would expose guest data)
-- No schema changes needed
-- The INSERT policy already allows public inserts with `registration_type = 'registration'`
-- Duplicate registrations are caught by the `23505` unique constraint error which is already handled
-- Client-generated UUIDs are standard practice with Supabase
+```
+Before:
+<TabsList className="w-full justify-start bg-secondary/50 rounded-xl p-1 h-auto flex-wrap">
 
-## Files to change
+After:
+<TabsList className="w-full justify-start bg-secondary/50 rounded-xl p-1 h-auto overflow-x-auto scrollbar-hide flex-nowrap">
+```
 
-| File | Change |
-|------|--------|
-| `src/components/events/EventRegistrationDialog.tsx` | Generate client-side UUID, remove `.select()` chain, remove pre-check SELECT query |
+### `src/components/ui/tabs.tsx`
+Add `flex-shrink-0` to TabsTrigger base styles so individual tab buttons don't compress when inside a scrollable container.
 
-**1 file modified. 0 migrations. 0 new files.**
+**2 files modified, 1 UI component adjusted. No logic changes.**
 
