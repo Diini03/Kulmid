@@ -29,6 +29,7 @@ interface Props {
 export const EventCard = ({ event, basePath = "/events" }: Props) => {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const isLiked = isFavorite(event.id);
   const [showAuthModal, setShowAuthModal] = useState(false);
