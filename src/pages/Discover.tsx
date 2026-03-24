@@ -201,7 +201,7 @@ const Discover = () => {
       {/* Featured Events */}
       <section className="container max-w-5xl px-4 py-16 md:py-20">
         <div className="flex items-center justify-between mb-10">
-          <h2 className="text-2xl font-bold">{showAll ? "All events" : "Featured events"}</h2>
+          <h2 className="text-2xl font-bold">{showAll ? t("discover_all_events") : t("discover_featured")}</h2>
           {!showAll && allEvents.length > 6 && (
             <Button onClick={handleViewAll} variant="ghost" className="gap-2">
               View all
