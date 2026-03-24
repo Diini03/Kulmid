@@ -357,9 +357,9 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
       {selectedIds.size > 0 && (
         <Card className="border-primary">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <span className="font-medium">{selectedIds.size} selected</span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant="default"
@@ -387,7 +387,7 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
       {/* Registrations List */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Registrations ({filteredRegistrations.length})</CardTitle>
             {filteredRegistrations.length > 0 && (
               <Button variant="outline" size="sm" onClick={toggleSelectAll}>
@@ -410,44 +410,44 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
                 return (
                   <Collapsible key={registration.id}>
                     <div className={`border border-border rounded-lg p-4 ${rowProcessing ? 'opacity-70' : ''}`}>
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-3 sm:gap-4">
                         <Checkbox
                           checked={selectedIds.has(registration.id)}
                           onCheckedChange={() => toggleSelection(registration.id)}
                           disabled={rowProcessing}
                         />
                         
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-semibold">{registration.name}</p>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                                <span className="flex items-center gap-1">
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0">
+                              <p className="font-semibold break-words">{registration.name}</p>
+                              <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                                <span className="flex min-w-0 items-start gap-1">
                                   <Mail className="h-3 w-3" />
-                                  {registration.email}
+                                  <span className="break-all">{registration.email}</span>
                                 </span>
                                 {registration.phone_number && (
-                                  <span className="flex items-center gap-1">
+                                  <span className="flex min-w-0 items-start gap-1">
                                     <Phone className="h-3 w-3" />
-                                    {registration.phone_number}
+                                    <span className="break-all">{registration.phone_number}</span>
                                   </span>
                                 )}
                               </div>
                               {(registration.organization || registration.job_title) && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                                   {registration.organization && (
-                                    <span className="flex items-center gap-1">
+                                    <span className="flex min-w-0 items-start gap-1">
                                       <Building2 className="h-3 w-3" />
-                                      {registration.organization}
+                                      <span className="break-words">{registration.organization}</span>
                                     </span>
                                   )}
                                   {registration.job_title && (
-                                    <span>• {registration.job_title}</span>
+                                    <span className="break-words">• {registration.job_title}</span>
                                   )}
                                 </div>
                               )}
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex shrink-0 items-center gap-2 self-end sm:self-start">
                               {getStatusBadge(registration.status)}
                               <CollapsibleTrigger asChild>
                                 <Button
@@ -468,7 +468,7 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
                           </div>
 
                           {registration.status === "pending" && (
-                            <div className="flex gap-2 pt-2">
+                            <div className="flex flex-wrap gap-2 pt-2">
                               <Button
                                 size="sm"
                                 variant="default"
