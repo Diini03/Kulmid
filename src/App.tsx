@@ -103,12 +103,12 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <LanguageProvider>
         <AuthProvider>
           <NotificationsProvider>
             <PendingActionsProvider>
               <AdminBadgesProvider>
               <FavoritesProvider>
-                <LanguageProvider>
                 <ThemeProvider>
                 <TooltipProvider>
                   <Toaster />
@@ -178,12 +178,12 @@ const App = () => (
                 </Routes>
                 </TooltipProvider>
               </ThemeProvider>
-                </LanguageProvider>
             </FavoritesProvider>
               </AdminBadgesProvider>
           </PendingActionsProvider>
         </NotificationsProvider>
       </AuthProvider>
+        </LanguageProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </HelmetProvider>
