@@ -160,7 +160,7 @@ const Discover = () => {
                 <Button asChild size="lg" variant="outline" className="gap-2">
                   <Link to="/onboarding">
                     <Settings className="h-5 w-5" />
-                    Set your preferences for personalized events
+                    {t("discover_set_preferences")}
                   </Link>
                 </Button>
               </div>
