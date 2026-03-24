@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Welcome = () => {
+  const { t } = useLanguage();
   return (
     <>
       <Seo
