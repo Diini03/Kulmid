@@ -114,8 +114,9 @@ const SignUp = () => {
     <AuthLayout>
       <Seo title="Sign Up" canonical="/signup" />
       <div className="space-y-6 animate-fade-in">
-        <div className="space-y-2">
-          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Create an account</h1>
+        <div className="space-y-1.5">
+          <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
+          <p className="text-sm text-muted-foreground">Start creating and discovering events with Kulmid.</p>
         </div>
 
         {/* Social Login */}
@@ -137,7 +138,7 @@ const SignUp = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {/* Full Name */}
           <div className="space-y-2">
             <Label htmlFor="fullName">Full name</Label>
@@ -239,13 +240,13 @@ const SignUp = () => {
               />
               <label htmlFor="terms" className="text-sm text-muted-foreground leading-snug cursor-pointer">
                 I agree to the{" "}
-                <Link to="/help" className="text-primary hover:underline">
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                   Terms of Service
-                </Link>{" "}
+                </a>{" "}
                 and{" "}
-                <Link to="/help" className="text-primary hover:underline">
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                   Privacy Policy
-                </Link>
+                </a>
               </label>
             </div>
             {errors.terms && (
