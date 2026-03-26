@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, User, Loader2 } from "lucide-react";
+import { Eye, EyeOff, User, Loader2, Mail, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { signUpSchema, type SignUpFormData } from "@/lib/validations";
 import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
@@ -19,6 +19,8 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [emailConfirmationSent, setEmailConfirmationSent] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
   const { signUp, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -50,9 +52,14 @@ const SignUp = () => {
       console.warn("Domain validation unavailable, skipping check");
     }
 
-    const { error } = await signUp(data.email, data.password, data.fullName);
+    const { error, needsEmailConfirmation } = await signUp(data.email, data.password, data.fullName);
     if (!error) {
-      navigate("/onboarding");
+      if (needsEmailConfirmation) {
+        setSubmittedEmail(data.email);
+        setEmailConfirmationSent(true);
+      } else {
+        navigate("/onboarding");
+      }
     }
   };
 
@@ -69,6 +76,39 @@ const SignUp = () => {
       setGoogleLoading(false);
     }
   };
+
+  // Show email confirmation success state
+  if (emailConfirmationSent) {
+    return (
+      <AuthLayout>
+        <Seo title="Check Your Email" canonical="/signup" />
+        <div className="space-y-6 animate-fade-in text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <CheckCircle2 className="h-8 w-8 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Check your email</h1>
+            <p className="text-muted-foreground">
+              We've sent a verification link to{" "}
+              <span className="font-medium text-foreground">{submittedEmail}</span>
+            </p>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
+            <p>Click the link in the email to verify your account and get started.</p>
+            <p>Don't see it? Check your spam folder.</p>
+          </div>
+          <div className="pt-2">
+            <Link
+              to="/signin"
+              className="text-primary font-medium hover:text-primary/80 transition-colors underline text-sm"
+            >
+              Go to sign in
+            </Link>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>

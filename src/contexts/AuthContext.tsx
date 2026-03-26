@@ -19,7 +19,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   adminCheckComplete: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any; needsEmailConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -46,6 +46,51 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [adminCheckComplete, setAdminCheckComplete] = useState(false);
   const { toast } = useToast();
   const currentUserIdRef = useRef<string | null>(null);
+  const reconciliationDoneRef = useRef<Set<string>>(new Set());
+
+  // Post-auth reconciliation: ensure profile + user_preferences rows exist
+  const handlePostAuth = async (authUser: User) => {
+    // Skip if already reconciled this session
+    if (reconciliationDoneRef.current.has(authUser.id)) return;
+    reconciliationDoneRef.current.add(authUser.id);
+
+    try {
+      const fullName = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User';
+
+      // Upsert profile (in case trigger failed or metadata was missing)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(
+          { user_id: authUser.id, full_name: fullName },
+          { onConflict: 'user_id' }
+        );
+      if (profileError) {
+        console.error('Post-auth profile upsert error:', profileError);
+      }
+
+      // Check if user_preferences row exists; create if not
+      const { data: prefs, error: prefsError } = await supabase
+        .from('user_preferences')
+        .select('id')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+
+      if (prefsError && prefsError.code !== 'PGRST116') {
+        console.error('Post-auth preferences check error:', prefsError);
+      }
+
+      if (!prefs) {
+        const { error: insertError } = await supabase
+          .from('user_preferences')
+          .insert({ user_id: authUser.id, onboarding_completed: false });
+        if (insertError) {
+          console.error('Post-auth preferences insert error:', insertError);
+        }
+      }
+    } catch (error) {
+      console.error('Post-auth reconciliation error:', error);
+    }
+  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -150,7 +195,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (session.user.id !== currentUserIdRef.current) {
             currentUserIdRef.current = session.user.id;
             setAdminCheckComplete(false);
+            // Run reconciliation + fetch in parallel
             setTimeout(() => {
+              handlePostAuth(session.user);
               fetchProfile(session.user.id);
               checkAdminRole(session.user.id);
             }, 0);
@@ -170,6 +217,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (session?.user) {
         currentUserIdRef.current = session.user.id;
+        handlePostAuth(session.user);
         fetchProfile(session.user.id);
         checkAdminRole(session.user.id);
       } else {
@@ -207,14 +255,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
         
         toast({ title: "Sign up failed", description, variant: "destructive" });
-        return { error };
+        return { error, needsEmailConfirmation: false };
       }
-      
-      toast({ title: "Account created successfully", description: "Welcome! You're now signed in." });
-      return { error: null };
+
+      // Check if we got a session back (email confirmation disabled) or not (confirmation required)
+      if (data.session) {
+        // User is signed in immediately — run reconciliation
+        await handlePostAuth(data.session.user);
+        toast({ title: "Account created successfully", description: "Welcome! Let's set up your preferences." });
+        return { error: null, needsEmailConfirmation: false };
+      } else {
+        // No session = email confirmation is required
+        // Don't show misleading "you're signed in" toast
+        return { error: null, needsEmailConfirmation: true };
+      }
     } catch (error: any) {
       toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
-      return { error };
+      return { error, needsEmailConfirmation: false };
     }
   };
 
@@ -222,7 +279,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
+        const msg = error.message?.toLowerCase() || '';
+        let description = error.message;
+
+        if (msg.includes('email not confirmed')) {
+          description = "Your email hasn't been verified yet. Please check your inbox for a confirmation link.";
+        } else if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
+          description = "Invalid email or password. Please check your credentials and try again.";
+        }
+
+        toast({ title: "Sign in failed", description, variant: "destructive" });
       }
       return { error };
     } catch (error: any) {
@@ -250,6 +316,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       currentUserIdRef.current = null;
+      reconciliationDoneRef.current.clear();
       setUser(null);
       setSession(null);
       setProfile(null);
@@ -261,6 +328,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error: any) {
       console.error('Sign out error:', error);
       currentUserIdRef.current = null;
+      reconciliationDoneRef.current.clear();
       setUser(null);
       setSession(null);
       setProfile(null);
