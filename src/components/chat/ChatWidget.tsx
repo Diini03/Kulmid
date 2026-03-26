@@ -280,8 +280,8 @@ export const ChatWidget = () => {
         ref={panelRef}
         className={cn(
           "fixed z-50 flex flex-col transition-all duration-300 transform overflow-hidden bg-background/95 backdrop-blur-xl border border-border/50 shadow-2xl",
-          // Floating panel in bottom-right corner
-          "bottom-4 right-4 left-4 sm:left-auto sm:w-[380px] h-[min(600px,calc(100vh-2rem))] rounded-2xl",
+          // Floating panel anchored to bottom-right
+          "bottom-4 right-4 w-[min(380px,calc(100vw-2rem))] h-[min(500px,calc(100vh-6rem))] rounded-2xl",
           isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
         )}
       >
