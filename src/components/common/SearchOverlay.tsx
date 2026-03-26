@@ -30,7 +30,7 @@ const shortcuts = [
   { icon: Home, label: "Go to Home", path: "/home", requireAuth: true },
   { icon: Calendar, label: "Browse Events", path: "/events", requireAuth: false },
   { icon: Compass, label: "Discover", path: "/discover", requireAuth: false },
-  { icon: User, label: "My Dashboard", path: "/dashboard", requireAuth: true },
+  { icon: User, label: "My Profile", path: "/profile", requireAuth: true },
   { icon: Calendar, label: "My Events", path: "/events", requireAuth: true },
   { icon: Settings, label: "Settings", path: "/settings", requireAuth: true },
   { icon: HelpCircle, label: "Help Center", path: "/help", requireAuth: false },
