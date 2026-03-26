@@ -45,6 +45,7 @@ export const SearchOverlay = ({ open, onClose }: Props) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Filter shortcuts based on auth
+  const shortcuts = getShortcuts(user?.id);
   const availableShortcuts = shortcuts.filter(
     (s) => !s.requireAuth || (s.requireAuth && user)
   );
