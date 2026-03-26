@@ -25,12 +25,12 @@ interface EventResult {
   image_url: string | null;
 }
 
-const shortcuts = [
+const getShortcuts = (userId?: string) => [
   { icon: Plus, label: "Create Event", path: "/create", requireAuth: true },
   { icon: Home, label: "Go to Home", path: "/home", requireAuth: true },
   { icon: Calendar, label: "Browse Events", path: "/events", requireAuth: false },
   { icon: Compass, label: "Discover", path: "/discover", requireAuth: false },
-  { icon: User, label: "My Profile", path: "/profile", requireAuth: true },
+  { icon: User, label: "My Profile", path: userId ? `/profile/${userId}` : "/events", requireAuth: true },
   { icon: Calendar, label: "My Events", path: "/events", requireAuth: true },
   { icon: Settings, label: "Settings", path: "/settings", requireAuth: true },
   { icon: HelpCircle, label: "Help Center", path: "/help", requireAuth: false },
@@ -45,6 +45,7 @@ export const SearchOverlay = ({ open, onClose }: Props) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Filter shortcuts based on auth
+  const shortcuts = getShortcuts(user?.id);
   const availableShortcuts = shortcuts.filter(
     (s) => !s.requireAuth || (s.requireAuth && user)
   );
