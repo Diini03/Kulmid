@@ -1,84 +1,100 @@
 
 
-# Auth Flow Fixes — Google First-Time Detection + Email Signup Reliability
+# Auth Pages Redesign — Modern, Product-Level
 
-## Root Cause Analysis
+## Current Problems
+- Right panel is a large empty gradient with animated orbs — purely decorative, wastes half the screen
+- Layout uses a 50/50 split that feels like a generic template
+- Not aligned with the app's `max-w-5xl` system width
+- Missing updated microcopy (subtitles)
+- Terms links point to `/help` instead of proper routes
 
-### Email Signup Problem
-The `signUp` function in `AuthContext.tsx` (line 186-219) calls `supabase.auth.signUp()`. Two issues:
+## New Design
 
-1. **Supabase likely has email confirmation enabled.** When enabled, `signUp()` returns a user object but **no session** — the user is not signed in. The code then shows "Account created successfully" toast and returns `{ error: null }`.
-2. **SignUp.tsx line 54-56** navigates to `/onboarding` on success. But `/onboarding` is wrapped in `ProtectedRoute`, which requires an authenticated user. Since there's no session (email not confirmed), `ProtectedRoute` redirects to `/signin`. The user then can't sign in because they haven't confirmed their email.
+### Layout Strategy
 
-**Fix:** After `signUp()`, check if a session was returned. If no session (email confirmation required), show a "check your email" message instead of navigating. If session exists (confirmation disabled), proceed to onboarding.
+**Desktop (lg+):** Single centered container within `max-w-5xl`, two-column grid (60/40 split). Left: form card. Right: meaningful content panel with a product message and a mini event preview card.
 
-### Google Auth First-Time Detection Problem
-Google OAuth works via redirect. After redirect back, `onAuthStateChange` fires with the session. The existing `ProtectedRoute` already checks `hasCompletedOnboarding()` and redirects new users to `/onboarding`. However, Google OAuth redirects to `window.location.origin` (the `/` route), which is the Welcome page wrapped in `PublicRoute` — not `ProtectedRoute`. `PublicRoute` redirects authenticated users to `/events`, which is behind `ProtectedRoute`, which then checks onboarding.
+**Tablet/Mobile:** Single column, form only, right panel hidden. Centered with comfortable padding.
 
-This chain actually works for routing, but the profile creation relies on the `handle_new_user` database trigger (which only sets `full_name` from metadata). There is **no automatic `user_preferences` row creation**, so `hasCompletedOnboarding` returns `false` for new Google users → they get sent to onboarding. This is correct behavior.
+### File Changes
 
-**Potential gap:** If the trigger fails or Google doesn't provide `full_name`, the profile row might have issues. We should add a `handlePostAuth` reconciliation step in `AuthContext` to ensure both `profiles` and `user_preferences` rows exist.
+#### 1. `src/components/layout/AuthLayout.tsx` — Full Rewrite
 
-## Changes
+Replace the current 50/50 split layout:
 
-### 1. `src/contexts/AuthContext.tsx` — Add post-auth reconciliation
+- Outer container: `min-h-screen bg-background` with a subtle radial glow behind the content area (not a full-panel gradient)
+- Inner container: `max-w-5xl mx-auto` with the same system width as the rest of the app
+- Header: Logo + theme toggle, same spacing as navbar
+- Content area: `grid lg:grid-cols-5` — form gets 3 cols, right panel gets 2 cols
+- Form side: Wrapped in a subtle card surface (`bg-card border rounded-xl`) with `max-w-[460px]`, good padding
+- Right panel (desktop only): Contains a short product tagline ("Create, discover, and manage events — all in one place"), a mini decorative event card preview showing a sample event with teal accent, and a soft ambient glow tied to brand color
+- Footer: Copyright text, centered
 
-Add a `handlePostAuth` function that runs after any successful authentication (both email and Google):
-- Upsert profile row (ensures it exists for Google users even if trigger failed)
-- Check/create `user_preferences` row if missing (with `onboarding_completed: false`)
+Background: Remove the heavy mesh gradient. Use a single very subtle radial glow (`hsl(175 70% 50% / 0.05)`) behind the content area, barely visible but adding depth. Dark mode compatible.
 
-Call this from `onAuthStateChange` when a new user session is detected (for Google OAuth callback) and from `signUp` when a session is returned.
+#### 2. `src/pages/SignIn.tsx` — Microcopy + Polish
 
-**Update `signUp` function** to:
-- Check if `data.session` exists after `signUp()`
-- If session exists: run `handlePostAuth`, return `{ error: null, needsEmailConfirmation: false }`
-- If no session but user exists: return `{ error: null, needsEmailConfirmation: true }`
-- Update the return type to include `needsEmailConfirmation`
+- Change heading from "Log in" to "Welcome back"
+- Add subtitle: "Sign in to manage your events and activity."
+- Increase form field spacing from `space-y-4` to `space-y-5`
+- Add `variant="default"` (filled) to submit button for strong CTA
+- Keep Google button as outlined
 
-**Update `onAuthStateChange`** to run `handlePostAuth` on `SIGNED_IN` events for the reconciliation (profile + preferences upsert).
+#### 3. `src/pages/SignUp.tsx` — Microcopy + Links Fix
 
-### 2. `src/pages/SignUp.tsx` — Handle email confirmation state
+- Change heading from "Create an account" to "Create your account"
+- Add subtitle: "Start creating and discovering events with Kulmid."
+- Increase form field spacing to `space-y-5`
+- Change Terms link from `/help` to `/terms` with `target="_blank"`
+- Change Privacy link from `/help` to `/privacy` with `target="_blank"`
+- Add `variant="default"` to submit button
 
-Update `onSubmit` to check the `needsEmailConfirmation` flag:
-- If `false`: navigate to `/onboarding` (user is signed in)
-- If `true`: show a success state with "Check your email to verify your account" message instead of navigating
+#### 4. `src/components/auth/SocialLoginButton.tsx` — Minor Polish
 
-Add a local state `emailSent` to toggle the UI to a confirmation message view.
+- Remove `hover:shadow-md` (keep it subtle per design system)
+- Ensure consistent `rounded-lg` with other buttons
 
-### 3. `src/pages/SignIn.tsx` — Better error context
-
-After failed sign-in, if the error is "Email not confirmed", show a specific helpful message instead of generic "Invalid credentials".
-
-### 4. `src/contexts/AuthContext.tsx` — Update interface
-
-Update `AuthContextType` to change `signUp` return type:
-```typescript
-signUp: (email: string, password: string, fullName: string) => Promise<{ error: any; needsEmailConfirmation?: boolean }>;
-```
-
-## Post-Auth Reconciliation Logic (runs in AuthContext)
+### Right Panel Content (Desktop)
 
 ```text
-handlePostAuth(user):
-  1. upsert profiles row (id, user_id, full_name from user metadata)
-  2. check if user_preferences row exists
-  3. if not → insert with onboarding_completed = false
+┌─────────────────────────┐
+│                         │
+│  "Create, discover,     │
+│   and manage events     │
+│   — all in one place."  │
+│                         │
+│  ┌───────────────────┐  │
+│  │  Mini Event Card  │  │
+│  │  ┌─────┐          │  │
+│  │  │ img │ Title     │  │
+│  │  └─────┘ Date      │  │
+│  │          Location  │  │
+│  └───────────────────┘  │
+│                         │
+│  Trusted by 1,000+      │
+│  event organizers       │
+│                         │
+└─────────────────────────┘
 ```
 
-This ensures Google users, email users, and any future OAuth providers all go through the same reconciliation.
+The mini event card is static/decorative — not a real component. Uses the same card styling as EventCard but simplified. Shows a placeholder event like "Kulmid Community Meetup" with a teal accent bar.
 
-## Files Changed
+### What This Achieves
+- Auth pages feel integrated with the main app (same width, same card style)
+- Right panel has purpose instead of empty gradient
+- Clean, modern SaaS feel without over-design
+- Mobile experience is clean single-column
+- Consistent with Monochrome Teal design system
+
+### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/contexts/AuthContext.tsx` | Add `handlePostAuth`, update `signUp` return type, call reconciliation on auth state change |
-| `src/pages/SignUp.tsx` | Handle `needsEmailConfirmation`, show confirmation UI |
-| `src/pages/SignIn.tsx` | Improve error message for unconfirmed emails |
+| `src/components/layout/AuthLayout.tsx` | Rewrite — new layout with meaningful right panel |
+| `src/pages/SignIn.tsx` | Update microcopy, spacing, button variant |
+| `src/pages/SignUp.tsx` | Update microcopy, spacing, fix terms links |
+| `src/components/auth/SocialLoginButton.tsx` | Minor style cleanup |
 
-**3 files modified. No database changes needed — existing tables and triggers are sufficient.**
-
-## What May Still Need Manual Action
-
-- **Email confirmation setting**: If you want email signup to work without confirmation, disable "Confirm email" in **Supabase Dashboard → Authentication → Providers → Email** settings. The code fix handles both cases gracefully.
-- **Google OAuth**: Must remain configured in Supabase Dashboard with correct redirect URLs. No code changes needed for the OAuth flow itself.
+**4 files modified. No new files. No dependencies.**
 
