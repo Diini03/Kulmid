@@ -46,7 +46,7 @@ export const SocialLoginButton = ({
     <Button
       type="button"
       variant="outline"
-      className="w-full h-12 gap-3 text-base font-medium bg-card hover:bg-muted/50 border-border/60 transition-all duration-200 hover:border-primary/30 hover:shadow-md"
+      className="w-full h-12 gap-3 text-base font-medium bg-card hover:bg-muted/50 border-border/60 transition-all duration-200 hover:border-primary/30 rounded-lg"
       onClick={onClick}
       disabled={loading || disabled}
     >

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTheme } from "next-themes";
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun, Monitor, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,6 +9,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import kulmidLogo from "@/assets/kulmid-logo.png";
+
+const MiniEventCard = () => (
+  <div className="rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 space-y-3">
+    <div className="flex items-start gap-3">
+      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <Calendar className="h-5 w-5 text-primary" />
+      </div>
+      <div className="min-w-0">
+        <p className="font-semibold text-sm text-foreground leading-tight">Kulmid Community Meetup</p>
+        <p className="text-xs text-muted-foreground mt-1">Sat, Mar 28 · 2:00 PM</p>
+      </div>
+    </div>
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <MapPin className="h-3 w-3 flex-shrink-0" />
+      <span>Mogadishu Innovation Hub</span>
+    </div>
+    <div className="h-px bg-border/50" />
+    <div className="flex items-center justify-between">
+      <div className="flex -space-x-1.5">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-6 h-6 rounded-full border-2 border-card bg-muted"
+          />
+        ))}
+        <div className="w-6 h-6 rounded-full border-2 border-card bg-primary/10 flex items-center justify-center">
+          <span className="text-[9px] font-medium text-primary">+42</span>
+        </div>
+      </div>
+      <span className="text-xs font-medium text-primary">Free</span>
+    </div>
+  </div>
+);
 
 export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   const { theme, setTheme } = useTheme();
@@ -22,13 +55,20 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Left Panel - Form */}
-      <div className="flex-1 flex flex-col min-h-screen lg:w-1/2">
-        {/* Header - matching Navbar width */}
-        <header className="flex items-center justify-between p-6 lg:px-12 max-w-5xl mx-auto w-full">
+    <div className="min-h-screen bg-background relative">
+      {/* Subtle ambient glow */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 30%, hsl(175 70% 50% / 0.04) 0%, transparent 60%)',
+        }}
+      />
+
+      <div className="relative max-w-5xl mx-auto min-h-screen flex flex-col px-4">
+        {/* Header */}
+        <header className="flex items-center justify-between py-5">
           <Link to="/" className="flex items-center gap-2">
-            <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
+            <img src={kulmidLogo} alt="Kulmid" className="h-9 w-9" />
             <span className="font-bold text-xl">Kulmid</span>
           </Link>
           
@@ -52,71 +92,43 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
           </DropdownMenu>
         </header>
 
-        {/* Form Content - Centered with fixed width matching system */}
-        <main className="flex-1 flex items-center justify-center px-6 lg:px-12">
-          <div className="w-full max-w-md">
-            {children}
+        {/* Main Content */}
+        <main className="flex-1 flex items-center py-8">
+          <div className="w-full grid lg:grid-cols-5 gap-12 lg:gap-16 items-center">
+            {/* Left: Form */}
+            <div className="lg:col-span-3 flex justify-center lg:justify-start">
+              <div className="w-full max-w-[460px]">
+                <div className="rounded-xl border border-border/60 bg-card p-6 sm:p-8">
+                  {children}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Meaningful Panel (desktop only) */}
+            <div className="hidden lg:flex lg:col-span-2 flex-col justify-center space-y-8">
+              <div className="space-y-3">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground leading-snug">
+                  Create, discover, and manage events
+                  <span className="text-primary"> — all in one place.</span>
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Join a growing community of organizers and attendees building meaningful connections through events.
+                </p>
+              </div>
+
+              <MiniEventCard />
+
+              <p className="text-xs text-muted-foreground">
+                Trusted by <span className="font-medium text-foreground">1,000+</span> event organizers
+              </p>
+            </div>
           </div>
         </main>
 
         {/* Footer */}
-        <footer className="p-6 lg:px-12 text-center text-sm text-muted-foreground max-w-5xl mx-auto w-full">
+        <footer className="py-5 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} Kulmid. All rights reserved.
         </footer>
-      </div>
-
-      {/* Right Panel - Mesh Gradient (hidden on mobile) */}
-      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        {/* Soft Mesh Gradient Background - Using system teal/cyan colors */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(at 40% 20%, hsl(189 85% 75% / 0.7) 0px, transparent 50%),
-              radial-gradient(at 80% 0%, hsl(220 70% 70% / 0.6) 0px, transparent 50%),
-              radial-gradient(at 0% 50%, hsl(172 80% 65% / 0.6) 0px, transparent 50%),
-              radial-gradient(at 80% 50%, hsl(189 85% 80% / 0.5) 0px, transparent 50%),
-              radial-gradient(at 0% 100%, hsl(160 60% 65% / 0.4) 0px, transparent 50%),
-              radial-gradient(at 80% 100%, hsl(220 70% 75% / 0.5) 0px, transparent 50%),
-              radial-gradient(at 50% 50%, hsl(189 85% 70% / 0.3) 0px, transparent 70%)
-            `,
-            backgroundColor: 'hsl(189 40% 97%)'
-          }}
-        />
-        
-        {/* Animated floating orbs for subtle movement */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div 
-            className="absolute w-[500px] h-[500px] rounded-full blur-3xl opacity-60 animate-pulse"
-            style={{
-              background: 'radial-gradient(circle, hsl(189 85% 70% / 0.6) 0%, transparent 70%)',
-              top: '10%',
-              left: '20%',
-              animationDuration: '8s'
-            }}
-          />
-          <div 
-            className="absolute w-[400px] h-[400px] rounded-full blur-3xl opacity-50 animate-pulse"
-            style={{
-              background: 'radial-gradient(circle, hsl(220 70% 70% / 0.5) 0%, transparent 70%)',
-              bottom: '20%',
-              right: '10%',
-              animationDuration: '10s',
-              animationDelay: '2s'
-            }}
-          />
-          <div 
-            className="absolute w-[350px] h-[350px] rounded-full blur-3xl opacity-40 animate-pulse"
-            style={{
-              background: 'radial-gradient(circle, hsl(172 80% 65% / 0.5) 0%, transparent 70%)',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              animationDuration: '12s',
-              animationDelay: '4s'
-            }}
-          />
-        </div>
       </div>
     </div>
   );

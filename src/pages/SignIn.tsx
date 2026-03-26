@@ -129,8 +129,9 @@ const SignIn = () => {
     <AuthLayout>
       <Seo title="Sign In" canonical="/signin" />
       <div className="space-y-6 animate-fade-in">
-        <div className="space-y-2">
-          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Log in</h1>
+        <div className="space-y-1.5">
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+          <p className="text-sm text-muted-foreground">Sign in to manage your events and activity.</p>
         </div>
 
         {/* Social Login */}
@@ -152,7 +153,7 @@ const SignIn = () => {
           </div>
         </div>
 
-        <form onSubmit={signInForm.handleSubmit(onSignIn)} className="space-y-4">
+        <form onSubmit={signInForm.handleSubmit(onSignIn)} className="space-y-5">
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
