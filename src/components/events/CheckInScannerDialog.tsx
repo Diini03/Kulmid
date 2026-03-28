@@ -160,21 +160,41 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
       const html5QrCode = new Html5Qrcode(SCANNER_ELEMENT_ID);
       scannerRef.current = html5QrCode;
 
-      await html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        handleScanSuccess,
-        () => {} // Ignore scan-not-found
-      );
+      const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
 
-      // html5-qrcode can render video with width: 0px if container was hidden during mount
-      const videoElement = container.querySelector("video") as HTMLVideoElement | null;
-      if (videoElement) {
-        videoElement.style.width = "100%";
-        videoElement.style.height = "100%";
-        videoElement.style.objectFit = "cover";
+      const patchVideoForIOS = () => {
+        const video = container.querySelector("video") as HTMLVideoElement | null;
+        if (video) {
+          video.setAttribute("playsinline", "true");
+          video.setAttribute("webkit-playsinline", "true");
+          video.setAttribute("autoplay", "true");
+          video.setAttribute("muted", "true");
+          video.playsInline = true;
+          video.muted = true;
+          video.style.width = "100%";
+          video.style.height = "100%";
+          video.style.objectFit = "cover";
+        }
+      };
+
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          scanConfig,
+          handleScanSuccess,
+          () => {}
+        );
+        patchVideoForIOS();
+      } catch {
+        // Fallback: try front camera if back camera fails (common on iOS)
+        await html5QrCode.start(
+          { facingMode: "user" },
+          scanConfig,
+          handleScanSuccess,
+          () => {}
+        );
+        patchVideoForIOS();
       }
-
       if (mountedRef.current && !closingRef.current) {
         setScanning(true);
       } else {
