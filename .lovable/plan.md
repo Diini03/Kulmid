@@ -1,48 +1,65 @@
 
 
-## Problem: QR Scanner Not Working on iOS/iPhone
+## iOS QR Scanner Robustness Fix
 
-**Root Cause**: iOS Safari has stricter requirements for camera access than Android:
-1. Video elements must have `playsinline` attribute (iOS won't autoplay video without it)
-2. `facingMode: { exact: "environment" }` can fail on some iOS devices — the non-exact `"environment"` is safer but `html5-qrcode` may internally use `exact`
-3. iOS requires explicit user gesture to trigger camera permissions
-4. The `html5-qrcode` library has known iOS compatibility issues with certain versions
+### Root Cause
+iOS Safari requires `playsinline` on video elements before stream attachment, has stricter camera permission handling, and can fail silently with `facingMode: "environment"` on some devices. The current code patches video attributes *after* start, which is too late on iOS. There's also no fallback if the live camera completely fails.
 
-## Plan
+### Changes — Single File: `src/components/events/CheckInScannerDialog.tsx`
 
-### 1. Add iOS video element patching after scanner starts
-After `html5QrCode.start()` succeeds (line ~163), find the rendered `<video>` element and force-set `playsinline`, `autoplay`, and `muted` attributes — iOS Safari requires these to display camera feeds inline.
+**1. Refactor `startScanning` with tiered camera fallback**
+- Attempt 1: `{ facingMode: "environment" }` (back camera)
+- Attempt 2: `{ facingMode: "user" }` (front camera)  
+- Attempt 3: `video: true` (any camera, no facing preference)
+- Each attempt wrapped in its own try/catch; only show error after all three fail
 
-### 2. Add a fallback camera configuration
-If the initial `start()` with `{ facingMode: "environment" }` fails, retry with a bare `{ facingMode: "user" }` or just `true` for the video constraint. Some older iPhones don't enumerate the back camera correctly.
+**2. Patch video element immediately after each start attempt**
+- Use a `MutationObserver` on the scanner container to catch the video element as soon as it's inserted into the DOM (before stream attaches)
+- Set `playsinline`, `webkit-playsinline`, `autoplay`, `muted` attributes and inline styles
+- Also patch after `start()` resolves as a safety net
 
-### 3. Force video element styles for iOS rendering
-iOS Safari sometimes renders the video at 0×0 if `playsinline` wasn't set before the stream attached. After start, explicitly set `width`, `height`, `object-fit`, and the `webkit-playsinline` attribute on the video element.
+**3. Black-screen detection**
+- After successful start, wait 2 seconds then check if video element has `videoWidth > 0` and `videoHeight > 0`
+- If zero-sized, show a specific "Camera preview failed" UI with retry + fallback options
 
-### Technical Details
+**4. Detailed error categorization & logging**
+- Log `error.name`, `error.message`, `navigator.userAgent`, and which constraint was attempted
+- Map errors to user-friendly messages:
+  - `NotAllowedError` → permission denied
+  - `NotFoundError` → no camera
+  - `OverconstrainedError` → camera constraint issue (triggers next fallback)
+  - `NotReadableError` → camera busy
 
-**File**: `src/components/events/CheckInScannerDialog.tsx`
+**5. Upload QR Image fallback**
+- Add an "Upload QR Image" button (always visible below scanner area)
+- Use `Html5Qrcode.scanFile()` to decode a QR from a user-selected image
+- Route decoded text through existing `handleScanSuccess`
 
-In `startScanning()`, after the successful `html5QrCode.start()` call (~line 163-168):
-- Query the video element inside the scanner container
-- Set attributes: `playsinline`, `webkit-playsinline`, `autoplay`, `muted`
-- Add a fallback retry in the `catch` block that attempts `{ facingMode: "user" }` if the environment camera fails
+**6. Manual code entry fallback**
+- Add a text input for pasting/typing a check-in token directly
+- "Verify" button calls `handleScanSuccess` with the entered text
 
-Add a helper to patch the video element:
-```ts
-const patchVideoForIOS = (container: HTMLElement) => {
-  const video = container.querySelector("video");
-  if (video) {
-    video.setAttribute("playsinline", "true");
-    video.setAttribute("webkit-playsinline", "true");
-    video.setAttribute("autoplay", "true");
-    video.setAttribute("muted", "true");
-    video.style.width = "100%";
-    video.style.height = "100%";
-    video.style.objectFit = "cover";
-  }
-};
+**7. Lifecycle cleanup**
+- Add the `MutationObserver` disconnect to `destroyScanner`
+- Existing cleanup logic is solid; no other changes needed
+
+### UI Layout (scanner area)
+```text
+┌─────────────────────────────┐
+│  [Camera Preview / Error]   │
+├─────────────────────────────┤
+│  [Stop Scanner]             │
+│  [Upload QR Image]          │
+│  [Enter Code Manually ___]  │
+├─────────────────────────────┤
+│  [Scan Result Panel]        │
+│  [Manual Search]            │
+│  [Recent Scans]             │
+└─────────────────────────────┘
 ```
 
-In the catch block, add a retry with relaxed constraints before showing the error.
+### What stays unchanged
+- All scan result handling, confirm check-in, manual search, stats, recent scans
+- Android behavior unaffected (tiered fallback only activates on failure)
+- Dialog open/close lifecycle
 
