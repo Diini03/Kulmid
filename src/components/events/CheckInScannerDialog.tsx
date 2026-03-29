@@ -16,6 +16,8 @@ import {
   Users,
   ScanLine,
   VideoOff,
+  Upload,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -57,12 +59,45 @@ interface ManualGuest {
 
 const SCANNER_ELEMENT_ID = "checkin-qr-reader";
 
+// Categorize camera errors for user-friendly messages
+const categorizeCameraError = (err: any): string => {
+  const name = err?.name || "";
+  const msg = err?.message || String(err);
+  const combined = `${name} ${msg}`;
+
+  if (combined.includes("NotAllowedError") || combined.includes("Permission")) {
+    return "Camera permission denied. Please allow camera access in your browser settings and try again.";
+  }
+  if (combined.includes("NotFoundError") || combined.includes("Requested device not found")) {
+    return "No camera found on this device.";
+  }
+  if (combined.includes("OverconstrainedError")) {
+    return "Camera does not support the requested configuration.";
+  }
+  if (combined.includes("NotReadableError") || combined.includes("Could not start video source")) {
+    return "Camera is busy or not readable. Close other apps using the camera and try again.";
+  }
+  return "Failed to start camera: " + msg;
+};
+
+const logCameraError = (err: any, constraint: string) => {
+  console.error("[QR Scanner] Camera error", {
+    errorName: err?.name,
+    errorMessage: err?.message,
+    stack: err?.stack?.slice(0, 300),
+    constraint,
+    userAgent: navigator.userAgent,
+  });
+};
+
 const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDialogProps) => {
   const { user } = useAuth();
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const observerRef = useRef<MutationObserver | null>(null);
   const [scanning, setScanning] = useState(false);
   const [startingScanner, setStartingScanner] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [blackScreen, setBlackScreen] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
@@ -70,10 +105,13 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ManualGuest[]>([]);
   const [searching, setSearching] = useState(false);
+  const [manualToken, setManualToken] = useState("");
+  const [verifyingToken, setVerifyingToken] = useState(false);
   const processingRef = useRef(false);
   const lastTokenRef = useRef<string>("");
   const closingRef = useRef(false);
   const mountedRef = useRef(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchStats = useCallback(async () => {
     const { data } = await supabase
@@ -90,13 +128,11 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
     }
   }, [eventId]);
 
-  // Track mount state
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
-  // Fetch stats when dialog opens
   useEffect(() => {
     if (open) {
       closingRef.current = false;
@@ -104,14 +140,57 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
     }
   }, [open, fetchStats]);
 
-  // Cleanup scanner on unmount (safety net)
   useEffect(() => {
     return () => {
       destroyScanner();
     };
   }, []);
 
+  // Patch any video element for iOS Safari compatibility
+  const patchVideoElement = (video: HTMLVideoElement) => {
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("webkit-playsinline", "true");
+    video.setAttribute("autoplay", "true");
+    video.setAttribute("muted", "true");
+    video.playsInline = true;
+    video.muted = true;
+    video.autoplay = true;
+    video.style.width = "100%";
+    video.style.height = "100%";
+    video.style.objectFit = "cover";
+  };
+
+  // Set up MutationObserver to patch video elements as soon as they appear in DOM
+  const setupVideoObserver = (container: HTMLElement) => {
+    // Disconnect any existing observer
+    observerRef.current?.disconnect();
+
+    // Patch any existing video
+    const existingVideo = container.querySelector("video");
+    if (existingVideo) patchVideoElement(existingVideo as HTMLVideoElement);
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of Array.from(mutation.addedNodes)) {
+          if (node instanceof HTMLVideoElement) {
+            patchVideoElement(node);
+          }
+          if (node instanceof HTMLElement) {
+            const video = node.querySelector?.("video");
+            if (video) patchVideoElement(video as HTMLVideoElement);
+          }
+        }
+      }
+    });
+
+    observer.observe(container, { childList: true, subtree: true });
+    observerRef.current = observer;
+  };
+
   const destroyScanner = async () => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
+
     const scanner = scannerRef.current;
     if (!scanner) return;
 
@@ -121,7 +200,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
         await scanner.stop();
       }
     } catch {
-      // Scanner may already be stopped or in bad state
+      // Scanner may already be stopped
     }
 
     try {
@@ -133,100 +212,108 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
     scannerRef.current = null;
   };
 
+  // Check if video preview is actually rendering (not black/zero-sized)
+  const checkVideoPreview = (container: HTMLElement) => {
+    setTimeout(() => {
+      if (!mountedRef.current || closingRef.current) return;
+      const video = container.querySelector("video") as HTMLVideoElement | null;
+      if (video && (video.videoWidth === 0 || video.videoHeight === 0)) {
+        console.warn("[QR Scanner] Black screen detected — video dimensions are zero", {
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+          readyState: video.readyState,
+          userAgent: navigator.userAgent,
+        });
+        setBlackScreen(true);
+      }
+    }, 2500);
+  };
+
   const startScanning = async () => {
     if (scanning || startingScanner) return;
 
     setCameraError(null);
+    setBlackScreen(false);
     setStartingScanner(true);
     setScanning(true);
 
-    // Ensure any previous instance is fully cleaned
     await destroyScanner();
 
-    // Wait for React to render scanner container before initializing camera
+    // Wait for DOM to render scanner container
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
     const container = document.getElementById(SCANNER_ELEMENT_ID);
     if (!container) {
       setCameraError("Scanner container not found. Please reopen the scanner.");
+      setScanning(false);
+      setStartingScanner(false);
       return;
     }
 
-    // Clear any leftover children from previous scanner
     container.innerHTML = "";
 
-    try {
-      const html5QrCode = new Html5Qrcode(SCANNER_ELEMENT_ID);
-      scannerRef.current = html5QrCode;
+    // Set up observer BEFORE scanner starts so video is patched immediately on iOS
+    setupVideoObserver(container);
 
-      const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+    const html5QrCode = new Html5Qrcode(SCANNER_ELEMENT_ID);
+    scannerRef.current = html5QrCode;
 
-      const patchVideoForIOS = () => {
-        const video = container.querySelector("video") as HTMLVideoElement | null;
-        if (video) {
-          video.setAttribute("playsinline", "true");
-          video.setAttribute("webkit-playsinline", "true");
-          video.setAttribute("autoplay", "true");
-          video.setAttribute("muted", "true");
-          video.playsInline = true;
-          video.muted = true;
-          video.style.width = "100%";
-          video.style.height = "100%";
-          video.style.objectFit = "cover";
-        }
-      };
+    const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
 
+    // Tiered camera fallback
+    const cameraConfigs: Array<{ constraint: any; label: string }> = [
+      { constraint: { facingMode: "environment" }, label: "rear camera" },
+      { constraint: { facingMode: "user" }, label: "front camera" },
+    ];
+
+    let started = false;
+    let lastError: any = null;
+
+    for (const { constraint, label } of cameraConfigs) {
       try {
         await html5QrCode.start(
-          { facingMode: "environment" },
+          constraint,
           scanConfig,
           handleScanSuccess,
           () => {}
         );
-        patchVideoForIOS();
-      } catch {
-        // Fallback: try front camera if back camera fails (common on iOS)
-        await html5QrCode.start(
-          { facingMode: "user" },
-          scanConfig,
-          handleScanSuccess,
-          () => {}
-        );
-        patchVideoForIOS();
-      }
-      if (mountedRef.current && !closingRef.current) {
-        setScanning(true);
-      } else {
-        // Component unmounted or dialog closing during start
-        await destroyScanner();
-      }
-    } catch (err: any) {
-      console.error("Failed to start scanner:", err);
-      const message = err?.message || String(err);
+        // Safety-net patch after start resolves
+        const video = container.querySelector("video") as HTMLVideoElement | null;
+        if (video) patchVideoElement(video);
 
-      if (message.includes("NotAllowedError") || message.includes("Permission")) {
-        setCameraError("Camera permission denied. Please allow camera access and try again.");
-      } else if (message.includes("NotFoundError") || message.includes("no camera")) {
-        setCameraError("No camera found on this device.");
-      } else {
-        setCameraError("Failed to start camera: " + message);
+        console.info(`[QR Scanner] Started with ${label}`);
+        started = true;
+        break;
+      } catch (err: any) {
+        logCameraError(err, label);
+        lastError = err;
+        // If permission denied, don't try other constraints
+        if (err?.name === "NotAllowedError") break;
       }
+    }
 
-      if (mountedRef.current) {
-        setScanning(false);
-      }
+    if (!started) {
+      const errorMsg = categorizeCameraError(lastError);
+      setCameraError(errorMsg);
+      setScanning(false);
       scannerRef.current = null;
-    } finally {
-      if (mountedRef.current) {
-        setStartingScanner(false);
-      }
+    } else if (mountedRef.current && !closingRef.current) {
+      setScanning(true);
+      checkVideoPreview(container);
+    } else {
+      await destroyScanner();
+    }
+
+    if (mountedRef.current) {
+      setStartingScanner(false);
     }
   };
 
   const stopScanning = async () => {
     setStartingScanner(false);
     setScanning(false);
+    setBlackScreen(false);
     await destroyScanner();
   };
 
@@ -236,11 +323,12 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
     setScanning(false);
     setScanResult(null);
     setCameraError(null);
+    setBlackScreen(false);
     setSearchQuery("");
     setSearchResults([]);
+    setManualToken("");
 
     await destroyScanner();
-
     onOpenChange(false);
   };
 
@@ -284,7 +372,6 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
 
       if (mountedRef.current) {
         setScanResult(data as ScanResult);
-
         if (data.status === "already_checked_in") {
           addRecentScan(data.guest?.name, data.guest?.email, "already");
         }
@@ -296,7 +383,6 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
       }
     } finally {
       processingRef.current = false;
-      // Resume scanner after delay
       setTimeout(() => {
         const scanner = scannerRef.current;
         if (scanner) {
@@ -397,6 +483,41 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
     }
   };
 
+  // Upload QR image fallback
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Need a fresh instance if scanner is not active
+      let qrDecoder = scannerRef.current;
+      if (!qrDecoder) {
+        qrDecoder = new Html5Qrcode(SCANNER_ELEMENT_ID + "-file");
+      }
+
+      const result = await qrDecoder.scanFile(file, true);
+      await handleScanSuccess(result);
+    } catch (err: any) {
+      console.error("[QR Scanner] File scan failed:", err);
+      toast.error("Could not read QR code from image. Please try a clearer photo.");
+    }
+
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // Manual token entry
+  const handleManualTokenVerify = async () => {
+    const trimmed = manualToken.trim();
+    if (!trimmed) return;
+    setVerifyingToken(true);
+    try {
+      await handleScanSuccess(trimmed);
+    } finally {
+      setVerifyingToken(false);
+    }
+  };
+
   const progressPercent = stats.total > 0 ? (stats.checkedIn / stats.total) * 100 : 0;
 
   if (!open) return null;
@@ -438,7 +559,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
         </div>
 
         <div className="p-4 space-y-4">
-          {/* Scanner area — container is always in DOM when dialog open */}
+          {/* Scanner area */}
           <div className="rounded-xl overflow-hidden bg-black border border-border">
             <div
               id={SCANNER_ELEMENT_ID}
@@ -449,10 +570,37 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                 display: scanning || startingScanner ? "block" : "none",
               }}
             />
+            {/* Hidden container for file-based scanning */}
+            <div id={SCANNER_ELEMENT_ID + "-file"} style={{ display: "none" }} />
 
             {startingScanner && (
               <div className="p-8 text-center text-muted-foreground">
                 Initializing camera preview...
+              </div>
+            )}
+
+            {/* Black screen detection */}
+            {blackScreen && scanning && !startingScanner && (
+              <div className="p-6 text-center bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200 dark:border-amber-800">
+                <VideoOff className="h-8 w-8 text-amber-600 mx-auto mb-2" />
+                <p className="text-sm font-medium text-amber-900 dark:text-amber-200 mb-1">
+                  Camera preview may not be working
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mb-3">
+                  If you see a black screen, try the alternatives below or restart the scanner.
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      stopScanning();
+                      setTimeout(startScanning, 300);
+                    }}
+                  >
+                    Restart Scanner
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -468,7 +616,7 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-3">
-                  You can use manual search below as a fallback.
+                  Use the alternatives below to check in guests.
                 </p>
               </div>
             )}
@@ -491,6 +639,42 @@ const CheckInScannerDialog = ({ eventId, open, onOpenChange }: CheckInScannerDia
               Stop Scanner
             </Button>
           )}
+
+          {/* Fallback: Upload QR Image + Manual Token */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Upload QR Image
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter check-in code..."
+                value={manualToken}
+                onChange={(e) => setManualToken(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleManualTokenVerify()}
+              />
+              <Button
+                variant="outline"
+                onClick={handleManualTokenVerify}
+                disabled={verifyingToken || !manualToken.trim()}
+              >
+                <KeyRound className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
           {/* Scan result panel */}
           {scanResult && (
