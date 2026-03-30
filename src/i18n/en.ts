@@ -82,6 +82,28 @@ export const en = {
   common_no_results: "No results found",
   common_search: "Search",
   common_or: "or",
+
+  // Events Page
+  events_my_events: "My Events",
+  events_upcoming: "Upcoming",
+  events_past: "Past",
+  events_no_upcoming: "No upcoming events",
+  events_no_past: "No past events",
+  events_no_upcoming_desc: "Create your next event and start inviting guests.",
+  events_no_past_desc: "Your past events will appear here once completed.",
+  events_guests_confirmed: "{count} guests confirmed",
+  events_pending_count: "{count} pending",
+  events_location_missing: "Location missing",
+
+  // Empty State
+  empty_title: "Create your first event",
+  empty_description: "Host your next event with Kulmid. Create beautiful event pages, invite guests, and track attendance.",
+  empty_create_button: "Create Your First Event",
+  empty_explore_text: "or explore events happening around you",
+  empty_discover: "Discover Events",
+
+  // Auth Modal
+  auth_required_message: "Sign in or create an account to start creating events.",
 } as const;
 
 export type TranslationKeys = keyof typeof en;
