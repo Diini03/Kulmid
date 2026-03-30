@@ -229,9 +229,9 @@ const Events = () => {
                                   <span className="truncate">{event.location}</span>
                                 </span>
                               ) : (
-                                <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400">
+                              <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400">
                                   <AlertTriangle className="h-4 w-4" />
-                                  <span>Location missing</span>
+                                  <span>{t("events_location_missing")}</span>
                                 </span>
                               )}
                             </div>
