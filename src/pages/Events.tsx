@@ -162,14 +162,14 @@ const Events = () => {
       <Seo title="Events" description="Manage your events on Kulmid" canonical="/events" />
       <div className="container max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-10">
-          <h1 className="text-3xl font-bold">My Events</h1>
+          <h1 className="text-3xl font-bold">{t("events_my_events")}</h1>
           <div className="flex items-center gap-4">
             <div className="flex rounded-full border p-1">
               <button onClick={() => setFilter("upcoming")} className={`px-5 py-2 text-sm font-medium rounded-full transition-colors ${filter === "upcoming" ? "bg-foreground text-background" : "text-muted-foreground"}`}>
-                Upcoming
+                {t("events_upcoming")}
               </button>
               <button onClick={() => setFilter("past")} className={`px-5 py-2 text-sm font-medium rounded-full transition-colors ${filter === "past" ? "bg-foreground text-background" : "text-muted-foreground"}`}>
-                Past
+                {t("events_past")}
               </button>
             </div>
           </div>
