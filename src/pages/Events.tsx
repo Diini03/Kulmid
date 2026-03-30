@@ -237,7 +237,7 @@ const Events = () => {
                             </div>
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                               <Users className="h-4 w-4" />
-                              <span>{guestCounts[event.id] || 0} guests confirmed</span>
+                              <span>{t("events_guests_confirmed", { count: (guestCounts[event.id] || 0).toString() })}</span>
                             </div>
                           </div>
                           {event.image_url && (

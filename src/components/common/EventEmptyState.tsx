@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CalendarPlus, Compass, Plus } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface EventEmptyStateProps {
   title?: string;
@@ -11,12 +12,16 @@ interface EventEmptyStateProps {
 }
 
 export const EventEmptyState = ({
-  title = "Create your first event",
-  description = "Host your next event with Kulmid. Create beautiful event pages, invite guests, and track attendance.",
+  title,
+  description,
   showCreateButton = true,
   createLink = "/create",
   onCreateClick,
 }: EventEmptyStateProps) => {
+  const { t } = useLanguage();
+  const displayTitle = title || t("empty_title");
+  const displayDesc = description || t("empty_description");
+
   return (
     <div className="min-h-[50vh] flex items-center justify-center">
       <div className="max-w-md mx-4 text-center animate-fade-in">
@@ -29,20 +34,20 @@ export const EventEmptyState = ({
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold mb-3">{title}</h1>
-        <p className="text-muted-foreground mb-8">{description}</p>
+        <h1 className="text-2xl font-bold mb-3">{displayTitle}</h1>
+        <p className="text-muted-foreground mb-8">{displayDesc}</p>
 
         {showCreateButton && (
           onCreateClick ? (
             <Button onClick={onCreateClick} size="lg" className="px-8 gap-2">
               <Plus className="h-5 w-5" />
-              Create Your First Event
+              {t("empty_create_button")}
             </Button>
           ) : (
             <Button asChild size="lg" variant="default" className="px-8">
               <Link to={createLink} className="gap-2">
                 <Plus className="h-5 w-5" />
-                Create Your First Event
+                {t("empty_create_button")}
               </Link>
             </Button>
           )
@@ -50,12 +55,12 @@ export const EventEmptyState = ({
 
         <div className="mt-10 pt-8">
           <p className="text-sm text-muted-foreground mb-3">
-            or explore events happening around you
+            {t("empty_explore_text")}
           </p>
           <Button asChild variant="ghost">
             <Link to="/discover" className="gap-2">
               <Compass className="h-4 w-4" />
-              Discover Events
+              {t("empty_discover")}
             </Link>
           </Button>
         </div>
