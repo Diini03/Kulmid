@@ -177,8 +177,8 @@ const Events = () => {
 
         {filteredEvents.length === 0 && (
           <EventEmptyState
-            title={filter === "upcoming" ? "No upcoming events" : "No past events"}
-            description={filter === "upcoming" ? "Create your next event and start inviting guests." : "Your past events will appear here once completed."}
+            title={filter === "upcoming" ? t("events_no_upcoming") : t("events_no_past")}
+            description={filter === "upcoming" ? t("events_no_upcoming_desc") : t("events_no_past_desc")}
             showCreateButton={filter === "upcoming"}
           />
         )}
