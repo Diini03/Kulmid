@@ -26,6 +26,7 @@ interface Event {
 const Events = () => {
   const { user, loading: authLoading } = useAuth();
   const { getPendingCountForEvent } = usePendingActions();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [guestCounts, setGuestCounts] = useState<Record<string, number>>({});
