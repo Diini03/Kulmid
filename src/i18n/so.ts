@@ -84,4 +84,26 @@ export const so: Record<TranslationKeys, string> = {
   common_no_results: "Natiijo lama helin",
   common_search: "Raadi",
   common_or: "ama",
+
+  // Events Page
+  events_my_events: "Dhacddooyinkayga",
+  events_upcoming: "Soo socda",
+  events_past: "Hore u dhacay",
+  events_no_upcoming: "Dhacdo soo socota ma jirto",
+  events_no_past: "Dhacdo hore u dhacday ma jirto",
+  events_no_upcoming_desc: "Abuur dhacddadaada xigta oo martida u dir.",
+  events_no_past_desc: "Dhacddooyinkii hore halkan ayay ku soo muuqan doonaan.",
+  events_guests_confirmed: "{count} marti la xaqiijiyay",
+  events_pending_count: "{count} sugaya",
+  events_location_missing: "Goobta way ka maqan tahay",
+
+  // Empty State
+  empty_title: "Abuur dhacddadaada ugu horeysa",
+  empty_description: "Ku martiqaad dhacddadaada xigta Kulmid. Abuur bogag dhacdo oo qurux badan, martida u dir, oo la soco imaanshaha.",
+  empty_create_button: "Abuur Dhacddadaada Ugu Horeysa",
+  empty_explore_text: "ama fiiri dhacddooyinka ku dhacaya agagaarkaaga",
+  empty_discover: "Soo Hel Dhacddoyin",
+
+  // Auth Modal
+  auth_required_message: "Soo gal ama samayso akoon si aad u bilowdo abuurista dhacddooyinka.",
 };

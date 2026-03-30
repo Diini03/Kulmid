@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePendingActions } from "@/contexts/PendingActionsContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar, Plus, ChevronRight, MapPin, Users, AlertTriangle, Clock, Compass, CalendarPlus } from "lucide-react";
@@ -25,6 +26,7 @@ interface Event {
 const Events = () => {
   const { user, loading: authLoading } = useAuth();
   const { getPendingCountForEvent } = usePendingActions();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [guestCounts, setGuestCounts] = useState<Record<string, number>>({});
@@ -123,7 +125,7 @@ const Events = () => {
         <AuthRequiredModal 
           isOpen={showAuthModal} 
           onClose={() => setShowAuthModal(false)}
-          message="Sign in or create an account to start creating events."
+          message={t("auth_required_message")}
           mode="signup"
         />
       </>
@@ -160,14 +162,14 @@ const Events = () => {
       <Seo title="Events" description="Manage your events on Kulmid" canonical="/events" />
       <div className="container max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-10">
-          <h1 className="text-3xl font-bold">My Events</h1>
+          <h1 className="text-3xl font-bold">{t("events_my_events")}</h1>
           <div className="flex items-center gap-4">
             <div className="flex rounded-full border p-1">
               <button onClick={() => setFilter("upcoming")} className={`px-5 py-2 text-sm font-medium rounded-full transition-colors ${filter === "upcoming" ? "bg-foreground text-background" : "text-muted-foreground"}`}>
-                Upcoming
+                {t("events_upcoming")}
               </button>
               <button onClick={() => setFilter("past")} className={`px-5 py-2 text-sm font-medium rounded-full transition-colors ${filter === "past" ? "bg-foreground text-background" : "text-muted-foreground"}`}>
-                Past
+                {t("events_past")}
               </button>
             </div>
           </div>
@@ -175,8 +177,8 @@ const Events = () => {
 
         {filteredEvents.length === 0 && (
           <EventEmptyState
-            title={filter === "upcoming" ? "No upcoming events" : "No past events"}
-            description={filter === "upcoming" ? "Create your next event and start inviting guests." : "Your past events will appear here once completed."}
+            title={filter === "upcoming" ? t("events_no_upcoming") : t("events_no_past")}
+            description={filter === "upcoming" ? t("events_no_upcoming_desc") : t("events_no_past_desc")}
             showCreateButton={filter === "upcoming"}
           />
         )}
@@ -215,7 +217,7 @@ const Events = () => {
                               </span>
                               {pendingCount > 0 && (
                                 <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
-                                  {pendingCount} pending
+                                  {t("events_pending_count", { count: pendingCount.toString() })}
                                 </span>
                               )}
                             </div>
@@ -227,15 +229,15 @@ const Events = () => {
                                   <span className="truncate">{event.location}</span>
                                 </span>
                               ) : (
-                                <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400">
+                              <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400">
                                   <AlertTriangle className="h-4 w-4" />
-                                  <span>Location missing</span>
+                                  <span>{t("events_location_missing")}</span>
                                 </span>
                               )}
                             </div>
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                               <Users className="h-4 w-4" />
-                              <span>{guestCounts[event.id] || 0} guests confirmed</span>
+                              <span>{t("events_guests_confirmed", { count: (guestCounts[event.id] || 0).toString() })}</span>
                             </div>
                           </div>
                           {event.image_url && (
