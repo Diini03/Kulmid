@@ -217,7 +217,7 @@ const Events = () => {
                               </span>
                               {pendingCount > 0 && (
                                 <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
-                                  {pendingCount} pending
+                                  {t("events_pending_count", { count: pendingCount.toString() })}
                                 </span>
                               )}
                             </div>
