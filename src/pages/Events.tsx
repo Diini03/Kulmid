@@ -125,7 +125,7 @@ const Events = () => {
         <AuthRequiredModal 
           isOpen={showAuthModal} 
           onClose={() => setShowAuthModal(false)}
-          message="Sign in or create an account to start creating events."
+          message={t("auth_required_message")}
           mode="signup"
         />
       </>
