@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "next-themes";
 import kulmidLogo from "@/assets/kulmid-new-logo.png";
+import kulmidLogoDark from "@/assets/kulmid-logo-dark-mode.png";
 
 export const Footer = () => {
   const { t } = useLanguage();
+  const { resolvedTheme } = useTheme();
 
   return (
     <footer className="bg-card border-t mt-24">
@@ -15,7 +18,8 @@ export const Footer = () => {
             to="/" 
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
+            <img src={kulmidLogo} alt="Kulmid" className={`h-10 w-10 ${resolvedTheme === "dark" ? "hidden" : "block"}`} />
+            <img src={kulmidLogoDark} alt="Kulmid" className={`h-10 w-10 ${resolvedTheme === "dark" ? "block" : "hidden"}`} />
             <span className="text-xl font-bold tracking-tight text-foreground">KULMID</span>
           </Link>
 
