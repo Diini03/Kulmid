@@ -18,7 +18,8 @@ export const Footer = () => {
             to="/" 
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
+            <img src={kulmidLogo} alt="Kulmid" className={`h-10 w-10 ${resolvedTheme === "dark" ? "hidden" : "block"}`} />
+            <img src={kulmidLogoDark} alt="Kulmid" className={`h-10 w-10 ${resolvedTheme === "dark" ? "block" : "hidden"}`} />
             <span className="text-xl font-bold tracking-tight text-foreground">KULMID</span>
           </Link>
 
