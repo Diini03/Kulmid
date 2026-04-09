@@ -7,6 +7,7 @@ import kulmidLogoDark from "@/assets/kulmid-logo-dark-mode.png";
 
 export const Footer = () => {
   const { t } = useLanguage();
+  const { resolvedTheme } = useTheme();
 
   return (
     <footer className="bg-card border-t mt-24">

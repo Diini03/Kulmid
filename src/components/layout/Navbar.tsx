@@ -89,7 +89,8 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             }}
             className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity p-1"
           >
-            <img src={kulmidLogoNav} alt="Kulmid" className="h-9 w-9" />
+            <img src={kulmidLogoNav} alt="Kulmid" className={`h-9 w-9 ${theme === "dark" ? "hidden" : "block"}`} />
+            <img src={kulmidLogoDark} alt="Kulmid" className={`h-9 w-9 ${theme === "dark" ? "block" : "hidden"}`} />
             <span className="text-lg font-bold tracking-tight text-foreground">KULMID</span>
           </button>
 
