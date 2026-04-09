@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
-import kulmidLogoNav from "@/assets/kulmid-logo-nav.png";
+import kulmidLogoNav from "@/assets/kulmid-new-logo.png";
 
 interface NavbarProps {
   onOpenSearch: () => void;
@@ -89,6 +89,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity p-1"
           >
             <img src={kulmidLogoNav} alt="Kulmid" className="h-9 w-9" />
+            <span className="text-lg font-bold tracking-tight text-foreground">KULMID</span>
           </button>
 
           {!isAdmin && (

@@ -1,25 +1,22 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
-import kulmidLogoDark from "@/assets/kulmid-logo-dark.png";
-import kulmidLogoWhite from "@/assets/kulmid-logo-white.png";
+import kulmidLogo from "@/assets/kulmid-new-logo.png";
 
 export const Footer = () => {
-  const { resolvedTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
     <footer className="bg-card border-t mt-24">
       <div className="container mx-auto max-w-5xl py-16 px-4">
         <div className="flex flex-col items-center gap-10">
-          {/* Logo - both rendered, visibility toggled for instant swap */}
+          {/* Logo + Text */}
           <Link 
             to="/" 
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src={kulmidLogoWhite} alt="Kulmid" className={`h-10 ${resolvedTheme === "dark" ? "block" : "hidden"}`} />
-            <img src={kulmidLogoDark} alt="Kulmid" className={`h-10 ${resolvedTheme === "dark" ? "hidden" : "block"}`} />
+            <img src={kulmidLogo} alt="Kulmid" className="h-10 w-10" />
+            <span className="text-xl font-bold tracking-tight text-foreground">KULMID</span>
           </Link>
 
           {/* Navigation Links */}
@@ -33,40 +30,16 @@ export const Footer = () => {
 
           {/* Social Media Links */}
           <div className="flex items-center justify-center gap-4">
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
-              aria-label="Facebook"
-            >
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-all hover:scale-110" aria-label="Facebook">
               <Facebook className="h-5 w-5" />
             </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
-              aria-label="Twitter"
-            >
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-all hover:scale-110" aria-label="Twitter">
               <Twitter className="h-5 w-5" />
             </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
-              aria-label="Instagram"
-            >
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-all hover:scale-110" aria-label="Instagram">
               <Instagram className="h-5 w-5" />
             </a>
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
-              aria-label="LinkedIn"
-            >
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-all hover:scale-110" aria-label="LinkedIn">
               <Linkedin className="h-5 w-5" />
             </a>
           </div>
