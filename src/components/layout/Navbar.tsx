@@ -242,7 +242,8 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
-                    <img src={kulmidLogoNav} alt="Kulmid" className="h-8 w-8" />
+                    <img src={kulmidLogoNav} alt="Kulmid" className={`h-8 w-8 ${theme === "dark" ? "hidden" : "block"}`} />
+                    <img src={kulmidLogoDark} alt="Kulmid" className={`h-8 w-8 ${theme === "dark" ? "block" : "hidden"}`} />
                     {t("nav_menu")}
                   </SheetTitle>
                 </SheetHeader>
