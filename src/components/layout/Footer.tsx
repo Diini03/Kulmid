@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "next-themes";
 import kulmidLogo from "@/assets/kulmid-new-logo.png";
+import kulmidLogoDark from "@/assets/kulmid-logo-dark-mode.png";
 
 export const Footer = () => {
   const { t } = useLanguage();

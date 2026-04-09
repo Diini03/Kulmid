@@ -16,6 +16,7 @@ import { NotificationsPanel } from "@/components/notifications/NotificationsPane
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import kulmidLogoNav from "@/assets/kulmid-new-logo.png";
+import kulmidLogoDark from "@/assets/kulmid-logo-dark-mode.png";
 
 interface NavbarProps {
   onOpenSearch: () => void;
