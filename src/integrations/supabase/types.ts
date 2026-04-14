@@ -340,12 +340,15 @@ export type Database = {
           description: string | null
           end_date: string | null
           event_type: string | null
+          facebook_url: string | null
           host_description: string | null
           host_email: string | null
           host_name: string | null
           host_phone: string | null
           id: string
           image_url: string | null
+          instagram_url: string | null
+          linkedin_url: string | null
           location: string
           max_attendees: number | null
           meeting_link: string | null
@@ -355,7 +358,9 @@ export type Database = {
           rejection_reason: string | null
           status: string
           title: string
+          twitter_url: string | null
           updated_at: string | null
+          website_url: string | null
         }
         Insert: {
           auto_approve_registrations?: boolean | null
@@ -366,12 +371,15 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_type?: string | null
+          facebook_url?: string | null
           host_description?: string | null
           host_email?: string | null
           host_name?: string | null
           host_phone?: string | null
           id: string
           image_url?: string | null
+          instagram_url?: string | null
+          linkedin_url?: string | null
           location: string
           max_attendees?: number | null
           meeting_link?: string | null
@@ -381,7 +389,9 @@ export type Database = {
           rejection_reason?: string | null
           status?: string
           title: string
+          twitter_url?: string | null
           updated_at?: string | null
+          website_url?: string | null
         }
         Update: {
           auto_approve_registrations?: boolean | null
@@ -392,12 +402,15 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_type?: string | null
+          facebook_url?: string | null
           host_description?: string | null
           host_email?: string | null
           host_name?: string | null
           host_phone?: string | null
           id?: string
           image_url?: string | null
+          instagram_url?: string | null
+          linkedin_url?: string | null
           location?: string
           max_attendees?: number | null
           meeting_link?: string | null
@@ -407,7 +420,9 @@ export type Database = {
           rejection_reason?: string | null
           status?: string
           title?: string
+          twitter_url?: string | null
           updated_at?: string | null
+          website_url?: string | null
         }
         Relationships: [
           {
