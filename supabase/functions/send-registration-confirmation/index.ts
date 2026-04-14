@@ -180,7 +180,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const isApproved = status === "registered";
     
-    let qrCodeDataUrl = "";
+    let qrImageUrl = "";
     let checkInUrl = "";
 
     // Generate QR code for approved registrations
@@ -268,7 +268,7 @@ const handler = async (req: Request): Promise<Response> => {
             <td style="padding:0 28px 24px 28px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#14181d; border:1px solid #262c35; border-radius:18px;">
                 <tr><td align="center" style="padding:20px 20px 10px 20px;"><div style="font-size:12px; line-height:18px; letter-spacing:0.8px; text-transform:uppercase; color:#6ee7d8; font-weight:700;">Check-in pass</div></td></tr>
-                <tr><td align="center" style="padding:6px 20px 12px 20px;"><img src="${qrCodeDataUrl}" alt="QR Code" width="170" height="170" style="display:block; width:170px; height:170px; border-radius:12px; background:#ffffff; padding:8px;" /></td></tr>
+                <tr><td align="center" style="padding:6px 20px 12px 20px;"><img src="${qrImageUrl}" alt="QR Code" width="170" height="170" style="display:block; width:170px; height:170px; border-radius:12px; background:#ffffff; padding:8px;" /></td></tr>
                 <tr><td align="center" style="padding:0 20px 22px 20px; font-size:13px; line-height:21px; color:#7f8a99;">Present this code when you arrive.</td></tr>
               </table>
             </td>
@@ -292,7 +292,7 @@ const handler = async (req: Request): Promise<Response> => {
           <tr>
             <td style="padding:20px 28px 28px 28px;">
               <p style="margin:0 0 8px 0; font-size:12px; line-height:20px; color:#6b7280;">You received this email because you registered for an event on Kulmid.</p>
-              <p style="margin:0; font-size:12px; line-height:20px; color:#6b7280;">Need help? Contact support at kulmid@gmail.com</p>
+              <p style="margin:0; font-size:12px; line-height:20px; color:#6b7280;">Need help? Contact support at kulmid2025@gmail.com</p>
             </td>
           </tr>
         </table>
@@ -363,7 +363,7 @@ const handler = async (req: Request): Promise<Response> => {
           <tr>
             <td style="padding:20px 28px 28px 28px;">
               <p style="margin:0 0 8px 0; font-size:12px; line-height:20px; color:#6b7280;">You received this email because you registered for an event on Kulmid.</p>
-              <p style="margin:0; font-size:12px; line-height:20px; color:#6b7280;">Need help? Contact support at kulmid@gmail.com</p>
+              <p style="margin:0; font-size:12px; line-height:20px; color:#6b7280;">Need help? Contact support at kulmid2025@gmail.com</p>
             </td>
           </tr>
         </table>
