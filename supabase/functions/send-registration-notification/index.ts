@@ -9,7 +9,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// HTML escape function to prevent XSS in emails
 const escapeHtml = (str: string | null | undefined): string => {
   if (!str) return '';
   return str
@@ -36,7 +35,6 @@ interface NotificationRequest {
   };
 }
 
-// Send email using Resend API
 const sendEmailWithResend = async (to: string, subject: string, htmlContent: string) => {
   const apiKey = Deno.env.get("RESEND_API_KEY")!;
 
@@ -69,7 +67,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Verify authentication
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       console.error("No authorization header provided");
@@ -79,7 +76,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create authenticated client to verify user
     const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } }
     });
@@ -95,7 +91,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { eventId, guestData }: NotificationRequest = await req.json();
 
-    // Input validation
     if (!eventId || typeof eventId !== 'string') {
       return new Response(
         JSON.stringify({ error: "Invalid eventId" }),
@@ -114,7 +109,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get event details and verify user is authorized
     const { data: event, error: eventError } = await supabase
       .from("events")
       .select("title, host_email, created_by")
@@ -129,7 +123,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Verify caller is the event owner or an admin
     const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
     
     if (event.created_by !== user.id && !isAdmin) {
@@ -140,7 +133,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get organizer email from profiles if host_email not set
     let organizerEmail = event.host_email;
     if (!organizerEmail) {
       const { data: profile } = await supabase
@@ -163,7 +155,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Escape all user-provided content
     const safeName = escapeHtml(guestData.name);
     const safeEmail = escapeHtml(guestData.email);
     const safePhone = escapeHtml(guestData.phone_number);
@@ -176,41 +167,85 @@ const handler = async (req: Request): Promise<Response> => {
     const safeQuestions = escapeHtml(guestData.questions);
     const safeEventTitle = escapeHtml(event.title);
 
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #3b82f6;">📬 New Registration for ${safeEventTitle}</h1>
-        
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h2 style="margin-top: 0;">Attendee Information</h2>
-          <p><strong>Name:</strong> ${safeName}</p>
-          <p><strong>Email:</strong> ${safeEmail}</p>
-          <p><strong>Phone:</strong> ${safePhone}</p>
-          ${safeOrganization ? `<p><strong>Organization:</strong> ${safeOrganization}</p>` : ""}
-          ${safeJobTitle ? `<p><strong>Job Title:</strong> ${safeJobTitle}</p>` : ""}
-          ${safeDegree ? `<p><strong>Education:</strong> ${safeDegree}</p>` : ""}
-        </div>
+    const detailRow = (label: string, value: string) => value ? `
+      <tr><td style="padding:4px 0; font-size:13px; color:#6b7280;">${label}</td><td style="padding:4px 0 4px 12px; font-size:13px; color:#111827;">${value}</td></tr>` : '';
 
-        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="margin-top: 0;">Why They're Interested</h3>
-          <p>${safeWhyInterested}</p>
-          ${safeWhatToGain ? `
-            <h3>What They Hope to Gain</h3>
-            <p>${safeWhatToGain}</p>
-          ` : ""}
-          ${safeHeardFrom ? `<p><strong>Heard From:</strong> ${safeHeardFrom}</p>` : ""}
-          ${safeQuestions ? `
-            <h3>Questions for You</h3>
-            <p>${safeQuestions}</p>
-          ` : ""}
-        </div>
-
-        <div style="margin: 30px 0;">
-          <p>Log in to your dashboard to approve or manage this registration.</p>
-        </div>
-
-        <p style="margin-top: 30px; color: #6b7280;">Kulmid Notifications</p>
-      </div>
-    `;
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0; padding:0; background-color:#f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#111827;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f4f5;">
+    <tr>
+      <td align="center" style="padding:24px 16px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px; margin:0 auto; background-color:#ffffff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;">
+          <tr>
+            <td style="padding:20px 24px 10px 24px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td align="left" style="font-size:18px; line-height:24px; font-weight:700; color:#111827;">Kulmid</td>
+                  <td align="right"><span style="display:inline-block; padding:4px 10px; border-radius:999px; background-color:#eff6ff; color:#2563eb; font-size:12px; line-height:16px; font-weight:600;">New Registration</span></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 24px 0 24px;">
+              <h1 style="margin:0 0 8px 0; font-size:24px; line-height:30px; font-weight:700; color:#111827;">New registration</h1>
+              <p style="margin:0 0 16px 0; font-size:14px; line-height:22px; color:#6b7280;">${safeName} registered for <strong style="color:#111827;">${safeEventTitle}</strong>.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 24px 16px 24px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f9fafb; border:1px solid #e5e7eb; border-radius:12px;">
+                <tr><td colspan="2" style="padding:14px 16px 6px 16px; font-size:14px; line-height:20px; font-weight:600; color:#111827;">Attendee information</td></tr>
+                <tr>
+                  <td colspan="2" style="padding:0 16px 14px 16px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      ${detailRow('Name', safeName)}
+                      ${detailRow('Email', safeEmail)}
+                      ${detailRow('Phone', safePhone)}
+                      ${detailRow('Organization', safeOrganization)}
+                      ${detailRow('Job Title', safeJobTitle)}
+                      ${detailRow('Education', safeDegree)}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          ${safeWhyInterested || safeWhatToGain || safeHeardFrom || safeQuestions ? `
+          <tr>
+            <td style="padding:0 24px 16px 24px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f9fafb; border:1px solid #e5e7eb; border-radius:12px;">
+                <tr><td style="padding:14px 16px 6px 16px; font-size:14px; line-height:20px; font-weight:600; color:#111827;">Their responses</td></tr>
+                <tr>
+                  <td style="padding:0 16px 14px 16px;">
+                    ${safeWhyInterested ? `<p style="margin:0 0 8px 0; font-size:13px; line-height:20px; color:#6b7280;"><strong style="color:#374151;">Why interested:</strong> ${safeWhyInterested}</p>` : ''}
+                    ${safeWhatToGain ? `<p style="margin:0 0 8px 0; font-size:13px; line-height:20px; color:#6b7280;"><strong style="color:#374151;">What to gain:</strong> ${safeWhatToGain}</p>` : ''}
+                    ${safeHeardFrom ? `<p style="margin:0 0 8px 0; font-size:13px; line-height:20px; color:#6b7280;"><strong style="color:#374151;">Heard from:</strong> ${safeHeardFrom}</p>` : ''}
+                    ${safeQuestions ? `<p style="margin:0; font-size:13px; line-height:20px; color:#6b7280;"><strong style="color:#374151;">Questions:</strong> ${safeQuestions}</p>` : ''}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>` : ''}
+          <tr>
+            <td style="padding:0 24px 20px 24px;">
+              <p style="margin:0; font-size:13px; line-height:20px; color:#6b7280;">Log in to your dashboard to approve or manage this registration.</p>
+            </td>
+          </tr>
+          <tr><td style="padding:0 24px;"><div style="height:1px; background-color:#e5e7eb;"></div></td></tr>
+          <tr>
+            <td style="padding:16px 24px 20px 24px;">
+              <p style="margin:0; font-size:11px; line-height:18px; color:#9ca3af;">Kulmid Notifications</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
     const emailResponse = await sendEmailWithResend(
       organizerEmail,
@@ -220,7 +255,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Notification email sent:", emailResponse);
 
-    // Create in-app notification for the event owner
     const { error: notificationError } = await supabase
       .from("notifications")
       .insert({
