@@ -1,23 +1,41 @@
 
+I inspected the current code and the screenshot. The main QR problem is not the domain anymore.
 
-## Plan: Update QR Code URLs to Use Custom Domain
+What I found:
+- The email templates already generate QR links with `https://www.kulmid.com/check-in/{token}`.
+- But the QR image is embedded as a base64 `data:` URL inside the email HTML. Gmail mobile commonly fails to render those inline images, which matches the broken-image placeholder in your screenshot.
+- There is also no public `/check-in/:token` route in the app right now, so if someone scans that QR with a normal phone camera, it can still feel “broken” because the URL has nowhere useful to land.
+- The support email is still hardcoded as `kulmid@gmail.com` in all 3 transactional email functions.
 
-### Problem
-QR codes in emails point to `https://kulmid.lovable.app/check-in/{token}` instead of your actual custom domain `https://www.kulmid.com/check-in/{token}`.
+Plan:
+1. Fix QR delivery in emails
+- Replace the embedded base64 QR image approach with hosted QR PNGs.
+- Generate the QR as an image file server-side and use a normal HTTPS image URL in the email template.
+- This is much more reliable across Gmail and other email clients.
 
-### Changes
+2. Make the QR URL actually usable
+- Add a public `/check-in/:token` route so scanning the QR opens a real Kulmid page instead of falling into a missing route.
+- That page can show a simple branded check-in/pass screen and a clear message if the pass is invalid or expired.
 
-**1. `supabase/functions/send-event-invitation/index.ts`**
-- Change `https://kulmid.lovable.app/check-in/` → `https://www.kulmid.com/check-in/`
+3. Update all support email copy
+- Change the support line in the invitation, confirmation, and registration-action emails from `kulmid@gmail.com` to `kulmid2025@gmail.com`.
 
-**2. `supabase/functions/send-registration-confirmation/index.ts`**
-- Same URL update
+4. Redeploy and verify
+- Redeploy the modified Edge Functions after the changes.
+- Send a fresh test email and confirm:
+  - the QR image renders in Gmail mobile
+  - the QR opens a real `www.kulmid.com` page
+  - the support email shows `kulmid2025@gmail.com`
 
-**3. `supabase/functions/handle-registration-action/index.ts`**
-- Same URL update
+Files I expect to touch:
+- `supabase/functions/send-event-invitation/index.ts`
+- `supabase/functions/send-registration-confirmation/index.ts`
+- `supabase/functions/handle-registration-action/index.ts`
+- `src/App.tsx`
+- one new public check-in page/component
+- possibly a storage migration if I add a dedicated public bucket for hosted QR images
 
-**4. `src/components/Seo.tsx`**
-- Update `BASE_URL` from `https://kulmid.lovable.app` → `https://www.kulmid.com`
-
-All 4 files — just a find-and-replace of the domain. The `verify-check-in` Edge Function doesn't care about the domain — it only validates the token from the request body, so no change needed there.
-
+Technical notes:
+- I do not think the current issue is the token logic itself; it is mainly email-client rendering.
+- The organizer scanner already knows how to extract a token from `/check-in/{token}` format.
+- I will keep the existing QR/token verification flow and only make it deliverable and user-visible.
