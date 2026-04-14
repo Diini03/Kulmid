@@ -155,43 +155,43 @@ const handler = async (req: Request): Promise<Response> => {
         const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
-<body style="margin:0; padding:0; background-color:#0b0d10; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#ffffff;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#0b0d10; margin:0; padding:0; width:100%;">
+<body style="margin:0; padding:0; background-color:#f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#111827;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f4f5;">
     <tr>
-      <td align="center" style="padding:32px 16px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px; margin:0 auto; background-color:#111418; border:1px solid #1f242b; border-radius:20px; overflow:hidden;">
+      <td align="center" style="padding:24px 16px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px; margin:0 auto; background-color:#ffffff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;">
           <tr>
-            <td style="padding:24px 28px 12px 28px;">
+            <td style="padding:20px 24px 10px 24px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
-                  <td align="left" style="font-size:20px; line-height:28px; font-weight:700; color:#ffffff;">Kulmid</td>
-                  <td align="right"><span style="display:inline-block; padding:6px 10px; border-radius:999px; background-color:#0f2f2b; color:#6ee7d8; font-size:12px; line-height:12px; font-weight:600; letter-spacing:0.2px;">Invitation</span></td>
+                  <td align="left" style="font-size:18px; line-height:24px; font-weight:700; color:#111827;">Kulmid</td>
+                  <td align="right"><span style="display:inline-block; padding:4px 10px; border-radius:999px; background-color:#f0fdfa; color:#0d9488; font-size:12px; line-height:16px; font-weight:600;">Invitation</span></td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="padding:8px 28px 0 28px;">
-              <h1 style="margin:0 0 10px 0; font-size:30px; line-height:36px; font-weight:700; color:#ffffff;">You're invited</h1>
-              <p style="margin:0 0 24px 0; font-size:15px; line-height:24px; color:#9aa4b2;">Hi ${safeGuestName}, you've been invited to the following event on Kulmid.</p>
+            <td style="padding:8px 24px 0 24px;">
+              <h1 style="margin:0 0 8px 0; font-size:24px; line-height:30px; font-weight:700; color:#111827;">You're invited</h1>
+              <p style="margin:0 0 16px 0; font-size:14px; line-height:22px; color:#6b7280;">Hi ${safeGuestName}, you've been invited to the following event on Kulmid.</p>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 24px 28px;">
-              <div style="font-size:20px; line-height:28px; font-weight:700; color:#ffffff;">${safeTitle}</div>
+            <td style="padding:0 24px 16px 24px;">
+              <div style="font-size:18px; line-height:24px; font-weight:700; color:#111827;">${safeTitle}</div>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 24px 28px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#171b21; border:1px solid #262c35; border-radius:16px;">
-                <tr><td style="padding:20px 20px 8px 20px; font-size:15px; line-height:22px; font-weight:600; color:#ffffff;">Event details</td></tr>
+            <td style="padding:0 24px 16px 24px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f9fafb; border:1px solid #e5e7eb; border-radius:12px;">
+                <tr><td style="padding:14px 16px 6px 16px; font-size:14px; line-height:20px; font-weight:600; color:#111827;">Event details</td></tr>
                 <tr>
-                  <td style="padding:0 20px 18px 20px;">
+                  <td style="padding:0 16px 14px 16px;">
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                      <tr><td style="padding:8px 0; font-size:13px; line-height:20px; color:#7f8a99;">Date</td><td align="right" style="padding:8px 0; font-size:14px; line-height:20px; color:#e5e7eb;">${formattedDate}</td></tr>
-                      <tr><td style="padding:8px 0; font-size:13px; line-height:20px; color:#7f8a99;">Time</td><td align="right" style="padding:8px 0; font-size:14px; line-height:20px; color:#e5e7eb;">${formattedTime}</td></tr>
-                      <tr><td style="padding:8px 0; font-size:13px; line-height:20px; color:#7f8a99;">Location</td><td align="right" style="padding:8px 0; font-size:14px; line-height:20px; color:#e5e7eb;">${safeLocation}</td></tr>
-                      <tr><td style="padding:8px 0; font-size:13px; line-height:20px; color:#7f8a99;">Organizer</td><td align="right" style="padding:8px 0; font-size:14px; line-height:20px; color:#e5e7eb;">${safeHostName || 'Event Organizer'}</td></tr>
+                      <tr><td style="padding:6px 0; font-size:13px; color:#6b7280;">Date</td><td align="right" style="padding:6px 0; font-size:13px; color:#111827;">${formattedDate}</td></tr>
+                      <tr><td style="padding:6px 0; font-size:13px; color:#6b7280;">Time</td><td align="right" style="padding:6px 0; font-size:13px; color:#111827;">${formattedTime}</td></tr>
+                      <tr><td style="padding:6px 0; font-size:13px; color:#6b7280;">Location</td><td align="right" style="padding:6px 0; font-size:13px; color:#111827;">${safeLocation}</td></tr>
+                      <tr><td style="padding:6px 0; font-size:13px; color:#6b7280;">Organizer</td><td align="right" style="padding:6px 0; font-size:13px; color:#111827;">${safeHostName || 'Event Organizer'}</td></tr>
                     </table>
                   </td>
                 </tr>
@@ -199,31 +199,31 @@ const handler = async (req: Request): Promise<Response> => {
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 28px 28px;">
-              <p style="margin:0; font-size:15px; line-height:25px; color:#9aa4b2;">${invitationMessage}</p>
+            <td style="padding:0 24px 16px 24px;">
+              <p style="margin:0; font-size:14px; line-height:22px; color:#6b7280;">${invitationMessage}</p>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 24px 28px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#14181d; border:1px solid #262c35; border-radius:18px;">
-                <tr><td align="center" style="padding:20px 20px 10px 20px;"><div style="font-size:12px; line-height:18px; letter-spacing:0.8px; text-transform:uppercase; color:#6ee7d8; font-weight:700;">Check-in pass</div></td></tr>
-                <tr><td align="center" style="padding:6px 20px 12px 20px;"><img src="${qrImageUrl}" alt="QR Code" width="170" height="170" style="display:block; width:170px; height:170px; border-radius:12px; background:#ffffff; padding:8px;" /></td></tr>
-                <tr><td align="center" style="padding:0 20px 22px 20px; font-size:13px; line-height:21px; color:#7f8a99;">Present this code when you arrive.</td></tr>
+            <td style="padding:0 24px 16px 24px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f0fdfa; border:1px solid #ccfbf1; border-radius:14px;">
+                <tr><td align="center" style="padding:16px 16px 8px 16px;"><div style="font-size:11px; line-height:16px; letter-spacing:0.8px; text-transform:uppercase; color:#0d9488; font-weight:700;">Check-in pass</div></td></tr>
+                <tr><td align="center" style="padding:4px 16px 8px 16px;"><img src="${qrImageUrl}" alt="QR Code" width="160" height="160" style="display:block; width:160px; height:160px; border-radius:10px; border:1px solid #e5e7eb;" /></td></tr>
+                <tr><td align="center" style="padding:0 16px 16px 16px; font-size:12px; line-height:18px; color:#6b7280;">Present this code when you arrive.</td></tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 32px 28px;">
+            <td style="padding:0 24px 20px 24px;">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr><td align="center" style="border-radius:12px; background-color:#14b8a6;"><a href="${eventUrl}" target="_blank" style="display:inline-block; padding:14px 22px; font-size:14px; line-height:14px; font-weight:700; color:#08110f; text-decoration:none; border-radius:12px;">View event</a></td></tr>
+                <tr><td align="center" style="border-radius:10px; background-color:#14b8a6;"><a href="${eventUrl}" target="_blank" style="display:inline-block; padding:12px 20px; font-size:14px; line-height:14px; font-weight:600; color:#ffffff; text-decoration:none; border-radius:10px;">View event</a></td></tr>
               </table>
             </td>
           </tr>
-          <tr><td style="padding:0 28px;"><div style="height:1px; background-color:#1f242b;"></div></td></tr>
+          <tr><td style="padding:0 24px;"><div style="height:1px; background-color:#e5e7eb;"></div></td></tr>
           <tr>
-            <td style="padding:20px 28px 28px 28px;">
-              <p style="margin:0 0 8px 0; font-size:12px; line-height:20px; color:#6b7280;">You received this email because an event organizer invited you through Kulmid.</p>
-              <p style="margin:0; font-size:12px; line-height:20px; color:#6b7280;">Need help? Contact support at kulmid2025@gmail.com</p>
+            <td style="padding:16px 24px 20px 24px;">
+              <p style="margin:0 0 4px 0; font-size:11px; line-height:18px; color:#9ca3af;">You received this email because an event organizer invited you through Kulmid.</p>
+              <p style="margin:0; font-size:11px; line-height:18px; color:#9ca3af;">Need help? Contact support at kulmid2025@gmail.com</p>
             </td>
           </tr>
         </table>
