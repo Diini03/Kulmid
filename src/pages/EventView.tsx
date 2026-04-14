@@ -1,9 +1,9 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, MapPin, DollarSign, ExternalLink, Globe, Users, Video, Copy, Check, Building2 } from "lucide-react";
+import { CalendarDays, MapPin, DollarSign, ExternalLink, Globe, Users, Video, Copy, Check, Building2, ArrowLeft, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { useState, useEffect } from "react";
 import { categories } from "@/constants/categories";
 import { toast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const EventView = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -141,9 +142,13 @@ const EventView = () => {
 
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/95 border-b">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <a href={window.location.origin} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            ← Back to Kulmid
-          </a>
+          <button
+            onClick={() => navigate(-1)}
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
           <Button variant="outline" size="sm" onClick={handleCopyLink}>
             {linkCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
             {linkCopied ? 'Copied' : 'Share'}
@@ -259,6 +264,32 @@ const EventView = () => {
             )}
           </div>
         </section>
+
+        {(() => {
+          const socialLinks = [
+            { url: event.facebook_url, icon: Facebook, label: 'Facebook' },
+            { url: event.twitter_url, icon: Twitter, label: 'Twitter / X' },
+            { url: event.instagram_url, icon: Instagram, label: 'Instagram' },
+            { url: event.linkedin_url, icon: Linkedin, label: 'LinkedIn' },
+            { url: event.website_url, icon: Globe, label: 'Website' },
+          ].filter(l => l.url);
+          if (socialLinks.length === 0) return null;
+          return (
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">Links</h2>
+              <div className="flex flex-wrap gap-2">
+                {socialLinks.map(({ url, icon: Icon, label }) => (
+                  <Button key={label} asChild variant="outline" size="sm">
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      <Icon className="h-4 w-4 mr-2" />
+                      {label}
+                    </a>
+                  </Button>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Share Event</h2>
