@@ -111,7 +111,7 @@ const CheckIn = () => {
           <div className="bg-primary/10 px-6 py-4 flex items-center justify-between">
             <span className="text-lg font-bold text-foreground">Kulmid</span>
             {data.checkedIn ? (
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">Checked In</span>
+              <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-semibold">Checked In</span>
             ) : data.isExpired ? (
               <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-semibold">Expired</span>
             ) : (
@@ -124,8 +124,8 @@ const CheckIn = () => {
             {/* Status icon */}
             <div className="flex justify-center">
               {data.checkedIn ? (
-                <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-10 w-10 text-primary" />
                 </div>
               ) : data.isExpired ? (
                 <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
