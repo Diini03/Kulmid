@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import QRCode from "npm:qrcode@1.5.3";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -195,11 +194,7 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("id", guestId);
 
       checkInUrl = `https://www.kulmid.com/check-in/${checkInToken}`;
-      qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
-        width: 300,
-        margin: 2,
-        color: { dark: "#000000", light: "#FFFFFF" },
-      });
+      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=png&data=${encodeURIComponent(checkInUrl)}`;
     }
 
     // Get event for organizer info
