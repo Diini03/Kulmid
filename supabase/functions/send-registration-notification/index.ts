@@ -212,7 +212,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    const emailResponse = await sendEmailWithMailjet(
+    const emailResponse = await sendEmailWithResend(
       organizerEmail,
       `📬 New Registration: ${safeName} for ${safeEventTitle}`,
       htmlContent

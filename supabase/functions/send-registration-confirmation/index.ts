@@ -378,7 +378,7 @@ const handler = async (req: Request): Promise<Response> => {
 </body>
 </html>`;
 
-    const emailResponse = await sendEmailWithMailjet(email, subject, htmlContent);
+    const emailResponse = await sendEmailWithResend(email, subject, htmlContent);
 
     console.log("Confirmation email sent:", emailResponse);
 
