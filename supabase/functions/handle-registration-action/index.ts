@@ -326,7 +326,7 @@ const handler = async (req: Request): Promise<Response> => {
 </html>`;
     }
 
-    await sendEmailWithMailjet(guest.email, subject, htmlContent);
+    await sendEmailWithResend(guest.email, subject, htmlContent);
 
     console.log(`${action} processed successfully for guest:`, guestId);
 
