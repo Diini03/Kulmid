@@ -36,30 +36,27 @@ interface NotificationRequest {
   };
 }
 
-// Send email using Mailjet API
-const sendEmailWithMailjet = async (to: string, subject: string, htmlContent: string) => {
-  const apiKey = Deno.env.get("MAILJET_API_KEY")!;
-  const secretKey = Deno.env.get("MAILJET_SECRET_KEY")!;
+// Send email using Resend API
+const sendEmailWithResend = async (to: string, subject: string, htmlContent: string) => {
+  const apiKey = Deno.env.get("RESEND_API_KEY")!;
 
-  const response = await fetch("https://api.mailjet.com/v3.1/send", {
+  const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Basic " + btoa(`${apiKey}:${secretKey}`),
+      "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      Messages: [{
-        From: { Email: "asadcade401@gmail.com", Name: "Kulmid Events" },
-        To: [{ Email: to }],
-        Subject: subject,
-        HTMLPart: htmlContent,
-      }],
+      from: "Kulmid Events <noreply@kulmid.com>",
+      to: [to],
+      subject,
+      html: htmlContent,
     }),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    console.error("Mailjet API error:", error);
+    console.error("Resend API error:", error);
     throw new Error(`Failed to send email: ${JSON.stringify(error)}`);
   }
 
