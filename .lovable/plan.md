@@ -1,31 +1,61 @@
 
 
-## Plan: Update Logo Across Favicon, Navbar, and Footer
+## Plan: UX Improvements — Social Links, Back Nav, Post-Creation Flow, Modal Consistency
 
-### What we're doing
-Replace the current logo assets with the uploaded teal icon logo, and ensure "KULMID" text appears next to the logo in both the navbar and footer.
+### 1. Add Social Media Link Fields to Event Creation Form + Database
 
-### Steps
+**Database migration**: Add 5 new nullable columns to the `events` table:
+- `facebook_url text`
+- `twitter_url text`
+- `instagram_url text`
+- `linkedin_url text`
+- `website_url text`
 
-1. **Copy uploaded logo to project**
-   - Copy `user-uploads://download.png` → `public/favicon.png` (for favicon)
-   - Copy `user-uploads://download.png` → `src/assets/kulmid-new-logo.png` (for navbar/footer)
+**`src/pages/Create.tsx`**:
+- Add 5 optional URL fields to the zod schema (validated as URLs, optional)
+- Add a collapsible "Social Links (Optional)" section at the end of the form, before submit buttons
+- Include these fields in the `eventData` object sent to Supabase
+- Use the same input styling as existing fields, grouped with icons (Facebook, Twitter/X, Instagram, LinkedIn, Globe)
 
-2. **Update favicon in `index.html`**
-   - Change `<link rel="icon" ...>` to reference `/favicon.png`
+**`src/pages/EventDetails.tsx` and `src/pages/EventView.tsx`**:
+- Add a "Links" section that only renders if at least one social URL exists on the event
+- Display clickable icon buttons for each provided link (opens in new tab)
+- Place this section between "Organized By" and "Share Event"
 
-3. **Update Navbar (`src/components/layout/Navbar.tsx`)**
-   - Import the new logo instead of `kulmid-logo-nav.png`
-   - Add "KULMID" text next to the logo icon (bold, styled to match brand)
-   - Keep the same h-9 w-9 sizing for the icon
+### 2. Modern Back Navigation on Event Pages
 
-4. **Update Footer (`src/components/layout/Footer.tsx`)**
-   - Replace the horizontal wordmark images (`kulmid-logo-dark.png` / `kulmid-logo-white.png`) with the new icon + "KULMID" text
-   - Use the new icon logo + styled text so it works in both light and dark themes without needing two separate image files
-   - Remove the dual-image theme-toggle approach since text color handles theming naturally
+**`src/pages/EventDetails.tsx`**:
+- Add a subtle back button at the top of the page content (above the image), using `useNavigate(-1)`
+- Style: `← Back` with `ArrowLeft` icon, muted text, small size
+- Uses `navigate(-1)` for dynamic back behavior (not hardcoded route)
 
-### Result
-- Favicon shows the teal icon
-- Navbar: teal icon + "KULMID" text
-- Footer: teal icon + "KULMID" text (theme-aware via CSS text color)
+**`src/pages/EventView.tsx`**:
+- Already has a `← Back to Kulmid` link in the header — update it to use `navigate(-1)` with label `← Back` so it returns to the actual previous page instead of always going to the homepage
+
+### 3. Post Event Creation Flow Fix
+
+**`src/pages/Create.tsx`** — change the non-admin redirect after event creation:
+- Currently redirects to `/event/${id}/builder`
+- Change to redirect to `/events` (My Events page)
+- Update toast message: "Event submitted for review! Track it in My Events."
+- Add an action button in the toast linking to the event builder for those who want to continue editing
+
+### 4. Modal vs Page Consistency Audit
+
+No code changes needed — the current architecture already follows the correct pattern:
+- Event detail views are full pages (correct)
+- Registration, reporting, AI description, invitations are modals (correct)
+- No violations found in the codebase
+
+---
+
+### Technical details
+
+**Files modified**:
+- `src/pages/Create.tsx` — schema + form fields + redirect logic
+- `src/pages/EventDetails.tsx` — back button + social links section
+- `src/pages/EventView.tsx` — back button update + social links section
+- Database migration — 5 new columns on `events`
+
+**No breaking changes**: All new columns are nullable with no defaults required. Existing events simply won't show social links (hidden when empty). Back navigation uses browser history, so it works regardless of entry point.
 
