@@ -39,6 +39,7 @@ const CalendarView = lazy(() => import("./pages/CalendarView"));
 const Create = lazy(() => import("./pages/Create"));
 const EventBuilder = lazy(() => import("./pages/EventBuilder"));
 const EventScanner = lazy(() => import("./pages/EventScanner"));
+const CheckIn = lazy(() => import("./pages/CheckIn"));
 const SystemDocumentation = lazy(() => import("./pages/SystemDocumentation"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Help = lazy(() => import("./pages/Help"));
@@ -152,6 +153,7 @@ const App = () => (
                   {/* Standalone Event View - No layout */}
                   <Route path="/event/:id" element={<SuspenseWrapper><EventView /></SuspenseWrapper>} />
                   <Route path="/e/:id" element={<ShortEventRedirect />} />
+                  <Route path="/check-in/:token" element={<SuspenseWrapper><CheckIn /></SuspenseWrapper>} />
                   
                   <Route path="/event/:eventId/scanner" element={<ProtectedRoute><SuspenseWrapper><EventScanner /></SuspenseWrapper></ProtectedRoute>} />
                   <Route path="/my-events" element={<Navigate to="/events" replace />} />
