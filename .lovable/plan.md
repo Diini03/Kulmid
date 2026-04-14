@@ -1,61 +1,47 @@
 
 
-## Plan: UX Improvements — Social Links, Back Nav, Post-Creation Flow, Modal Consistency
+## Plan: Switch Email Sending from Mailjet to Resend
 
-### 1. Add Social Media Link Fields to Event Creation Form + Database
+### What changes
 
-**Database migration**: Add 5 new nullable columns to the `events` table:
-- `facebook_url text`
-- `twitter_url text`
-- `instagram_url text`
-- `linkedin_url text`
-- `website_url text`
+All 3 Edge Functions currently use `sendEmailWithMailjet()` with Mailjet API. We'll replace that helper with `sendEmailWithResend()` using the Resend API directly — keeping the same beautiful HTML templates untouched.
 
-**`src/pages/Create.tsx`**:
-- Add 5 optional URL fields to the zod schema (validated as URLs, optional)
-- Add a collapsible "Social Links (Optional)" section at the end of the form, before submit buttons
-- Include these fields in the `eventData` object sent to Supabase
-- Use the same input styling as existing fields, grouped with icons (Facebook, Twitter/X, Instagram, LinkedIn, Globe)
+### Files modified
 
-**`src/pages/EventDetails.tsx` and `src/pages/EventView.tsx`**:
-- Add a "Links" section that only renders if at least one social URL exists on the event
-- Display clickable icon buttons for each provided link (opens in new tab)
-- Place this section between "Organized By" and "Share Event"
+**1. `supabase/functions/send-event-invitation/index.ts`**
+- Replace `sendEmailWithMailjet` function with `sendEmailWithResend`
+- Uses `RESEND_API_KEY` from Supabase secrets
+- From address: `Kulmid Events <noreply@kulmid.com>`
+- Resend API endpoint: `https://api.resend.com/emails`
+- Keep all existing HTML templates, QR code generation, auth, and guest logic unchanged
 
-### 2. Modern Back Navigation on Event Pages
+**2. `supabase/functions/send-registration-confirmation/index.ts`**
+- Same swap: Mailjet helper replaced with Resend helper
+- From address: `Kulmid Events <noreply@kulmid.com>`
+- Keep all existing HTML templates and business logic unchanged
 
-**`src/pages/EventDetails.tsx`**:
-- Add a subtle back button at the top of the page content (above the image), using `useNavigate(-1)`
-- Style: `← Back` with `ArrowLeft` icon, muted text, small size
-- Uses `navigate(-1)` for dynamic back behavior (not hardcoded route)
+**3. `supabase/functions/send-registration-notification/index.ts`**
+- Same swap: Mailjet helper replaced with Resend helper
+- From address: `Kulmid Events <noreply@kulmid.com>`
+- Keep all existing HTML templates and business logic unchanged
 
-**`src/pages/EventView.tsx`**:
-- Already has a `← Back to Kulmid` link in the header — update it to use `navigate(-1)` with label `← Back` so it returns to the actual previous page instead of always going to the homepage
+### What stays the same
 
-### 3. Post Event Creation Flow Fix
-
-**`src/pages/Create.tsx`** — change the non-admin redirect after event creation:
-- Currently redirects to `/event/${id}/builder`
-- Change to redirect to `/events` (My Events page)
-- Update toast message: "Event submitted for review! Track it in My Events."
-- Add an action button in the toast linking to the event builder for those who want to continue editing
-
-### 4. Modal vs Page Consistency Audit
-
-No code changes needed — the current architecture already follows the correct pattern:
-- Event detail views are full pages (correct)
-- Registration, reporting, AI description, invitations are modals (correct)
-- No violations found in the codebase
-
----
+- **EmailJS client-side code** (`src/lib/emailjs.ts`) — untouched as you requested
+- All HTML email templates (dark theme, teal accents, QR codes)
+- All authentication, authorization, and database logic
+- All other Edge Functions (ai-assistant, verify-check-in, etc.)
 
 ### Technical details
 
-**Files modified**:
-- `src/pages/Create.tsx` — schema + form fields + redirect logic
-- `src/pages/EventDetails.tsx` — back button + social links section
-- `src/pages/EventView.tsx` — back button update + social links section
-- Database migration — 5 new columns on `events`
+The Resend send helper is simple:
+```
+POST https://api.resend.com/emails
+Authorization: Bearer RESEND_API_KEY
+Body: { from, to, subject, html }
+```
 
-**No breaking changes**: All new columns are nullable with no defaults required. Existing events simply won't show social links (hidden when empty). Back navigation uses browser history, so it works regardless of entry point.
+No connector gateway needed since this is a direct API call from Edge Functions using the `RESEND_API_KEY` secret you already configured.
+
+After updating the code, all 3 functions will be redeployed automatically.
 
