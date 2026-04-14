@@ -1,9 +1,9 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, MapPin, DollarSign, Copy, Check, Video, Globe, Users, Mail, Phone, Building2, ExternalLink } from "lucide-react";
+import { CalendarDays, MapPin, DollarSign, Copy, Check, Video, Globe, Users, Mail, Phone, Building2, ExternalLink, ArrowLeft, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthRequiredModal } from "@/components/auth/AuthGuard";
@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const EventDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +172,14 @@ const EventDetails = () => {
       />
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-        
+
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
         {isApproved ? (
           <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
             <p className="text-sm text-muted-foreground flex items-center gap-2">
@@ -322,6 +330,32 @@ const EventDetails = () => {
             )}
           </div>
         </section>
+
+        {(() => {
+          const socialLinks = [
+            { url: event.facebook_url, icon: Facebook, label: 'Facebook' },
+            { url: event.twitter_url, icon: Twitter, label: 'Twitter / X' },
+            { url: event.instagram_url, icon: Instagram, label: 'Instagram' },
+            { url: event.linkedin_url, icon: Linkedin, label: 'LinkedIn' },
+            { url: event.website_url, icon: Globe, label: 'Website' },
+          ].filter(l => l.url);
+          if (socialLinks.length === 0) return null;
+          return (
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">Links</h2>
+              <div className="flex flex-wrap gap-2">
+                {socialLinks.map(({ url, icon: Icon, label }) => (
+                  <Button key={label} asChild variant="outline" size="sm">
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      <Icon className="h-4 w-4 mr-2" />
+                      {label}
+                    </a>
+                  </Button>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Share Event</h2>

@@ -906,7 +906,60 @@ const Create = () => {
                   )}
                 </div>
 
-                {/* Submit Buttons */}
+                {/* Social Links Section */}
+                <Collapsible>
+                  <div className="bg-card rounded-xl border shadow-sm p-6">
+                    <CollapsibleTrigger className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-5 w-5 text-primary" />
+                        <h3 className="text-lg font-semibold">Social Links</h3>
+                        <Badge variant="secondary" className="text-xs">Optional</Badge>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-4 space-y-4">
+                      <p className="text-sm text-muted-foreground">Add social media or website links for attendees to follow.</p>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <FormField control={form.control} name="facebook_url" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Facebook className="h-4 w-4" /> Facebook</FormLabel>
+                            <FormControl><Input type="url" placeholder="https://facebook.com/..." {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="twitter_url" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Twitter className="h-4 w-4" /> Twitter / X</FormLabel>
+                            <FormControl><Input type="url" placeholder="https://x.com/..." {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="instagram_url" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Instagram className="h-4 w-4" /> Instagram</FormLabel>
+                            <FormControl><Input type="url" placeholder="https://instagram.com/..." {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="linkedin_url" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Linkedin className="h-4 w-4" /> LinkedIn</FormLabel>
+                            <FormControl><Input type="url" placeholder="https://linkedin.com/..." {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                      <FormField control={form.control} name="website_url" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2"><Globe className="h-4 w-4" /> Website</FormLabel>
+                          <FormControl><Input type="url" placeholder="https://yourwebsite.com" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </CollapsibleContent>
+                  </div>
+                </Collapsible>
+
                 <div className="flex flex-col sm:flex-row gap-3 justify-end">
                   <Button
                     type="button"
