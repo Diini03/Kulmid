@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, XCircle, Clock, User, Mail, Phone, Building2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { sendRegistrationEmail, isEmailJSConfigured } from "@/lib/emailjs";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProcessingSet } from "@/hooks/useAsyncAction";
 
@@ -89,43 +89,14 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
     try {
       for (const id of processingBatch) {
-        const { data: guest } = await supabase
-          .from("event_guests")
-          .select("*, events:event_id(title, date, location)")
-          .eq("id", id)
-          .single();
-
-        if (!guest) continue;
-
-        const checkInToken = crypto.randomUUID();
-
-        const { error } = await supabase
-          .from("event_guests")
-          .update({
-            status: "registered",
-            check_in_token: checkInToken,
-            rsvp_at: new Date().toISOString(),
-          })
-          .eq("id", id);
+        const { data, error } = await supabase.functions.invoke('handle-registration-action', {
+          body: { guestId: id, action: 'approve' },
+        });
 
         if (error) throw error;
 
         // Update local state immediately
-        setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status: "registered", check_in_token: checkInToken } : r));
-
-        if (isEmailJSConfigured() && guest.email) {
-          const event = guest.events as any;
-          await sendRegistrationEmail({
-            toEmail: guest.email,
-            toName: guest.name || "Guest",
-            eventTitle: event?.title || "",
-            eventDate: event?.date ? new Date(event.date).toLocaleString() : "",
-            eventLocation: event?.location || "",
-            status: "registered",
-            eventId: guest.event_id,
-            checkInToken,
-          });
-        }
+        setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status: "registered" } : r));
       }
 
       toast({
@@ -153,36 +124,14 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
 
     try {
       for (const id of processingBatch) {
-        const { data: guest } = await supabase
-          .from("event_guests")
-          .select("*, events:event_id(title, date, location)")
-          .eq("id", id)
-          .single();
-
-        if (!guest) continue;
-
-        const { error } = await supabase
-          .from("event_guests")
-          .update({ status: "rejected" })
-          .eq("id", id);
+        const { data, error } = await supabase.functions.invoke('handle-registration-action', {
+          body: { guestId: id, action: 'reject' },
+        });
 
         if (error) throw error;
 
         // Update local state immediately
         setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status: "rejected" } : r));
-
-        if (isEmailJSConfigured() && guest.email) {
-          const event = guest.events as any;
-          await sendRegistrationEmail({
-            toEmail: guest.email,
-            toName: guest.name || "Guest",
-            eventTitle: event?.title || "",
-            eventDate: event?.date ? new Date(event.date).toLocaleString() : "",
-            eventLocation: event?.location || "",
-            status: "rejected",
-            eventId: guest.event_id,
-          });
-        }
       }
 
       toast({

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, X, FileSpreadsheet, Upload, Download, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { sendEventInvitation, isEmailJSConfigured } from "@/lib/emailjs";
+
 import { parseEmailsFromCSV, generateCSVTemplate } from "@/lib/csvParser";
 
 interface InviteGuestsDialogProps {
@@ -155,65 +155,23 @@ const InviteGuestsDialog = ({ eventId, open, onOpenChange, onSuccess }: InviteGu
       return;
     }
 
-    if (!isEmailJSConfigured()) {
-      toast({
-        title: "Email Not Configured",
-        description: "Please configure EmailJS in src/lib/emailjs.ts",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setSending(true);
 
     try {
-      // Get event details
-      const { data: event, error: eventError } = await supabase
-        .from("events")
-        .select("title, date, location")
-        .eq("id", eventId)
-        .single();
+      const { data, error } = await supabase.functions.invoke('send-event-invitation', {
+        body: {
+          eventId,
+          emails,
+          customTitle: customTitle || undefined,
+          customMessage: customMessage || undefined,
+        },
+      });
 
-      if (eventError || !event) {
-        throw new Error("Failed to fetch event details");
-      }
-
-      // Send invitations via EmailJS
-      const results = await Promise.all(
-        emails.map(async (email) => {
-          const success = await sendEventInvitation({
-            toEmail: email,
-            eventTitle: event.title,
-            eventDate: event.date ? new Date(event.date).toLocaleString() : "",
-            eventLocation: event.location || "",
-            customTitle: customTitle || undefined,
-            customMessage: customMessage || undefined,
-            eventId,
-          });
-
-          // Store invitation record in database
-          if (success) {
-            const { data: { user } } = await supabase.auth.getUser();
-            await supabase.from("event_invitations").insert({
-              event_id: eventId,
-              email,
-              custom_title: customTitle || null,
-              custom_message: customMessage || null,
-              created_by: user?.id,
-              status: "sent",
-            });
-          }
-
-          return { email, success };
-        })
-      );
-
-      const successCount = results.filter((r) => r.success).length;
-      const failCount = results.filter((r) => !r.success).length;
+      if (error) throw error;
 
       toast({
         title: "Invitations Sent",
-        description: `${successCount} invitation(s) sent successfully${failCount > 0 ? `, ${failCount} failed` : ""}`,
+        description: `${emails.length} invitation(s) sent successfully`,
       });
 
       onSuccess();
