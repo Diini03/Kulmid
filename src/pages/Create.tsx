@@ -16,7 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { categories } from "@/constants/categories";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2, Sparkles, ChevronDown, Check, X } from "lucide-react";
+import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2, Sparkles, ChevronDown, Check, X, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { coverImages } from "@/constants/coverImages";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -25,6 +26,8 @@ import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
 import { StripeConnectDialog } from "@/components/events/StripeConnectDialog";
 
 const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/;
+
+const optionalUrl = z.string().url("Must be a valid URL").optional().or(z.literal(""));
 
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title must be less than 100 characters"),
@@ -44,6 +47,11 @@ const eventSchema = z.object({
   host_description: z.string().max(500, "Host description must be less than 500 characters").optional().or(z.literal("")),
   host_email: z.string().email("Must be a valid email").optional().or(z.literal("")),
   host_phone: z.string().max(20, "Phone number must be less than 20 characters").optional().or(z.literal("")),
+  facebook_url: optionalUrl,
+  twitter_url: optionalUrl,
+  instagram_url: optionalUrl,
+  linkedin_url: optionalUrl,
+  website_url: optionalUrl,
 }).refine((data) => {
   if (data.event_type === "in-person" || data.event_type === "hybrid") {
     return !!data.location && data.location.length >= 3;
@@ -116,6 +124,11 @@ const Create = () => {
       host_description: "",
       host_email: "",
       host_phone: "",
+      facebook_url: "",
+      twitter_url: "",
+      instagram_url: "",
+      linkedin_url: "",
+      website_url: "",
     }
   });
 
@@ -277,6 +290,11 @@ const Create = () => {
         host_description: data.host_description || null,
         host_email: data.host_email || null,
         host_phone: data.host_phone || null,
+        facebook_url: data.facebook_url || null,
+        twitter_url: data.twitter_url || null,
+        instagram_url: data.instagram_url || null,
+        linkedin_url: data.linkedin_url || null,
+        website_url: data.website_url || null,
       };
 
       const { error } = await supabase
@@ -297,10 +315,10 @@ const Create = () => {
         navigate("/admin");
       } else {
         toast({
-          title: "Event created!",
-          description: "Your event has been created in draft mode. Continue building your event!",
+          title: "Event submitted for review!",
+          description: "Track your submission in My Events.",
         });
-        navigate(`/event/${eventData.id}/builder`);
+        navigate(`/events`);
       }
     } catch (error: any) {
       toast({
