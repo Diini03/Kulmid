@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { SimpleRegistrationForm } from "./registration/SimpleRegistrationForm";
-import { sendRegistrationEmail, sendOrganizerNotification, isEmailJSConfigured } from "@/lib/emailjs";
+
 
 interface EventRegistrationDialogProps {
   open: boolean;
@@ -84,45 +84,13 @@ const EventRegistrationDialog = ({
         }
       }
 
-      // Get event details for email
-      const { data: event } = await supabase
-        .from("events")
-        .select("date, location, created_by, host_email")
-        .eq("id", eventId)
-        .single();
-
-      // Generate and store check-in token for approved registrations
-      let savedToken: string | undefined;
-      if (autoApprove) {
-        savedToken = crypto.randomUUID();
-        await supabase
-          .from("event_guests")
-          .update({ check_in_token: savedToken })
-          .eq("event_id", eventId)
-          .eq("email", email);
-      }
-
-      // Send confirmation email via EmailJS
-      if (isEmailJSConfigured()) {
-        await sendRegistrationEmail({
-          toEmail: email,
-          toName: formData.name,
-          eventTitle,
-          eventDate: event?.date ? new Date(event.date).toLocaleString() : "",
-          eventLocation: event?.location || "",
-          status: autoApprove ? "registered" : "pending",
-          eventId,
-          checkInToken: savedToken,
+      // Send confirmation email via Edge Function (handles token generation, confirmation & organizer notification)
+      try {
+        await supabase.functions.invoke('send-registration-confirmation', {
+          body: { guestId: registrationId, eventId },
         });
-
-        if (event?.host_email) {
-          await sendOrganizerNotification({
-            organizerEmail: event.host_email,
-            guestName: formData.name,
-            guestEmail: email,
-            eventTitle,
-          });
-        }
+      } catch (emailError) {
+        console.error("Email sending failed (registration still saved):", emailError);
       }
 
       const description = autoApprove
