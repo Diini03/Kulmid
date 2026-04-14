@@ -1,47 +1,40 @@
 
 
-## Plan: Switch Email Sending from Mailjet to Resend
+## Plan: Remove EmailJS and Wire Client Code to Resend Edge Functions
 
-### What changes
+### Summary
 
-All 3 Edge Functions currently use `sendEmailWithMailjet()` with Mailjet API. We'll replace that helper with `sendEmailWithResend()` using the Resend API directly — keeping the same beautiful HTML templates untouched.
+The Edge Functions already use Resend. Now we remove all client-side EmailJS code and rewire the 3 components to call the existing Edge Functions instead.
 
-### Files modified
+### Changes
 
-**1. `supabase/functions/send-event-invitation/index.ts`**
-- Replace `sendEmailWithMailjet` function with `sendEmailWithResend`
-- Uses `RESEND_API_KEY` from Supabase secrets
-- From address: `Kulmid Events <noreply@kulmid.com>`
-- Resend API endpoint: `https://api.resend.com/emails`
-- Keep all existing HTML templates, QR code generation, auth, and guest logic unchanged
+**1. Delete `src/lib/emailjs.ts`**
+- Remove the entire file — no longer needed.
 
-**2. `supabase/functions/send-registration-confirmation/index.ts`**
-- Same swap: Mailjet helper replaced with Resend helper
-- From address: `Kulmid Events <noreply@kulmid.com>`
-- Keep all existing HTML templates and business logic unchanged
+**2. Remove `@emailjs/browser` dependency from `package.json`**
 
-**3. `supabase/functions/send-registration-notification/index.ts`**
-- Same swap: Mailjet helper replaced with Resend helper
-- From address: `Kulmid Events <noreply@kulmid.com>`
-- Keep all existing HTML templates and business logic unchanged
+**3. Update `src/components/events/InviteGuestsDialog.tsx`**
+- Remove import of `sendEventInvitation`, `isEmailJSConfigured` from emailjs
+- Remove the `isEmailJSConfigured()` check block
+- Replace the EmailJS `sendEventInvitation()` call with `supabase.functions.invoke('send-event-invitation', { body: { eventId, emails, customTitle, customMessage } })`
+- The Edge Function already handles fetching event details, sending emails, and storing invitation records — so we simplify the client code significantly
+
+**4. Update `src/components/events/EventRegistrationDialog.tsx`**
+- Remove import of `sendRegistrationEmail`, `sendOrganizerNotification`, `isEmailJSConfigured` from emailjs
+- Replace the EmailJS block with `supabase.functions.invoke('send-registration-confirmation', { body: { guestId: registrationId, eventId } })`
+- The Edge Function already handles confirmation emails and organizer notifications
+
+**5. Update `src/components/events/RegistrationsTab.tsx`**
+- Remove import of `sendRegistrationEmail`, `isEmailJSConfigured` from emailjs
+- Replace approve/reject EmailJS calls with `supabase.functions.invoke('handle-registration-action', { body: { guestId: id, action: 'approve'/'reject' } })`
+- The Edge Function already handles status updates and email sending
 
 ### What stays the same
+- All Edge Functions (already migrated to Resend)
+- All HTML email templates
+- QR code generation (handled server-side in Edge Functions)
+- Database logic
 
-- **EmailJS client-side code** (`src/lib/emailjs.ts`) — untouched as you requested
-- All HTML email templates (dark theme, teal accents, QR codes)
-- All authentication, authorization, and database logic
-- All other Edge Functions (ai-assistant, verify-check-in, etc.)
-
-### Technical details
-
-The Resend send helper is simple:
-```
-POST https://api.resend.com/emails
-Authorization: Bearer RESEND_API_KEY
-Body: { from, to, subject, html }
-```
-
-No connector gateway needed since this is a direct API call from Edge Functions using the `RESEND_API_KEY` secret you already configured.
-
-After updating the code, all 3 functions will be redeployed automatically.
+### Technical note
+The `generateCheckInToken` and `generateQRCodeUrl` utility functions in `emailjs.ts` are already duplicated in the Edge Functions, so deleting the file loses nothing.
 
