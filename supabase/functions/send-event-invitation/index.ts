@@ -109,7 +109,7 @@ const handler = async (req: Request): Promise<Response> => {
     const eventDateObj = new Date(event.date);
     const formattedDate = eventDateObj.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
     const formattedTime = eventDateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    const eventUrl = `https://kulmid.lovable.app/events/${eventId}`;
+    const eventUrl = `https://www.kulmid.com/events/${eventId}`;
     const safeCustomMessage = customMessage ? escapeHtml(customMessage) : null;
     const safeTitle = escapeHtml(event.title);
     const safeLocation = escapeHtml(event.location);
@@ -141,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         const checkInToken = generateCheckInToken();
-        const checkInUrl = `https://kulmid.lovable.app/check-in/${checkInToken}`;
+        const checkInUrl = `https://www.kulmid.com/check-in/${checkInToken}`;
         const qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
           width: 300,
           margin: 2,

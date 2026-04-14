@@ -158,7 +158,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (action === "approve") {
       const checkInToken = generateCheckInToken();
-      const checkInUrl = `https://kulmid.lovable.app/check-in/${checkInToken}`;
+      const checkInUrl = `https://www.kulmid.com/check-in/${checkInToken}`;
       const qrCodeDataUrl = await QRCode.toDataURL(checkInUrl, {
         width: 300,
         margin: 2,
@@ -179,7 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
       const eventDateObj = new Date(guest.events.date);
       const eventDate = eventDateObj.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
       const eventTime = eventDateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      const eventUrl = `https://kulmid.lovable.app/events/${guest.events.id}`;
+      const eventUrl = `https://www.kulmid.com/events/${guest.events.id}`;
 
       subject = `✅ Registration confirmed — ${safeEventTitle}`;
       htmlContent = `<!DOCTYPE html>
