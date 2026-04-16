@@ -8,7 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import kulmidLogo from "@/assets/kulmid-logo.png";
+import kulmidLogo from "@/assets/kulmid-new-logo.png";
+import kulmidLogoDark from "@/assets/kulmid-logo-dark-mode.png";
 
 const MiniEventCard = () => (
   <div className="rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 space-y-3">
@@ -44,7 +45,7 @@ const MiniEventCard = () => (
 );
 
 export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
   const getThemeIcon = () => {
     switch (theme) {
@@ -68,7 +69,8 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
         {/* Header */}
         <header className="flex items-center justify-between py-5">
           <Link to="/" className="flex items-center gap-2">
-            <img src={kulmidLogo} alt="Kulmid" className="h-9 w-9" />
+            <img src={kulmidLogo} alt="Kulmid" className={`h-9 w-9 ${resolvedTheme === "dark" ? "hidden" : "block"}`} />
+            <img src={kulmidLogoDark} alt="Kulmid" className={`h-9 w-9 ${resolvedTheme === "dark" ? "block" : "hidden"}`} />
             <span className="font-bold text-xl">Kulmid</span>
           </Link>
           
