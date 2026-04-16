@@ -8,7 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import kulmidLogo from "@/assets/kulmid-logo.png";
+import kulmidLogo from "@/assets/kulmid-new-logo.png";
+import kulmidLogoDark from "@/assets/kulmid-logo-dark-mode.png";
 
 const MiniEventCard = () => (
   <div className="rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 space-y-3">
