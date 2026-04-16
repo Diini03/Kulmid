@@ -69,7 +69,8 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
         {/* Header */}
         <header className="flex items-center justify-between py-5">
           <Link to="/" className="flex items-center gap-2">
-            <img src={kulmidLogo} alt="Kulmid" className="h-9 w-9" />
+            <img src={kulmidLogo} alt="Kulmid" className={`h-9 w-9 ${resolvedTheme === "dark" ? "hidden" : "block"}`} />
+            <img src={kulmidLogoDark} alt="Kulmid" className={`h-9 w-9 ${resolvedTheme === "dark" ? "block" : "hidden"}`} />
             <span className="font-bold text-xl">Kulmid</span>
           </Link>
           
