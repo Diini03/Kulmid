@@ -45,7 +45,7 @@ const MiniEventCard = () => (
 );
 
 export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
   const getThemeIcon = () => {
     switch (theme) {
