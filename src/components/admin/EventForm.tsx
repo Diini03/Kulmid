@@ -679,11 +679,9 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
               alt="Selected cover"
               className="w-full aspect-[16/9] object-cover"
             />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div className="text-center text-white">
-                <ImageIcon className="h-6 w-6 mx-auto mb-1" />
-                <p className="text-xs font-medium">Change Image</p>
-              </div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent py-2.5 px-3 flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+              <ImageIcon className="h-4 w-4 text-white" />
+              <p className="text-xs font-medium text-white">Change Image</p>
             </div>
           </button>
 
