@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { SimpleRegistrationForm } from "./registration/SimpleRegistrationForm";
+import { RegistrationAnswer, SimpleRegistrationForm } from "./registration/SimpleRegistrationForm";
 
 
 interface EventRegistrationDialogProps {
@@ -27,7 +27,7 @@ const EventRegistrationDialog = ({
 
   const handleSubmit = async (
     formData: any,
-    customAnswers: { question_id: string; answer_text?: string; answer_boolean?: boolean; answer_option?: string }[]
+    customAnswers: RegistrationAnswer[]
   ) => {
     if (loading) return;
     
