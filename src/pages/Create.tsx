@@ -139,7 +139,7 @@ const Create = () => {
   useEffect(() => {
     if (selectedCategory === "Webinar") {
       form.setValue('event_type', 'online');
-      form.setValue('location', '');
+      form.setValue('location', 'Online');
     }
   }, [selectedCategory]);
 
@@ -269,6 +269,7 @@ const Create = () => {
 
       // Admin events get 'approved' status, user events get 'draft'
       const eventStatus = isAdmin ? 'approved' : 'pending';
+      const normalizedLocation = data.event_type === "online" ? "Online" : data.location?.trim();
 
       const eventId = (await import('@/lib/utils')).generateEventId();
       const eventData = {
@@ -278,7 +279,7 @@ const Create = () => {
         date: new Date(data.date).toISOString(),
         end_date: data.end_date ? new Date(data.end_date).toISOString() : null,
         event_type: data.event_type,
-        location: data.location || null,
+        location: normalizedLocation,
         meeting_link: data.meeting_link || null,
         category: data.category,
         price: data.price,

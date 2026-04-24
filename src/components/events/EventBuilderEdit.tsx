@@ -153,11 +153,13 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
 
     try {
       const imageUrl = await uploadImage();
+      const normalizedLocation = data.event_type === "online" ? "Online" : data.location?.trim();
 
       const { error } = await supabase
         .from("events")
         .update({
           ...data,
+          location: normalizedLocation,
           image_url: imageUrl,
           date: new Date(data.date).toISOString(),
         })
