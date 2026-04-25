@@ -181,7 +181,7 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 </div>
                 <div className="my-2 h-px bg-border" />
                 <DropdownMenuItem asChild className="rounded-xl">
-                  <Link to={`/profile/${user.id}`} className="flex items-center gap-3">
+                  <Link to={profile?.username ? `/u/${profile.username}` : `/u/lookup/${user.id}`} className="flex items-center gap-3">
                     <User className="h-4 w-4" />
                     {t("nav_my_profile")}
                   </Link>
