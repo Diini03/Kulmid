@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/common/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,9 @@ interface ProfileHeaderProps {
 
 export const ProfileHeader = ({ profile, stats, isOwner }: ProfileHeaderProps) => {
   const handleShare = () => {
-    const url = window.location.href;
+    const url = profile.username
+      ? `${window.location.origin}/u/${profile.username}`
+      : window.location.href;
     if (navigator.share) {
       navigator.share({ title: `${profile.full_name} on Kulmid`, url });
     } else {
@@ -46,12 +48,12 @@ export const ProfileHeader = ({ profile, stats, isOwner }: ProfileHeaderProps) =
       <div className="px-6 pb-6 -mt-16">
         <div className="flex flex-col sm:flex-row sm:items-end gap-5">
           {/* Avatar */}
-          <Avatar className="h-28 w-28 border-4 border-background shadow-lg">
-            {profile.avatar_url && <AvatarImage src={profile.avatar_url} alt={profile.full_name} />}
-            <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">
-              {profile.full_name?.charAt(0)?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            src={profile.avatar_url}
+            name={profile.full_name}
+            className="h-28 w-28 border-4 border-background shadow-lg"
+            fallbackClassName="text-3xl"
+          />
 
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
