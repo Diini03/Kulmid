@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/common/UserAvatar";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
@@ -161,12 +161,13 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 p-0 relative">
-                  <Avatar className="h-9 w-9 border-2 border-primary/20">
-                    {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
-                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-bold text-sm">
-                      {profile?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    src={profile?.avatar_url}
+                    name={profile?.full_name}
+                    email={user.email}
+                    className="h-9 w-9 border-2 border-primary/20"
+                    fallbackClassName="text-sm"
+                  />
                   {totalPendingCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">
                       {totalPendingCount > 9 ? "9+" : totalPendingCount}
