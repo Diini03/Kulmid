@@ -20,7 +20,7 @@ type EventRow = {
 };
 
 const Profile = () => {
-  const { username } = useParams<{ username: string }>();
+  const { username, userId } = useParams<{ username?: string; userId?: string }>();
   const { user } = useAuth();
   const { favorites } = useFavorites();
   const [profileData, setProfileData] = useState<any>(null);
@@ -34,17 +34,14 @@ const Profile = () => {
   const isOwner = user?.id === profileData?.user_id;
 
   useEffect(() => {
-    if (!username) return;
+    if (!username && !userId) return;
     const load = async () => {
       setLoading(true);
 
       let prof: any = null;
 
-      // Legacy redirect: /u/by-id/:userId → /u/:username
-      if (username.startsWith("by-id")) {
-        // The :username param itself is "by-id", so pull userId from URL path
-        const pathParts = window.location.pathname.split("/");
-        const userId = pathParts[pathParts.length - 1];
+      // Legacy lookup by user_id → redirect to clean /u/:username URL
+      if (userId) {
         const { data } = await supabase
           .from("profiles")
           .select("*")
@@ -55,7 +52,7 @@ const Profile = () => {
           return;
         }
         prof = data;
-      } else {
+      } else if (username) {
         const { data } = await supabase
           .from("profiles")
           .select("*")
@@ -127,7 +124,7 @@ const Profile = () => {
       setLoading(false);
     };
     load();
-  }, [username, user?.email, user?.id]);
+  }, [username, userId, user?.email, user?.id]);
 
   if (redirectTo) {
     return <Navigate to={redirectTo} replace />;
