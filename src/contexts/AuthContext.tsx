@@ -8,6 +8,10 @@ interface Profile {
   user_id: string;
   full_name: string;
   avatar_url?: string | null;
+  username?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  social_links?: Record<string, string> | null;
   created_at: string;
   updated_at: string;
 }
@@ -96,7 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, user_id, full_name, avatar_url, created_at, updated_at')
+        .select('id, user_id, full_name, avatar_url, username, bio, location, created_at, updated_at')
         .eq('user_id', userId)
         .maybeSingle();
       
@@ -105,7 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
       
-      setProfile(data);
+      setProfile(data as Profile);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
