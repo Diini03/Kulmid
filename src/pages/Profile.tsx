@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -20,7 +20,7 @@ type EventRow = {
 };
 
 const Profile = () => {
-  const { userId } = useParams<{ userId: string }>();
+  const { username, userId } = useParams<{ username?: string; userId?: string }>();
   const { user } = useAuth();
   const { favorites } = useFavorites();
   const [profileData, setProfileData] = useState<any>(null);
@@ -29,28 +29,50 @@ const Profile = () => {
   const [totalGuests, setTotalGuests] = useState(0);
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
-  const isOwner = user?.id === userId;
+  const isOwner = user?.id === profileData?.user_id;
 
   useEffect(() => {
-    if (!userId) return;
+    if (!username && !userId) return;
     const load = async () => {
       setLoading(true);
 
-      // Fetch profile
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
+      let prof: any = null;
+
+      // Legacy lookup by user_id → redirect to clean /u/:username URL
+      if (userId) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (data?.username) {
+          setRedirectTo(`/u/${data.username}`);
+          return;
+        }
+        prof = data;
+      } else if (username) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .ilike("username", username)
+          .maybeSingle();
+        prof = data;
+      }
 
       setProfileData(prof);
+      const profUserId = prof?.user_id;
+      if (!profUserId) {
+        setLoading(false);
+        return;
+      }
 
       // Fetch hosted events
       const { data: hosted } = await supabase
         .from("events")
         .select("*")
-        .eq("created_by", userId)
+        .eq("created_by", profUserId)
         .order("date", { ascending: false });
 
       setHostedEvents((hosted as EventRow[]) || []);
@@ -66,7 +88,7 @@ const Profile = () => {
       }
 
       // Fetch attended events (via event_guests where user email matches)
-      if (user?.email) {
+      if (user?.email && user?.id === profUserId) {
         const { data: guestRecords } = await supabase
           .from("event_guests")
           .select("event_id")
@@ -102,7 +124,11 @@ const Profile = () => {
       setLoading(false);
     };
     load();
-  }, [userId, user?.email]);
+  }, [username, userId, user?.email, user?.id]);
+
+  if (redirectTo) {
+    return <Navigate to={redirectTo} replace />;
+  }
 
   if (loading) {
     return (
@@ -128,7 +154,7 @@ const Profile = () => {
       <Seo
         title={`${profileData.full_name} — Kulmid`}
         description={profileData.bio || `${profileData.full_name}'s profile on Kulmid`}
-        canonical={`/profile/${userId}`}
+        canonical={`/u/${profileData.username || ""}`}
       />
       <div className="container max-w-5xl px-4 py-8">
         <ProfileHeader
