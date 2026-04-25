@@ -548,6 +548,7 @@ export type Database = {
           location: string | null
           show_attended_events: boolean | null
           show_hosted_events: boolean | null
+          social_links: Json | null
           twitter: string | null
           updated_at: string
           user_id: string
@@ -568,6 +569,7 @@ export type Database = {
           location?: string | null
           show_attended_events?: boolean | null
           show_hosted_events?: boolean | null
+          social_links?: Json | null
           twitter?: string | null
           updated_at?: string
           user_id: string
@@ -588,6 +590,7 @@ export type Database = {
           location?: string | null
           show_attended_events?: boolean | null
           show_hosted_events?: boolean | null
+          social_links?: Json | null
           twitter?: string | null
           updated_at?: string
           user_id?: string
@@ -742,6 +745,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_username_slug: {
+        Args: { _name: string; _user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
