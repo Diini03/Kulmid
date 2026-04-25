@@ -84,10 +84,10 @@ const ShortEventRedirect = () => {
   return <Navigate to={`/event/${id}`} replace />;
 };
 
-// Legacy profile URL — redirect /profile/:userId to /u/:username
+// Legacy profile URL — looks up username and redirects to /u/:username
 const LegacyProfileRedirect = () => {
   const { userId } = useParams();
-  return <Navigate to={`/u/by-id/${userId}`} replace />;
+  return <Navigate to={`/u/lookup/${userId}`} replace />;
 };
 
 // Persistent layout wrapper
@@ -148,6 +148,7 @@ const App = () => (
                     <Route path="/events/:id/manage" element={<ProtectedRoute><SuspenseWrapper><EventBuilder /></SuspenseWrapper></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><SuspenseWrapper><Settings /></SuspenseWrapper></ProtectedRoute>} />
                     <Route path="/u/:username" element={<SuspenseWrapper><Profile /></SuspenseWrapper>} />
+                    <Route path="/u/lookup/:userId" element={<SuspenseWrapper><Profile /></SuspenseWrapper>} />
                     <Route path="/profile/:userId" element={<LegacyProfileRedirect />} />
                   </Route>
 
