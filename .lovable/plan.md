@@ -1,91 +1,115 @@
-## Plan: Dynamic Event Registration Form Builder
+# Event Insights & Analytics — Plan
 
-### Goal
-Make the current Registration tab feel like a simple Google Forms-style builder for organizers, while keeping Kulmid’s existing design and database structure.
+Build a new **Insights** tab inside the event builder that auto-generates analytics from the existing dynamic registration schema (`event_registration_questions` + `event_registration_answers`), and add an **Individual Response Viewer** to the Guests tab.
 
-### Important Existing Foundation
-The project already has most of the backend structure needed:
-- `event_registration_fields` stores default fields like name, email, phone, organization.
-- `event_registration_questions` stores custom questions with type, options, required status, and order.
-- `event_registration_answers` stores attendee responses linked to a registration.
+No schema changes required — the data model already supports everything (questions are stored with type/options, answers are linked by `registration_id` → `event_guests.id`).
 
-So I will improve and expand the existing system instead of redesigning everything or creating a separate duplicated schema.
+---
 
-### What Will Change
+## 1. New Insights Tab
 
-#### 1. Upgrade the organizer Registration tab
-In `EventBuilderRegistration`, replace the current basic custom-question section with a cleaner builder experience:
-- Keep default fields section for name, email, phone, organization.
-- Add a more professional “Custom form builder” area.
-- Add an “Add Question” modal instead of the inline add form.
-- Add clear question type selection with simple descriptions.
-- Add required/optional toggle.
-- Add option editor for choice-based questions.
-- Add reorder controls and edit/delete actions.
-- Add empty states and helper text for non-technical users.
+**File:** `src/pages/EventBuilder.tsx`
+- Add a 4th tab `"insights"` in the order: **Overview · Guests · Registration · Insights · Edit · Settings** (keeping Edit/Settings after, so the user-facing first 4 match their spec).
+- Render `<EventBuilderInsights eventId={event.id} />`.
 
-#### 2. Support the requested question types
-Map the requested public question types to the existing database field `question_type`:
-- `text` → short text input
-- `textarea` → long text input
-- `multiple_choice` → radio/select-style single choice
-- `checkbox` → multiple selections
-- `dropdown` → dropdown select
-- `phone` → phone input
-- `email` → email input
-- `social_link` → URL/social profile input
+**New file:** `src/components/events/EventBuilderInsights.tsx`
 
-Choice-based question types will require at least 2 options.
+Top-level layout (consistent with current `max-w-5xl`, monochrome teal style, Card-based):
+1. **Overview Metrics row** — 4 stat cards
+   - Total registrations (count of `event_guests` where `registration_type='registration'`)
+   - Approved / Registered (`status='registered'`)
+   - Pending (`status='pending'`)
+   - Checked in (`checked_in=true`)
+2. **Gender summary card** (only rendered if a gender-like question is detected — see §3)
+3. **Per-question analytics cards** — one card per supported question (see §2)
+4. **Open-text questions section** — list with sample answers + "View all responses" link to Individual Response Viewer
+5. **Empty states** — when no registrations or no custom questions, show "No data available yet" card.
+6. **Export button** (top-right) — CSV download of all responses (questions as columns).
 
-#### 3. Add live preview before saving
-Inside the Registration tab:
-- Add a preview panel/card that shows exactly how the registration form will look to attendees.
-- Preview default fields plus custom questions.
-- On desktop, show builder and preview in a clean two-column layout where appropriate.
-- On mobile, stack builder and preview vertically.
+---
 
-#### 4. Update dynamic attendee form rendering
-In `SimpleRegistrationForm`, support all new question types:
-- Text input
-- Textarea
-- Email input with validation
-- Phone input
-- Social link / URL input
-- Dropdown
-- Multiple choice
-- Checkbox/multi-select
+## 2. Dynamic Question Analytics
 
-The registration dialog will remain compact and mobile-friendly.
+**Data fetch (single page-load aggregation):**
+- Fetch active questions: `event_registration_questions` where `event_id=? AND is_active=true` ordered by `sort_order`.
+- Fetch all approved/pending guests for the event: `event_guests` (id, name, email, status, checked_in).
+- Fetch all answers for those guests: `event_registration_answers` where `registration_id IN (...)`.
+- Aggregate client-side into `Map<question_id, Map<option, count>>`.
 
-#### 5. Store answers in a scalable JSON-friendly way
-Use the current `event_registration_answers` table but make it flexible:
-- Text, email, phone, textarea, social link answers go into `answer_text`.
-- Dropdown/multiple choice answers go into `answer_option`.
-- Checkbox/multi-select answers can be stored as a JSON string in `answer_text` unless we add a dedicated JSONB column later.
+**Per-question rendering by type** (using existing `LEGACY_TYPE_MAP` + `getQuestionType` helpers, copied/imported from `EventBuilderRegistration.tsx`):
+- **multiple_choice / dropdown** — read `answer_option`. Render bar chart with option label, count, percentage of total responses.
+- **checkbox** — read `answer_text` (stored as JSON-stringified array per `SimpleRegistrationForm`). Parse and count each option independently. Total = number of respondents (not selections).
+- **text / textarea / phone / email / social_link** — no chart. Show response count + "View responses" button that opens the Individual Response Viewer filtered to that question, OR shows up to 3 sample answers inline.
 
-This keeps the feature working with the current schema and avoids unnecessary database restructuring.
+**Bar visualization:** simple horizontal CSS bars (`<div>` with width %) using primary teal color — no chart library needed. Mobile-responsive.
 
-### Technical Details
-Files likely to change:
-- `src/components/events/EventBuilderRegistration.tsx`
-- `src/components/events/registration/SimpleRegistrationForm.tsx`
-- `src/components/events/EventRegistrationDialog.tsx` if answer typing needs to be widened
+**Performance:** all aggregation happens once on mount in JS (registrations are typically <1000). No precompute table needed for MVP. Memoize aggregations with `useMemo`.
 
-Potential optional database improvement:
-- Add `answer_json jsonb` to `event_registration_answers` for checkbox/multi-select responses.
-- I recommend doing this only if you want the cleanest long-term data model. The feature can work without it by storing checkbox answers as JSON text.
+---
 
-### Validation Rules
-- Question title is required.
-- Choice questions require at least 2 non-empty options.
-- Required attendee questions must be answered before submission.
-- Email questions must be valid email format.
-- Social link questions should be a valid URL or accepted social handle-style link.
-- Inputs will be trimmed and length-limited.
+## 3. Gender Detection
 
-### What Will Not Change
-- No full system redesign.
-- No change to the Event Builder structure.
-- No change to the event creation flow.
-- No new EmailJS usage.
-- Existing registrations and existing questions will continue to work.
+**Detection logic** (in insights component):
+```ts
+const isGenderQuestion = (q) =>
+  /gender|jinsi|sex/i.test(q.question_text) &&
+  ['multiple_choice', 'dropdown', 'checkbox'].includes(getQuestionType(q.question_type));
+```
+
+If detected, render a dedicated **Gender Summary card** above per-question cards:
+- Bucket each option's count into male / female / other based on label match (`/^male|lab|man$/i`, `/^female|dumar|woman$/i`, else other).
+- Display as 3 stat tiles + simple percentage bars (no pie chart needed for MVP — keeps consistent with monochrome style).
+
+The same gender question still appears in the per-question cards below (no duplication suppression — it provides both summary and detail view).
+
+---
+
+## 4. Individual Response Viewer
+
+**Entry point:** Guests tab → `RegistrationsTab.tsx`
+- Each registration row already has an expand/collapse button. Add a new **"View full response"** button (next to Approve/Reject) that opens a modal.
+
+**New file:** `src/components/events/RegistrationResponseDialog.tsx`
+- Props: `guestId`, `eventId`, `open`, `onOpenChange`.
+- Fetches the guest record + all answers for that guest joined with their questions.
+- Renders:
+  - Header: name, email, phone, status badge
+  - Section: **Default fields** (organization, job_title, etc. — fields that have values on `event_guests`)
+  - Section: **Custom answers** — each question text followed by the answer (formatted by type: checkbox arrays as bullet list, boolean as Yes/No, etc.)
+- Uses existing Dialog component for consistency.
+
+Also wire the same dialog into the Insights tab's "View responses" buttons on text/textarea cards (opens the dialog seeded with the first respondent, with prev/next nav — optional, defer to v2 if scope creeps).
+
+---
+
+## 5. CSV Export (Optional but included)
+
+**Util:** `src/lib/exportRegistrations.ts`
+- Builds a CSV with columns: `Name, Email, Phone, Status, Checked In, [each question text...]`.
+- Each row = one registration. Checkbox answers join with `; `.
+- Triggers browser download via Blob + anchor click. No backend needed.
+
+Button placement: top-right of Insights tab, "Export CSV" with download icon.
+
+---
+
+## 6. Files Touched
+
+**New:**
+- `src/components/events/EventBuilderInsights.tsx`
+- `src/components/events/RegistrationResponseDialog.tsx`
+- `src/lib/exportRegistrations.ts`
+
+**Edited:**
+- `src/pages/EventBuilder.tsx` — add Insights tab trigger + content
+- `src/components/events/RegistrationsTab.tsx` — add "View full response" button + dialog
+
+**No DB migrations.** All RLS policies already permit event owners to read their guests, answers, and questions.
+
+---
+
+## 7. Constraints honored
+- No UI redesign — reuses Card, Badge, Dialog, Tabs, monochrome teal palette
+- Mobile responsive — grids collapse to 1 col, bars stay full-width
+- Fully dynamic — iterates `event_registration_questions`, no hardcoded keys
+- Empty states everywhere ("No data available yet")

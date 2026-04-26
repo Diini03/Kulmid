@@ -10,6 +10,7 @@ import EventBuilderEdit from "@/components/events/EventBuilderEdit";
 import EventBuilderGuests from "@/components/events/EventBuilderGuests";
 import EventBuilderRegistration from "@/components/events/EventBuilderRegistration";
 import EventBuilderSettings from "@/components/events/EventBuilderSettings";
+import EventBuilderInsights from "@/components/events/EventBuilderInsights";
 import { ChevronRight, ExternalLink, ArrowLeft } from "lucide-react";
 
 const EventBuilder = () => {
@@ -133,6 +134,12 @@ const EventBuilder = () => {
               Registration
             </TabsTrigger>
             <TabsTrigger 
+              value="insights"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
+            >
+              Insights
+            </TabsTrigger>
+            <TabsTrigger 
               value="edit"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
             >
@@ -156,6 +163,10 @@ const EventBuilder = () => {
 
           <TabsContent value="registration" className="mt-6">
             <EventBuilderRegistration eventId={event.id} />
+          </TabsContent>
+
+          <TabsContent value="insights" className="mt-6">
+            <EventBuilderInsights eventId={event.id} />
           </TabsContent>
 
           <TabsContent value="edit" className="mt-6">

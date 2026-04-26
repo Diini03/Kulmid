@@ -8,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, XCircle, Clock, User, Mail, Phone, Building2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProcessingSet } from "@/hooks/useAsyncAction";
+import RegistrationResponseDialog from "./RegistrationResponseDialog";
 
 interface RegistrationsTabProps {
   eventId: string;
@@ -26,6 +28,7 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { isProcessing, startProcessing, stopProcessing } = useProcessingSet();
   const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [viewerGuestId, setViewerGuestId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRegistrations();
@@ -444,6 +447,26 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
                                 )}
                                 Reject
                               </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setViewerGuestId(registration.id)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View full response
+                              </Button>
+                            </div>
+                          )}
+                          {registration.status !== "pending" && (
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setViewerGuestId(registration.id)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View full response
+                              </Button>
                             </div>
                           )}
                         </div>
@@ -512,6 +535,15 @@ const RegistrationsTab = ({ eventId }: RegistrationsTabProps) => {
           )}
         </CardContent>
       </Card>
+
+      <RegistrationResponseDialog
+        guestId={viewerGuestId}
+        eventId={eventId}
+        open={viewerGuestId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewerGuestId(null);
+        }}
+      />
     </div>
   );
 };
