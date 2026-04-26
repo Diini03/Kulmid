@@ -13,9 +13,8 @@ import {
   Download,
   MessageSquareText,
   Eye,
-  Venus,
-  Mars,
   CircleUser,
+  User as UserIcon,
 } from "lucide-react";
 import RegistrationResponseDialog from "./RegistrationResponseDialog";
 import { exportRegistrationsToCsv } from "@/lib/exportRegistrations";
@@ -294,13 +293,13 @@ const EventBuilderInsights = ({ eventId }: Props) => {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <GenderTile
-              icon={<Mars className="h-4 w-4 text-blue-600" />}
+              icon={<UserIcon className="h-4 w-4 text-blue-600" />}
               label="Male"
               count={genderSummary.male}
               total={genderSummary.total}
             />
             <GenderTile
-              icon={<Venus className="h-4 w-4 text-pink-600" />}
+              icon={<UserIcon className="h-4 w-4 text-pink-600" />}
               label="Female"
               count={genderSummary.female}
               total={genderSummary.total}
