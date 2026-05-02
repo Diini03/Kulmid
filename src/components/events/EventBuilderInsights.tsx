@@ -401,38 +401,6 @@ const MetricCard = ({
   </div>
 );
 
-const GenderTile = ({
-  icon,
-  label,
-  count,
-  total,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  count: number;
-  total: number;
-}) => {
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-  return (
-    <div className="rounded-lg border border-border/60 bg-card p-4 space-y-2">
-      <div className="flex items-center gap-2">
-        {icon}
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      </div>
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-2xl font-bold">{count}</span>
-        <span className="text-xs text-muted-foreground">({pct}%)</span>
-      </div>
-      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-        <div
-          className="h-full bg-primary transition-all"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-};
-
 const ChartQuestionCard = ({
   question,
   counts,
