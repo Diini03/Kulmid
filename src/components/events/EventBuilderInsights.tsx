@@ -13,11 +13,20 @@ import {
   Download,
   MessageSquareText,
   Eye,
-  CircleUser,
-  User as UserIcon,
 } from "lucide-react";
 import RegistrationResponseDialog from "./RegistrationResponseDialog";
 import { exportRegistrationsToCsv } from "@/lib/exportRegistrations";
+import {
+  categorizeAndBucket,
+  buildCategorizedIndex,
+  generateHighlights,
+  buildCrossBreakdown,
+  CATEGORY_LABELS,
+  type InsightCategory,
+} from "@/lib/insightsCategorizer";
+import SmartHighlights from "./insights/SmartHighlights";
+import CategoryChartCard from "./insights/CategoryChartCard";
+import CrossBreakdownCard from "./insights/CrossBreakdownCard";
 
 interface Question {
   id: string;
@@ -194,31 +203,26 @@ const EventBuilderInsights = ({ eventId }: Props) => {
     return result;
   }, [questions, answersByQuestion]);
 
-  // Gender detection
-  const genderQuestion = useMemo(() => {
-    return questions.find(
-      (q) =>
-        /gender|jinsi|\bsex\b/i.test(q.question_text) &&
-        CHART_TYPES.includes(getQuestionType(q.question_type))
-    );
-  }, [questions]);
+  // Smart categorization
+  const categorizedBuckets = useMemo(
+    () => categorizeAndBucket(questions, answers),
+    [questions, answers]
+  );
+  const categorizedIndex = useMemo(() => buildCategorizedIndex(questions), [questions]);
+  const highlights = useMemo(
+    () => generateHighlights(categorizedBuckets, guests.length),
+    [categorizedBuckets, guests.length]
+  );
+  const crossGenderRole = useMemo(() => {
+    if (!categorizedBuckets.has("gender") || !categorizedBuckets.has("role")) return null;
+    return buildCrossBreakdown("gender", "role", questions, answers);
+  }, [categorizedBuckets, questions, answers]);
 
-  const genderSummary = useMemo(() => {
-    if (!genderQuestion) return null;
-    const agg = aggregations.get(genderQuestion.id);
-    if (!agg) return null;
-
-    let male = 0;
-    let female = 0;
-    let other = 0;
-    agg.counts.forEach((count, label) => {
-      if (/^(male|lab|man|nin)$/i.test(label.trim())) male += count;
-      else if (/^(female|dumar|woman|gabar|naag)$/i.test(label.trim())) female += count;
-      else other += count;
-    });
-
-    return { male, female, other, total: male + female + other };
-  }, [genderQuestion, aggregations]);
+  const renderBucket = (cat: InsightCategory, variant: "bar" | "donut" = "bar") => {
+    const b = categorizedBuckets.get(cat);
+    if (!b || b.total === 0) return null;
+    return <CategoryChartCard bucket={b} variant={variant} />;
+  };
 
   const handleExport = () => {
     exportRegistrationsToCsv(eventTitle, guests, questions, answers);
@@ -284,37 +288,48 @@ const EventBuilderInsights = ({ eventId }: Props) => {
         />
       </div>
 
-      {/* Gender summary */}
-      {genderSummary && genderSummary.total > 0 && (
-        <Card className="p-5 space-y-4">
-          <div className="flex items-center gap-2">
-            <CircleUser className="h-4 w-4 text-muted-foreground" />
-            <h4 className="text-sm font-semibold">Gender breakdown</h4>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <GenderTile
-              icon={<UserIcon className="h-4 w-4 text-blue-600" />}
-              label="Male"
-              count={genderSummary.male}
-              total={genderSummary.total}
-            />
-            <GenderTile
-              icon={<UserIcon className="h-4 w-4 text-pink-600" />}
-              label="Female"
-              count={genderSummary.female}
-              total={genderSummary.total}
-            />
-            <GenderTile
-              icon={<CircleUser className="h-4 w-4 text-muted-foreground" />}
-              label="Other"
-              count={genderSummary.other}
-              total={genderSummary.total}
-            />
-          </div>
-        </Card>
+      {/* Smart highlights */}
+      <SmartHighlights highlights={highlights} />
+
+      {/* Demographics row */}
+      {(categorizedBuckets.has("gender") ||
+        categorizedBuckets.has("age") ||
+        categorizedBuckets.has("marital")) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {renderBucket("gender", "donut")}
+          {renderBucket("age", "bar")}
+          {renderBucket("marital", "bar")}
+        </div>
       )}
 
-      {/* Per-question analytics */}
+      {/* Background row */}
+      {(categorizedBuckets.has("education") || categorizedBuckets.has("role")) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {renderBucket("education", "bar")}
+          {renderBucket("role", "bar")}
+        </div>
+      )}
+
+      {/* Reach row */}
+      {(categorizedBuckets.has("source") ||
+        categorizedBuckets.has("location") ||
+        categorizedBuckets.has("language")) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {renderBucket("source", "bar")}
+          {renderBucket("location", "bar")}
+          {renderBucket("language", "bar")}
+        </div>
+      )}
+
+      {/* Cross breakdown */}
+      {crossGenderRole && crossGenderRole.rows.length > 0 && (
+        <CrossBreakdownCard
+          title={`${CATEGORY_LABELS.role} × ${CATEGORY_LABELS.gender}`}
+          rows={crossGenderRole.rows}
+        />
+      )}
+
+      {/* Other (uncategorized) per-question analytics */}
       {questions.length === 0 ? (
         <Card className="p-8 border-dashed text-center">
           <p className="text-sm font-medium">No custom questions yet</p>
@@ -324,7 +339,9 @@ const EventBuilderInsights = ({ eventId }: Props) => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {questions.map((q) => {
+          {questions
+            .filter((q) => !categorizedIndex.has(q.id))
+            .map((q) => {
             const type = getQuestionType(q.question_type);
             if (CHART_TYPES.includes(type)) {
               const agg = aggregations.get(q.id);
