@@ -1,115 +1,94 @@
-# Event Insights & Analytics — Plan
 
-Build a new **Insights** tab inside the event builder that auto-generates analytics from the existing dynamic registration schema (`event_registration_questions` + `event_registration_answers`), and add an **Individual Response Viewer** to the Guests tab.
+# Smart Event Insights — Auto-Categorized Analytics
 
-No schema changes required — the data model already supports everything (questions are stored with type/options, answers are linked by `registration_id` → `event_guests.id`).
+## Goal
+Move beyond the current "one chart per question" view. Automatically recognize common demographic questions used by Somali event organizers and turn them into a **prioritized, story-driven analytics dashboard** — like Google Forms / Microsoft Forms summary, but smarter.
 
----
+## What the model recognizes (auto-detection)
 
-## 1. New Insights Tab
+A new `src/lib/insightsCategorizer.ts` utility scans each event's questions and tags them into known **insight categories** using bilingual (English + Somali) keyword + option-pattern matching:
 
-**File:** `src/pages/EventBuilder.tsx`
-- Add a 4th tab `"insights"` in the order: **Overview · Guests · Registration · Insights · Edit · Settings** (keeping Edit/Settings after, so the user-facing first 4 match their spec).
-- Render `<EventBuilderInsights eventId={event.id} />`.
+| Category | Keywords (EN / SO) | Option hints |
+|---|---|---|
+| Gender | gender, sex / jinsi | male, female, lab, dheddig, dumar |
+| Marital status | married, marital, status / xaalad guur, qoys | single, married, divorced, guursaday, doob |
+| Education level | education, degree, qualification / waxbarasho, shahaado | high school, bachelor, master, phd, dugsi sare, jaamacad |
+| Role / Occupation | student, graduate, employed, occupation, profession / arday, qalin-jabiye, shaqaale | student, graduate, working, unemployed |
+| Age range | age / da' | 18-24, 25-34, etc. or numeric |
+| Language | language / luqad | english, somali, arabic, af-soomaali |
+| Location / City | city, region, location / magaalo, gobol | Mogadishu, Hargeisa, Garowe... |
+| Source / Heard from | how did you hear, source / sidee maqashay | facebook, instagram, friend, asxaab |
 
-**New file:** `src/components/events/EventBuilderInsights.tsx`
+Detection priority: question text match → option pattern match → fallback to plain chart card. Categorization is **non-destructive** — uncategorized questions still render as today.
 
-Top-level layout (consistent with current `max-w-5xl`, monochrome teal style, Card-based):
-1. **Overview Metrics row** — 4 stat cards
-   - Total registrations (count of `event_guests` where `registration_type='registration'`)
-   - Approved / Registered (`status='registered'`)
-   - Pending (`status='pending'`)
-   - Checked in (`checked_in=true`)
-2. **Gender summary card** (only rendered if a gender-like question is detected — see §3)
-3. **Per-question analytics cards** — one card per supported question (see §2)
-4. **Open-text questions section** — list with sample answers + "View all responses" link to Individual Response Viewer
-5. **Empty states** — when no registrations or no custom questions, show "No data available yet" card.
-6. **Export button** (top-right) — CSV download of all responses (questions as columns).
+## New Insights page layout
 
----
-
-## 2. Dynamic Question Analytics
-
-**Data fetch (single page-load aggregation):**
-- Fetch active questions: `event_registration_questions` where `event_id=? AND is_active=true` ordered by `sort_order`.
-- Fetch all approved/pending guests for the event: `event_guests` (id, name, email, status, checked_in).
-- Fetch all answers for those guests: `event_registration_answers` where `registration_id IN (...)`.
-- Aggregate client-side into `Map<question_id, Map<option, count>>`.
-
-**Per-question rendering by type** (using existing `LEGACY_TYPE_MAP` + `getQuestionType` helpers, copied/imported from `EventBuilderRegistration.tsx`):
-- **multiple_choice / dropdown** — read `answer_option`. Render bar chart with option label, count, percentage of total responses.
-- **checkbox** — read `answer_text` (stored as JSON-stringified array per `SimpleRegistrationForm`). Parse and count each option independently. Total = number of respondents (not selections).
-- **text / textarea / phone / email / social_link** — no chart. Show response count + "View responses" button that opens the Individual Response Viewer filtered to that question, OR shows up to 3 sample answers inline.
-
-**Bar visualization:** simple horizontal CSS bars (`<div>` with width %) using primary teal color — no chart library needed. Mobile-responsive.
-
-**Performance:** all aggregation happens once on mount in JS (registrations are typically <1000). No precompute table needed for MVP. Memoize aggregations with `useMemo`.
-
----
-
-## 3. Gender Detection
-
-**Detection logic** (in insights component):
-```ts
-const isGenderQuestion = (q) =>
-  /gender|jinsi|sex/i.test(q.question_text) &&
-  ['multiple_choice', 'dropdown', 'checkbox'].includes(getQuestionType(q.question_type));
+```text
+┌─ Overview metrics (4 KPI tiles, unchanged) ────────────────┐
+├─ Smart Highlights (NEW) ───────────────────────────────────┤
+│  3 auto-generated insight cards, e.g.:                     │
+│  • "62% of registrants are students"                       │
+│  • "Most attendees are 25–34 (48%)"                        │
+│  • "Top source: Facebook (41%)"                            │
+├─ Demographics row (NEW) ───────────────────────────────────┤
+│  Gender donut │ Age bars │ Marital pie  (only shown if     │
+│                                          detected)         │
+├─ Background row (NEW) ─────────────────────────────────────┤
+│  Education bars │ Role/Occupation bars                     │
+├─ Reach row (NEW) ──────────────────────────────────────────┤
+│  Source/Heard-from bars │ Location bars │ Language bars    │
+├─ Cross-breakdown (NEW, optional) ──────────────────────────┤
+│  e.g. Gender × Role  (small stacked bar)                   │
+├─ Other questions ──────────────────────────────────────────┤
+│  All non-categorized questions render as today             │
+└─ Open-text responses ──────────────────────────────────────┘
 ```
 
-If detected, render a dedicated **Gender Summary card** above per-question cards:
-- Bucket each option's count into male / female / other based on label match (`/^male|lab|man$/i`, `/^female|dumar|woman$/i`, else other).
-- Display as 3 stat tiles + simple percentage bars (no pie chart needed for MVP — keeps consistent with monochrome style).
+Sections render only when their category is detected and has answers — no empty placeholders.
 
-The same gender question still appears in the per-question cards below (no duplication suppression — it provides both summary and detail view).
+## Smart Highlights generator
 
----
+Function `generateHighlights(categorized, total)` returns the top 3 most "interesting" facts, ranked by:
+1. Dominance (one option ≥ 50% of responses)
+2. Coverage (category answered by ≥ 70% of registrants)
+3. Diversity gap (e.g. heavy skew toward one gender)
 
-## 4. Individual Response Viewer
+Each highlight is a short sentence + small icon + percentage badge. Falls back gracefully if fewer than 3 categories exist.
 
-**Entry point:** Guests tab → `RegistrationsTab.tsx`
-- Each registration row already has an expand/collapse button. Add a new **"View full response"** button (next to Approve/Reject) that opens a modal.
+## Cross-breakdown (Gender × Role)
 
-**New file:** `src/components/events/RegistrationResponseDialog.tsx`
-- Props: `guestId`, `eventId`, `open`, `onOpenChange`.
-- Fetches the guest record + all answers for that guest joined with their questions.
-- Renders:
-  - Header: name, email, phone, status badge
-  - Section: **Default fields** (organization, job_title, etc. — fields that have values on `event_guests`)
-  - Section: **Custom answers** — each question text followed by the answer (formatted by type: checkbox arrays as bullet list, boolean as Yes/No, etc.)
-- Uses existing Dialog component for consistency.
+When **both** Gender and Role/Occupation are detected, compute a 2D matrix and render a compact stacked bar (e.g. "Students: 60% female, 40% male"). Implemented client-side with the same answers array — no extra queries.
 
-Also wire the same dialog into the Insights tab's "View responses" buttons on text/textarea cards (opens the dialog seeded with the first respondent, with prev/next nav — optional, defer to v2 if scope creeps).
+## Charts
 
----
+Use existing recharts (`src/components/ui/chart.tsx` already wraps it) for:
+- Donut for Gender (2–3 slices)
+- Horizontal bars for Age / Education / Role / Source / Location / Language
+- Stacked bar for cross-breakdown
 
-## 5. CSV Export (Optional but included)
+Keep monochrome teal palette (primary + muted shades), consistent with project memory.
 
-**Util:** `src/lib/exportRegistrations.ts`
-- Builds a CSV with columns: `Name, Email, Phone, Status, Checked In, [each question text...]`.
-- Each row = one registration. Checkbox answers join with `; `.
-- Triggers browser download via Blob + anchor click. No backend needed.
+## Files
 
-Button placement: top-right of Insights tab, "Export CSV" with download icon.
+**New**
+- `src/lib/insightsCategorizer.ts` — keyword maps, `categorizeQuestions()`, `bucketAnswers()`, `generateHighlights()`
+- `src/components/events/insights/SmartHighlights.tsx`
+- `src/components/events/insights/CategoryChartCard.tsx` (donut + bar variants)
+- `src/components/events/insights/CrossBreakdownCard.tsx`
 
----
+**Edited**
+- `src/components/events/EventBuilderInsights.tsx` — replace gender-only block with categorized sections, keep KPI tiles + per-question fallback + open-text + CSV export
+- (No DB migrations needed — uses existing `event_registration_questions` + `event_registration_answers`)
 
-## 6. Files Touched
+## Constraints respected
+- No schema changes, no hardcoded questions — pure pattern detection on existing data
+- Bilingual EN/SO matching
+- Mobile-responsive grids (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`)
+- Monochrome teal, 12px radius, consistent with Kulmid design
 
-**New:**
-- `src/components/events/EventBuilderInsights.tsx`
-- `src/components/events/RegistrationResponseDialog.tsx`
-- `src/lib/exportRegistrations.ts`
+## Out of scope (can follow up later)
+- Saving "category mappings" per event so organizers can manually re-tag a question
+- Time-series of registrations
+- Excel export (CSV already exists)
 
-**Edited:**
-- `src/pages/EventBuilder.tsx` — add Insights tab trigger + content
-- `src/components/events/RegistrationsTab.tsx` — add "View full response" button + dialog
-
-**No DB migrations.** All RLS policies already permit event owners to read their guests, answers, and questions.
-
----
-
-## 7. Constraints honored
-- No UI redesign — reuses Card, Badge, Dialog, Tabs, monochrome teal palette
-- Mobile responsive — grids collapse to 1 col, bars stay full-width
-- Fully dynamic — iterates `event_registration_questions`, no hardcoded keys
-- Empty states everywhere ("No data available yet")
+Ready to implement on approval.
