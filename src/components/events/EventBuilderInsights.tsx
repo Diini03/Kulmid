@@ -90,7 +90,6 @@ const EventBuilderInsights = ({ eventId }: Props) => {
           .from("event_registration_questions")
           .select("*")
           .eq("event_id", eventId)
-          .eq("is_active", true)
           .order("sort_order"),
         supabase
           .from("event_guests")
