@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { usePendingActions } from "@/contexts/PendingActionsContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, UserPlus, QrCode, Users, CheckCircle2, Clock } from "lucide-react";
+import { Mail, QrCode, Users, CheckCircle2, Clock, Download, ChevronDown } from "lucide-react";
 import InviteGuestsDialog from "./InviteGuestsDialog";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RegistrationsTab from "./RegistrationsTab";
-import CheckedInTab from "./CheckedInTab";
 import CheckInScannerDialog from "./CheckInScannerDialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { exportRegistrationsToCsv } from "@/lib/exportRegistrations";
+import { toast } from "@/hooks/use-toast";
 
 interface EventBuilderGuestsProps {
   eventId: string;
@@ -21,8 +21,7 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showScannerDialog, setShowScannerDialog] = useState(false);
   const [totalStats, setTotalStats] = useState({ total: 0, registered: 0, checkedIn: 0, pending: 0 });
-  const { getPendingCountForEvent } = usePendingActions();
-  const pendingCount = getPendingCountForEvent(eventId);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchGuests();
@@ -80,10 +79,49 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
     }
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const [eventRes, qRes, gRes] = await Promise.all([
+        supabase.from("events").select("title").eq("id", eventId).maybeSingle(),
+        supabase
+          .from("event_registration_questions")
+          .select("*")
+          .eq("event_id", eventId)
+          .order("sort_order"),
+        supabase
+          .from("event_guests")
+          .select("id,name,email,phone_number,organization,status,checked_in,created_at")
+          .eq("event_id", eventId)
+          .eq("registration_type", "registration")
+          .order("created_at", { ascending: false }),
+      ]);
+
+      const gs = (gRes.data || []) as any[];
+      const qs = (qRes.data || []) as any[];
+      let answers: any[] = [];
+      if (gs.length > 0) {
+        const ids = gs.map((g) => g.id);
+        for (let i = 0; i < ids.length; i += 200) {
+          const { data } = await supabase
+            .from("event_registration_answers")
+            .select("*")
+            .in("registration_id", ids.slice(i, i + 200));
+          if (data) answers.push(...data);
+        }
+      }
+      exportRegistrationsToCsv(eventRes.data?.title || "event", gs, qs, answers);
+    } catch (e: any) {
+      toast({ title: "Export failed", description: e.message, variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Summary Stats Bar */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-3">
           <Users className="h-4 w-4 text-muted-foreground" />
           <div>
@@ -114,119 +152,75 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
         </div>
       </div>
 
-      {/* QR Scanner Button */}
-      <Card className="border-border/60">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg mb-1">Event Check-In</h3>
-              <p className="text-sm text-muted-foreground">
-                Scan QR codes at the event entrance to check in attendees
-              </p>
-            </div>
-            <Button onClick={() => setShowScannerDialog(true)} size="lg">
-              <QrCode className="h-5 w-5 mr-2" />
-              Open Scanner
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Action bar */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button onClick={() => setShowScannerDialog(true)} variant="default">
+          <QrCode className="h-4 w-4 mr-2" />
+          Open Scanner
+        </Button>
+        <Button onClick={() => setShowInviteDialog(true)} variant="outline">
+          <Mail className="h-4 w-4 mr-2" />
+          Invite Guests
+        </Button>
+        <Button onClick={handleExport} variant="outline" disabled={exporting}>
+          <Download className="h-4 w-4 mr-2" />
+          {exporting ? "Exporting..." : "Export CSV"}
+        </Button>
+      </div>
 
-      <Tabs defaultValue={pendingCount > 0 ? "registrations" : "invitations"} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="invitations">Invitations</TabsTrigger>
-          <TabsTrigger value="registrations" className="relative">
-            Registrations
-            {pendingCount > 0 && (
-              <Badge className="absolute -top-1 -right-1 bg-orange-500 hover:bg-orange-500 text-white text-[9px] h-4 min-w-4 px-1 flex items-center justify-center">
-                {pendingCount}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="checked-in" className="relative">
-            Checked In
-            {totalStats.checkedIn > 0 && (
-              <Badge className="absolute -top-1 -right-1 bg-green-600 hover:bg-green-600 text-white text-[9px] h-4 min-w-4 px-1 flex items-center justify-center">
-                {totalStats.checkedIn}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+      {/* Main: registrations directly */}
+      <RegistrationsTab eventId={eventId} />
 
-        <TabsContent value="invitations" className="space-y-6">
-          <Card className="border-border/60">
+      {/* Invitation log (collapsed) */}
+      <Collapsible>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" size="sm" className="text-muted-foreground">
+            <ChevronDown className="h-4 w-4 mr-1" />
+            View invitation log ({invitations.length})
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <Card className="border-border/60 mt-3">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Invited Guests ({guests.length})</CardTitle>
-                <Button onClick={() => setShowInviteDialog(true)}>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Invite Guests
-                </Button>
-              </div>
+              <CardTitle className="text-base">Invited Guests ({guests.length})</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {guests.length === 0 ? (
-                <div className="text-center py-12">
-                  <UserPlus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No guests yet</p>
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => setShowInviteDialog(true)}
-                  >
-                    Invite Your First Guest
-                  </Button>
-                </div>
+                <p className="text-sm text-muted-foreground">No invited guests yet.</p>
               ) : (
                 <div className="space-y-2">
                   {guests.map((guest) => (
                     <div
                       key={guest.id}
-                      className="flex items-center justify-between p-4 border border-border/60 rounded-lg"
+                      className="flex items-center justify-between p-3 border border-border/60 rounded-lg"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium shrink-0">
                           {(guest.name || guest.email).charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <p className="font-medium">{guest.name || guest.email}</p>
-                          {guest.name && <p className="text-sm text-muted-foreground">{guest.email}</p>}
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{guest.name || guest.email}</p>
+                          {guest.name && <p className="text-xs text-muted-foreground truncate">{guest.email}</p>}
                         </div>
                       </div>
-                      <Badge variant={getStatusColor(guest.status)}>
-                        {guest.status}
-                      </Badge>
+                      <Badge variant={getStatusColor(guest.status)}>{guest.status}</Badge>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60">
-            <CardHeader>
-              <CardTitle>Invitation History ({invitations.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {invitations.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No invitations sent yet</p>
-              ) : (
-                <div className="space-y-2">
+              {invitations.length > 0 && (
+                <div className="pt-3 border-t space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Invitation history</p>
                   {invitations.map((invitation) => (
                     <div
                       key={invitation.id}
-                      className="flex items-center justify-between p-4 border border-border/60 rounded-lg"
+                      className="flex items-center justify-between p-3 border border-border/60 rounded-lg"
                     >
-                      <div>
-                        <p className="font-medium">{invitation.email}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{invitation.email}</p>
+                        <p className="text-xs text-muted-foreground">
                           Sent {new Date(invitation.sent_at).toLocaleDateString()}
                         </p>
-                        {invitation.custom_title && (
-                          <p className="text-sm text-muted-foreground italic">
-                            "{invitation.custom_title}"
-                          </p>
-                        )}
                       </div>
                       <Badge variant="secondary">{invitation.status}</Badge>
                     </div>
@@ -235,26 +229,18 @@ const EventBuilderGuests = ({ eventId }: EventBuilderGuestsProps) => {
               )}
             </CardContent>
           </Card>
+        </CollapsibleContent>
+      </Collapsible>
 
-          <InviteGuestsDialog
-            eventId={eventId}
-            open={showInviteDialog}
-            onOpenChange={setShowInviteDialog}
-            onSuccess={() => {
-              fetchGuests();
-              fetchInvitations();
-            }}
-          />
-        </TabsContent>
-
-        <TabsContent value="registrations">
-          <RegistrationsTab eventId={eventId} />
-        </TabsContent>
-
-        <TabsContent value="checked-in">
-          <CheckedInTab eventId={eventId} />
-        </TabsContent>
-      </Tabs>
+      <InviteGuestsDialog
+        eventId={eventId}
+        open={showInviteDialog}
+        onOpenChange={setShowInviteDialog}
+        onSuccess={() => {
+          fetchGuests();
+          fetchInvitations();
+        }}
+      />
 
       <CheckInScannerDialog
         eventId={eventId}
