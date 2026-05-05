@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, UserPlus, QrCode, Users, CheckCircle2, Clock, Download, ChevronDown } from "lucide-react";
+import { Mail, QrCode, Users, CheckCircle2, Clock, Download, ChevronDown } from "lucide-react";
 import InviteGuestsDialog from "./InviteGuestsDialog";
 import { Badge } from "@/components/ui/badge";
 import RegistrationsTab from "./RegistrationsTab";
