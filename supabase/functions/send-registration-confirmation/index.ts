@@ -10,14 +10,9 @@ const corsHeaders = {
 };
 
 interface ConfirmationEmailRequest {
-  email: string;
-  name: string;
-  eventTitle: string;
-  eventDate: string;
-  eventLocation: string;
-  status: "registered" | "pending";
-  accountCreated?: boolean;
   guestId: string;
+  eventId?: string;
+  accountCreated?: boolean;
 }
 
 const escapeHtml = (str: string | null | undefined): string => {
@@ -66,50 +61,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error("Missing or invalid authorization header");
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - missing authentication" }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
-
-    if (authError || !user) {
-      console.error("Authentication failed:", authError?.message);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - invalid token" }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    console.log("Authenticated user:", user.id);
-
     const body = await req.json();
-    const { email, name, eventTitle, eventDate, eventLocation, status, accountCreated, guestId } = body as ConfirmationEmailRequest;
+    const { guestId, accountCreated } = body as ConfirmationEmailRequest;
 
-    if (!email || !name || !eventTitle || !eventDate || !eventLocation || !status || !guestId) {
+    if (!guestId || typeof guestId !== "string") {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid email format" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    if (status !== "registered" && status !== "pending") {
-      return new Response(
-        JSON.stringify({ error: "Invalid status value" }),
+        JSON.stringify({ error: "Missing guestId" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -118,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { data: guest, error: guestError } = await supabase
       .from("event_guests")
-      .select("id, event_id, email")
+      .select("id, event_id, email, name, status")
       .eq("id", guestId)
       .single();
 
@@ -132,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { data: event, error: eventError } = await supabase
       .from("events")
-      .select("id, created_by")
+      .select("id, title, date, location, host_name, created_by")
       .eq("id", guest.event_id)
       .single();
 
@@ -144,20 +101,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { data: isAdmin } = await supabase.rpc('has_role', { 
-      _user_id: user.id, 
-      _role: 'admin' 
-    });
-
-    const isEventOwner = event.created_by === user.id;
-
-    if (!isEventOwner && !isAdmin) {
-      console.error("User not authorized to send confirmation for this event");
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - not event owner or admin" }),
-        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    const email = guest.email;
+    const name = guest.name || "Guest";
+    const eventTitle = event.title;
+    const eventDate = event.date;
+    const eventLocation = event.location;
+    const status: "registered" | "pending" = guest.status === "registered" ? "registered" : "pending";
 
     console.log("Sending registration confirmation to:", email, "Status:", status, "Guest ID:", guestId);
 
@@ -183,12 +132,6 @@ const handler = async (req: Request): Promise<Response> => {
       // BUG FIX: removed inner `const` that was shadowing the outer `qrImageUrl`
       qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=png&data=${encodeURIComponent(checkInUrl)}`;
     }
-
-    const { data: eventFull } = await supabase
-      .from("events")
-      .select("host_name")
-      .eq("id", guest.event_id)
-      .single();
 
     const eventDateObj = new Date(eventDate);
     const formattedDate = isNaN(eventDateObj.getTime()) ? safeEventDate : eventDateObj.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
