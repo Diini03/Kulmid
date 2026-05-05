@@ -2,6 +2,7 @@ interface Question {
   id: string;
   question_text: string;
   question_type: string;
+  is_active?: boolean;
 }
 
 interface Guest {
@@ -65,7 +66,9 @@ export const exportRegistrationsToCsv = (
     "Status",
     "Checked In",
     "Registered At",
-    ...questions.map((q) => q.question_text),
+    ...questions.map((q) =>
+      q.is_active === false ? `${q.question_text} (removed)` : q.question_text
+    ),
   ];
 
   // Index answers by registration_id + question_id
