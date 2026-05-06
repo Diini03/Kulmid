@@ -823,6 +823,77 @@ const Create = () => {
                   </div>
                 </div>
 
+                {/* Capacity Section */}
+                <div className="bg-card rounded-xl border shadow-sm p-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Capacity</h3>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="capacity_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              field.onChange("unlimited");
+                              form.setValue("max_attendees", null);
+                            }}
+                            className={`rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
+                              field.value === "unlimited"
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            Unlimited
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => field.onChange("limited")}
+                            className={`rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
+                              field.value === "limited"
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            Limited
+                          </button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch("capacity_type") === "limited" && (
+                    <FormField
+                      control={form.control}
+                      name="max_attendees"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Maximum attendees</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              placeholder="e.g. 100"
+                              value={field.value ?? ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                field.onChange(v === "" ? null : parseInt(v, 10));
+                              }}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Attendees will see how many spots are left.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+
                 {/* Host Information Section */}
                 <div className="bg-card rounded-xl border shadow-sm p-6 space-y-4">
                   <div className="flex items-center justify-between">
