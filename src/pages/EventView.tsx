@@ -11,6 +11,7 @@ import EventRegistrationDialog from "@/components/events/EventRegistrationDialog
 import { ReportEventDialog } from "@/components/events/ReportEventDialog";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 
 const EventView = () => {
   const { id } = useParams();
@@ -20,19 +21,22 @@ const EventView = () => {
   const [error, setError] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [registrationCount, setRegistrationCount] = useState<number>(0);
 
   const fetchEvent = async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fetchError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      const [{ data, error: fetchError }, countResult] = await Promise.all([
+        supabase.from('events').select('*').eq('id', id).maybeSingle(),
+        supabase.rpc('get_event_registration_count', { _event_id: id }),
+      ]);
 
       if (fetchError) throw fetchError;
       setEvent(data);
+      if (!countResult.error && typeof countResult.data === 'number') {
+        setRegistrationCount(countResult.data);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to load event");
     } finally {
