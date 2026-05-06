@@ -1,54 +1,64 @@
-# Plan: Unified Guests view + Schema-aware export
+## Add Event Capacity (Spots Limit) + Live Progress Bar
 
-## 1. Flatten the Guests tab UX
+`max_attendees` already exists in the `events` table but is not used in the create/edit forms or on the public event details page. We'll surface it end-to-end, Luma-style.
 
-**Problem:** Organizer must click Event → Guests → Registrations sub-tab to approve people. Three nested layers is too much.
+### 1. Create form (`src/pages/Create.tsx`)
+Add a "Capacity" section near the date/price fields:
+- Two-state toggle: **Unlimited** (default) | **Limited**
+- When "Limited" is selected, show a number input (`min=1`) bound to `max_attendees`
+- Add `max_attendees: z.number().int().positive().optional().nullable()` to the zod schema
+- Persist `max_attendees` in the `eventData` insert payload (null when unlimited)
 
-**Change:** Make the **Guests** tab show the registrations list directly as the primary content. Drop the inner Tabs (Invitations / Registrations / Checked In) and replace with a lightweight filter bar.
+### 2. Event builder edit (`src/components/events/EventBuilderEdit.tsx`)
+Mirror the same Unlimited/Limited toggle + number input so organizers can change capacity after creation. Save via existing update mutation.
 
-In `src/components/events/EventBuilderGuests.tsx`:
-- Remove inner `<Tabs>`. Render `<RegistrationsTab>` as the main panel.
-- Keep the 4 summary cards (Total / Registered / Checked In / Pending) at top.
-- Keep the "Open Scanner" card.
-- Add a filter chip row above the list: **All · Pending · Approved · Rejected · Invited · Checked In** (these become a single filter, not separate tabs).
-- Move "Invite Guests" into a secondary action button in the header (still opens `InviteGuestsDialog`).
-- Move "Invitation History" behind a collapsible "View invitation log" link at the bottom (rarely needed).
+### 3. Public event details (`src/pages/EventDetails.tsx`)
+- On load, fetch the count of confirmed registrations alongside the event:
+  ```ts
+  supabase.from('event_guests')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_id', id)
+    .in('status', ['registered', 'approved'])
+  ```
+- Render a capacity card just above the Register button **only when `event.max_attendees` is set**:
+  - Header row: `Users` icon + `{count} of {max_attendees} spots filled`
+  - Right side: `{spotsLeft} spots left` (turns warning color when ≤10% remain, "Sold out" when 0)
+  - `<Progress value={(count/max)*100} />` bar (teal primary)
+- When sold out: disable the Register button and show "Event is full" badge instead
+- When unlimited: show a subtle `Users` line "{count} registered" (no bar) — keeps it simple
 
-In `src/components/events/RegistrationsTab.tsx`:
-- Accept an optional `filter` prop (already has internal filter — extend to include `invited` and `checked_in`).
-- Fetch all `event_guests` for the event (drop the `registration_type = 'registration'` restriction so invited guests show too) and tag each row with its source (Registration / Invitation) via a small badge.
-- Keep approve/reject inline buttons exactly as they are — that part already works well.
+### 4. Event card hint (`src/components/events/EventCard.tsx`) — optional polish
+If `max_attendees` is set and remaining ≤10, show a small "Only N spots left" badge to drive urgency. Skip if it complicates the card layout.
 
-Net result: organizer clicks event → Guests tab → sees everyone with approve/reject buttons right there.
+### Technical notes
+- No DB migration needed — column already exists and is nullable.
+- Use a single `select` with `count: 'exact'` to avoid an extra round trip; or run in the same `Promise.all` as the existing event/registration fetch.
+- RLS already permits public to view `event_guests` count? It does NOT — the SELECT policy on `event_guests` is restricted to admins / event owners. We need a public way to read the count.
 
-## 2. Schema-aware unified export (Google Forms parity)
+### RLS adjustment (migration)
+Add a SECURITY DEFINER function that returns just the registered count for a given event id, callable by anon:
 
-**Problem:** When an organizer edits the registration form (adds/removes questions) between registrations, the export today only joins on currently active questions. Older registrants who answered now-removed questions, or who never saw a newly added question, lose context.
+```sql
+create or replace function public.get_event_registration_count(_event_id text)
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select count(*)::int
+  from public.event_guests
+  where event_id = _event_id
+    and status in ('registered','approved');
+$$;
+grant execute on function public.get_event_registration_count(text) to anon, authenticated;
+```
 
-**Change:** Export ALL questions that have ever existed for the event, union of columns, with empty cells where a registrant didn't answer.
+Frontend calls `supabase.rpc('get_event_registration_count', { _event_id: id })` — leaks only the aggregate count, not guest data.
 
-In `src/lib/exportRegistrations.ts`:
-- No signature change needed — caller already passes `questions` and `answers`.
-
-In the caller (`EventBuilderInsights.tsx` / wherever export is triggered — currently in insights):
-- Fetch questions with `is_active` filter **removed** so deleted/inactive questions are still included as columns.
-- Order columns: default fields first, then questions ordered by `sort_order` then `created_at` (stable across edits).
-- Append a marker `(removed)` to column header for questions where `is_active = false`, so organizers know it's a legacy question.
-- Rows where a guest never answered a question simply emit empty string — already the behavior.
-
-Also add a small **"Export CSV"** button visible directly in the Guests tab header (not just Insights) so organizers don't have to leave the page.
-
-## 3. Out of scope (not changed)
-
-- No DB migration — `event_registration_questions` already preserves rows when deactivated; we just stop filtering them on export.
-- Insights page stays as-is.
-- Invitations table and dialog stay; just visually demoted.
-
-## Files touched
-
-- `src/components/events/EventBuilderGuests.tsx` — flatten to single view, filter chips, export button.
-- `src/components/events/RegistrationsTab.tsx` — broaden fetch to include all guest types, add `invited` / `checked_in` filters, source badge.
-- `src/lib/exportRegistrations.ts` — header marker for removed questions (1-line change).
-- New small helper to fetch full question history (active + inactive) used by the export action.
-
-Approve to implement.
+### Files touched
+- `src/pages/Create.tsx` (schema + capacity field + insert payload)
+- `src/components/events/EventBuilderEdit.tsx` (capacity field + update payload)
+- `src/pages/EventDetails.tsx` (fetch count, render progress + sold-out state)
+- `src/components/events/EventCard.tsx` (optional "spots left" badge)
+- New migration for `get_event_registration_count` RPC
