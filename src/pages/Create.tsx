@@ -43,6 +43,8 @@ const eventSchema = z.object({
     .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
     .optional()
     .or(z.literal("")),
+  capacity_type: z.enum(["unlimited", "limited"]).default("unlimited"),
+  max_attendees: z.number().int().positive().nullable().optional(),
   host_name: z.string().min(2, "Host name must be at least 2 characters").max(100, "Host name must be less than 100 characters"),
   host_description: z.string().max(500, "Host description must be less than 500 characters").optional().or(z.literal("")),
   host_email: z.string().email("Must be a valid email").optional().or(z.literal("")),
@@ -76,6 +78,14 @@ const eventSchema = z.object({
 }, {
   message: "Payout phone number is required for paid events",
   path: ["payout_phone"],
+}).refine((data) => {
+  if (data.capacity_type === "limited") {
+    return !!data.max_attendees && data.max_attendees > 0;
+  }
+  return true;
+}, {
+  message: "Enter a capacity of at least 1",
+  path: ["max_attendees"],
 }).refine((data) => {
   if (data.end_date && data.date) {
     return new Date(data.end_date) > new Date(data.date);
@@ -120,6 +130,8 @@ const Create = () => {
       category: "Seminar",
       price: 0,
       payout_phone: "",
+      capacity_type: "unlimited",
+      max_attendees: null,
       host_name: "",
       host_description: "",
       host_email: "",
@@ -284,6 +296,7 @@ const Create = () => {
         category: data.category,
         price: data.price,
         payout_phone: data.payout_phone || null,
+        max_attendees: data.capacity_type === "limited" ? data.max_attendees ?? null : null,
         image_url: imageUrl,
         status: eventStatus,
         created_by: user.id,
@@ -808,6 +821,77 @@ const Create = () => {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Capacity Section */}
+                <div className="bg-card rounded-xl border shadow-sm p-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Capacity</h3>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="capacity_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              field.onChange("unlimited");
+                              form.setValue("max_attendees", null);
+                            }}
+                            className={`rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
+                              field.value === "unlimited"
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            Unlimited
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => field.onChange("limited")}
+                            className={`rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
+                              field.value === "limited"
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            Limited
+                          </button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch("capacity_type") === "limited" && (
+                    <FormField
+                      control={form.control}
+                      name="max_attendees"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Maximum attendees</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              placeholder="e.g. 100"
+                              value={field.value ?? ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                field.onChange(v === "" ? null : parseInt(v, 10));
+                              }}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Attendees will see how many spots are left.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
 
                 {/* Host Information Section */}

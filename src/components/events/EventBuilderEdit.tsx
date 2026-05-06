@@ -33,6 +33,8 @@ const eventSchema = z.object({
     .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
     .optional()
     .or(z.literal("")),
+  capacity_type: z.enum(["unlimited", "limited"]).default("unlimited"),
+  max_attendees: z.number().int().positive().nullable().optional(),
   host_name: z.string().optional(),
   host_description: z.string().optional(),
   host_email: z.string().email().optional().or(z.literal("")),
@@ -45,6 +47,14 @@ const eventSchema = z.object({
 }, {
   message: "Payout phone number is required for paid events",
   path: ["payout_phone"],
+}).refine((data) => {
+  if (data.capacity_type === "limited") {
+    return !!data.max_attendees && data.max_attendees > 0;
+  }
+  return true;
+}, {
+  message: "Enter a capacity of at least 1",
+  path: ["max_attendees"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -76,6 +86,8 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
       category: event.category,
       price: event.price,
       payout_phone: event.payout_phone || "",
+      capacity_type: event.max_attendees ? "limited" : "unlimited",
+      max_attendees: event.max_attendees ?? null,
       host_name: event.host_name || "",
       host_description: event.host_description || "",
       host_email: event.host_email || "",
@@ -84,6 +96,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
   });
 
   const eventType = watch("event_type");
+  const capacityType = watch("capacity_type");
 
   const handleUnlock = () => {
     setEditing(true);
@@ -158,7 +171,8 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
       const { error } = await supabase
         .from("events")
         .update({
-          ...data,
+          ...(() => { const { capacity_type, ...rest } = data; return rest; })(),
+          max_attendees: data.capacity_type === "limited" ? data.max_attendees ?? null : null,
           location: normalizedLocation,
           image_url: imageUrl,
           date: new Date(data.date).toISOString(),
@@ -328,6 +342,45 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
                 <Input id="location" {...register("location")} placeholder="Event venue address" disabled={!editing} />
               </div>
             )}
+
+            <div className="space-y-3">
+              <Label>Capacity</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={!editing}
+                  onClick={() => { setValue("capacity_type", "unlimited"); setValue("max_attendees", null); }}
+                  className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
+                    capacityType === "unlimited" ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                  }`}
+                >Unlimited</button>
+                <button
+                  type="button"
+                  disabled={!editing}
+                  onClick={() => setValue("capacity_type", "limited")}
+                  className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
+                    capacityType === "limited" ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                  }`}
+                >Limited</button>
+              </div>
+              {capacityType === "limited" && (
+                <div>
+                  <Label htmlFor="max_attendees">Maximum attendees</Label>
+                  <Input
+                    id="max_attendees"
+                    type="number"
+                    min={1}
+                    placeholder="e.g. 100"
+                    disabled={!editing}
+                    {...register("max_attendees", {
+                      setValueAs: (v) => (v === "" || v == null ? null : parseInt(v, 10)),
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Attendees will see how many spots are left.</p>
+                  {errors.max_attendees && <p className="text-sm text-destructive mt-1">{errors.max_attendees.message}</p>}
+                </div>
+              )}
+            </div>
 
             {(eventType === "online" || eventType === "hybrid") && (
               <div>

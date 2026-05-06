@@ -749,6 +749,10 @@ export type Database = {
         Args: { _name: string; _user_id: string }
         Returns: string
       }
+      get_event_registration_count: {
+        Args: { _event_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
