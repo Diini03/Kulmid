@@ -343,6 +343,45 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
               </div>
             )}
 
+            <div className="space-y-3">
+              <Label>Capacity</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={!editing}
+                  onClick={() => { setValue("capacity_type", "unlimited"); setValue("max_attendees", null); }}
+                  className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
+                    capacityType === "unlimited" ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                  }`}
+                >Unlimited</button>
+                <button
+                  type="button"
+                  disabled={!editing}
+                  onClick={() => setValue("capacity_type", "limited")}
+                  className={`rounded-lg border-2 py-2 px-3 text-sm font-medium transition-all ${
+                    capacityType === "limited" ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                  }`}
+                >Limited</button>
+              </div>
+              {capacityType === "limited" && (
+                <div>
+                  <Label htmlFor="max_attendees">Maximum attendees</Label>
+                  <Input
+                    id="max_attendees"
+                    type="number"
+                    min={1}
+                    placeholder="e.g. 100"
+                    disabled={!editing}
+                    {...register("max_attendees", {
+                      setValueAs: (v) => (v === "" || v == null ? null : parseInt(v, 10)),
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Attendees will see how many spots are left.</p>
+                  {errors.max_attendees && <p className="text-sm text-destructive mt-1">{errors.max_attendees.message}</p>}
+                </div>
+              )}
+            </div>
+
             {(eventType === "online" || eventType === "hybrid") && (
               <div>
                 <Label htmlFor="meeting_link">Meeting Link</Label>
