@@ -11,6 +11,7 @@ import EventRegistrationDialog from "@/components/events/EventRegistrationDialog
 import { ReportEventDialog } from "@/components/events/ReportEventDialog";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 
 const EventView = () => {
   const { id } = useParams();
@@ -20,19 +21,22 @@ const EventView = () => {
   const [error, setError] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [registrationCount, setRegistrationCount] = useState<number>(0);
 
   const fetchEvent = async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fetchError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      const [{ data, error: fetchError }, countResult] = await Promise.all([
+        supabase.from('events').select('*').eq('id', id).maybeSingle(),
+        supabase.rpc('get_event_registration_count', { _event_id: id }),
+      ]);
 
       if (fetchError) throw fetchError;
       setEvent(data);
+      if (!countResult.error && typeof countResult.data === 'number') {
+        setRegistrationCount(countResult.data);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to load event");
     } finally {
@@ -157,8 +161,8 @@ const EventView = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        <div className="rounded-xl overflow-hidden border max-h-[50vh] md:max-h-[400px]">
-          <img src={event.image_url || '/placeholder.svg'} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
+        <div className="rounded-xl overflow-hidden border max-w-2xl mx-auto">
+          <img src={event.image_url || '/placeholder.svg'} alt={event.title} className="w-full aspect-[16/9] object-cover" loading="lazy" />
         </div>
 
         <div className="space-y-4">
@@ -212,9 +216,36 @@ const EventView = () => {
           </div>
         </div>
 
-        <Button onClick={() => setRegistrationOpen(true)} size="lg" className="w-full">
-          Register for Event
-        </Button>
+        {(() => {
+          const cap = event.max_attendees as number | null | undefined;
+          const isFull = cap != null && registrationCount >= cap;
+          return (
+            <div className="space-y-3">
+              {cap != null ? (
+                <div className="p-4 rounded-lg border bg-card space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Users className="h-4 w-4 text-primary" />
+                      <span>{registrationCount} of {cap} spots filled</span>
+                    </div>
+                    <span className={`text-xs font-medium ${isFull ? 'text-destructive' : (cap - registrationCount) <= Math.max(1, Math.floor(cap * 0.1)) ? 'text-amber-600 dark:text-amber-500' : 'text-muted-foreground'}`}>
+                      {isFull ? 'Sold out' : `${cap - registrationCount} spots left`}
+                    </span>
+                  </div>
+                  <Progress value={Math.min(100, (registrationCount / cap) * 100)} className="h-2" />
+                </div>
+              ) : registrationCount > 0 ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
+                  <Users className="h-4 w-4" />
+                  <span>{registrationCount} {registrationCount === 1 ? 'person' : 'people'} registered</span>
+                </div>
+              ) : null}
+              <Button onClick={() => setRegistrationOpen(true)} size="lg" className="w-full" disabled={isFull}>
+                {isFull ? 'Event is Full' : 'Register for Event'}
+              </Button>
+            </div>
+          );
+        })()}
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">About</h2>
