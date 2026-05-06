@@ -33,6 +33,8 @@ const eventSchema = z.object({
     .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
     .optional()
     .or(z.literal("")),
+  capacity_type: z.enum(["unlimited", "limited"]).default("unlimited"),
+  max_attendees: z.number().int().positive().nullable().optional(),
   host_name: z.string().optional(),
   host_description: z.string().optional(),
   host_email: z.string().email().optional().or(z.literal("")),
@@ -45,6 +47,14 @@ const eventSchema = z.object({
 }, {
   message: "Payout phone number is required for paid events",
   path: ["payout_phone"],
+}).refine((data) => {
+  if (data.capacity_type === "limited") {
+    return !!data.max_attendees && data.max_attendees > 0;
+  }
+  return true;
+}, {
+  message: "Enter a capacity of at least 1",
+  path: ["max_attendees"],
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -76,6 +86,8 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
       category: event.category,
       price: event.price,
       payout_phone: event.payout_phone || "",
+      capacity_type: event.max_attendees ? "limited" : "unlimited",
+      max_attendees: event.max_attendees ?? null,
       host_name: event.host_name || "",
       host_description: event.host_description || "",
       host_email: event.host_email || "",
@@ -84,6 +96,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
   });
 
   const eventType = watch("event_type");
+  const capacityType = watch("capacity_type");
 
   const handleUnlock = () => {
     setEditing(true);
@@ -159,6 +172,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
         .from("events")
         .update({
           ...data,
+          max_attendees: data.capacity_type === "limited" ? data.max_attendees ?? null : null,
           location: normalizedLocation,
           image_url: imageUrl,
           date: new Date(data.date).toISOString(),
