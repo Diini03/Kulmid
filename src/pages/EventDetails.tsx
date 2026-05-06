@@ -271,11 +271,36 @@ const EventDetails = () => {
               {userRegistrationStatus === "rejected" && "Registration Declined"}
             </Badge>
           </div>
-        ) : (
-          <Button onClick={handleRegisterClick} size="lg" className="w-full">
-            Register for Event
-          </Button>
-        )}
+        ) : (() => {
+          const cap = event.max_attendees as number | null | undefined;
+          const isFull = cap != null && registrationCount >= cap;
+          return (
+            <>
+              {cap != null ? (
+                <div className="p-4 rounded-lg border bg-card space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Users className="h-4 w-4 text-primary" />
+                      <span>{registrationCount} of {cap} spots filled</span>
+                    </div>
+                    <span className={`text-xs font-medium ${isFull ? 'text-destructive' : (cap - registrationCount) <= Math.max(1, Math.floor(cap * 0.1)) ? 'text-amber-600 dark:text-amber-500' : 'text-muted-foreground'}`}>
+                      {isFull ? 'Sold out' : `${cap - registrationCount} spots left`}
+                    </span>
+                  </div>
+                  <Progress value={Math.min(100, (registrationCount / cap) * 100)} className="h-2" />
+                </div>
+              ) : registrationCount > 0 ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
+                  <Users className="h-4 w-4" />
+                  <span>{registrationCount} {registrationCount === 1 ? 'person' : 'people'} registered</span>
+                </div>
+              ) : null}
+              <Button onClick={handleRegisterClick} size="lg" className="w-full" disabled={isFull}>
+                {isFull ? 'Event is Full' : 'Register for Event'}
+              </Button>
+            </>
+          );
+        })()}
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">About</h2>
