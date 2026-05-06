@@ -43,6 +43,8 @@ const eventSchema = z.object({
     .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
     .optional()
     .or(z.literal("")),
+  capacity_type: z.enum(["unlimited", "limited"]).default("unlimited"),
+  max_attendees: z.number().int().positive().nullable().optional(),
   host_name: z.string().min(2, "Host name must be at least 2 characters").max(100, "Host name must be less than 100 characters"),
   host_description: z.string().max(500, "Host description must be less than 500 characters").optional().or(z.literal("")),
   host_email: z.string().email("Must be a valid email").optional().or(z.literal("")),
@@ -76,6 +78,14 @@ const eventSchema = z.object({
 }, {
   message: "Payout phone number is required for paid events",
   path: ["payout_phone"],
+}).refine((data) => {
+  if (data.capacity_type === "limited") {
+    return !!data.max_attendees && data.max_attendees > 0;
+  }
+  return true;
+}, {
+  message: "Enter a capacity of at least 1",
+  path: ["max_attendees"],
 }).refine((data) => {
   if (data.end_date && data.date) {
     return new Date(data.end_date) > new Date(data.date);
