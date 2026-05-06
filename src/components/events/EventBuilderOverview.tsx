@@ -68,10 +68,11 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
       if (error) throw error;
 
       if (guests) {
+        const confirmedStatuses = ["confirmed", "registered", "approved"];
         setGuestStats({
           total: guests.length,
-          confirmed: guests.filter(g => g.status === "confirmed").length,
-          pending: guests.filter(g => g.status === "pending").length,
+          confirmed: guests.filter(g => confirmedStatuses.includes(g.status)).length,
+          pending: guests.filter(g => g.status === "pending" || g.status === "invited").length,
           checkedIn: guests.filter(g => g.checked_in).length,
           withPhone: guests.filter(g => g.phone_number).length,
         });
