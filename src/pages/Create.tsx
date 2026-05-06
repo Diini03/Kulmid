@@ -296,6 +296,7 @@ const Create = () => {
         category: data.category,
         price: data.price,
         payout_phone: data.payout_phone || null,
+        max_attendees: data.capacity_type === "limited" ? data.max_attendees ?? null : null,
         image_url: imageUrl,
         status: eventStatus,
         created_by: user.id,
