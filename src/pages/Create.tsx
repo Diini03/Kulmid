@@ -130,6 +130,8 @@ const Create = () => {
       category: "Seminar",
       price: 0,
       payout_phone: "",
+      capacity_type: "unlimited",
+      max_attendees: null,
       host_name: "",
       host_description: "",
       host_email: "",
