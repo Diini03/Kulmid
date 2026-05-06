@@ -171,7 +171,7 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
       const { error } = await supabase
         .from("events")
         .update({
-          ...data,
+          ...(() => { const { capacity_type, ...rest } = data; return rest; })(),
           max_attendees: data.capacity_type === "limited" ? data.max_attendees ?? null : null,
           location: normalizedLocation,
           image_url: imageUrl,
