@@ -7,14 +7,14 @@
 
 @layer base {
   :root {
-    /* Pure monochrome surfaces */
-    --background: 0 0% 100%;
+    /* Soft off-white surfaces — professional, not pure white */
+    --background: 0 0% 98%;
     --foreground: 0 0% 5%;
 
     /* Layered surfaces */
-    --surface-1: 0 0% 98%;
-    --surface-2: 0 0% 96%;
-    --surface-3: 0 0% 94%;
+    --surface-1: 0 0% 96%;
+    --surface-2: 0 0% 94%;
+    --surface-3: 0 0% 92%;
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 5%;

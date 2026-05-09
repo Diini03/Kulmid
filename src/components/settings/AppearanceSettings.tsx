@@ -1,12 +1,11 @@
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Monitor, Sun, Moon, Check } from "lucide-react";
+import { Sun, Moon, Check } from "lucide-react";
 
 const themes = [
-  { id: "system", label: "System", icon: Monitor, desc: "Follow your device settings" },
-  { id: "light", label: "Light", icon: Sun, desc: "Light background" },
-  { id: "dark", label: "Dark", icon: Moon, desc: "Dark background" },
+  { id: "light", label: "Light", icon: Sun, desc: "Default professional light theme" },
+  { id: "dark", label: "Dark", icon: Moon, desc: "Optional dark background" },
 ];
 
 export const AppearanceSettings = () => {
@@ -19,7 +18,7 @@ export const AppearanceSettings = () => {
         <CardDescription>Choose your preferred theme</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {themes.map((t) => (
             <button
               key={t.id}
