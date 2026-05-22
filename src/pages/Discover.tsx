@@ -7,13 +7,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate, Link } from "react-router-dom";
-import { categories } from "@/constants/categories";
+import { useCategories } from "@/hooks/useCategories";
 import { Sparkles, Settings, ArrowRight } from "lucide-react";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { EventItem, EVENT_LIST_COLUMNS } from "@/types/event";
 
 const Discover = () => {
   const { t } = useLanguage();
+  const { categories } = useCategories();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [showAll, setShowAll] = useState(false);
