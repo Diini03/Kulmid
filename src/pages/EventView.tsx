@@ -311,11 +311,59 @@ const EventView = () => {
                     >
                       {isFull ? 'Event is Full' : 'Register for Event'}
                     </Button>
+                    <Button asChild variant="outline" size="sm" className="w-full">
+                      <a
+                        href={(() => {
+                          const start = eventDate.toISOString().replace(/[-:]|\.\d{3}/g, '');
+                          const end = (endDate || new Date(eventDate.getTime() + 2 * 60 * 60 * 1000)).toISOString().replace(/[-:]|\.\d{3}/g, '');
+                          const params = new URLSearchParams({
+                            action: 'TEMPLATE',
+                            text: event.title,
+                            dates: `${start}/${end}`,
+                            details: event.description || '',
+                            location: event.event_type === 'online' ? (event.meeting_link || 'Online') : (event.location || ''),
+                          });
+                          return `https://www.google.com/calendar/render?${params.toString()}`;
+                        })()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <CalendarDays className="h-4 w-4 mr-2" />
+                        Add to Google Calendar
+                      </a>
+                    </Button>
                   </div>
 
                   {/* Mobile capacity inline (CTA itself lives in sticky bar) */}
                   {showCapacity && (
                     <div className="md:hidden">{CapacityCard}</div>
+                  )}
+
+                  {/* Who's going */}
+                  {attendees.length > 0 && (
+                    <section className="space-y-3">
+                      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Who's going</h2>
+                      <div className="flex items-center gap-3 p-3 rounded-xl border bg-card">
+                        <div className="flex -space-x-2">
+                          {attendees.slice(0, 5).map((a, i) => {
+                            const initial = (a.name || a.email || '?').charAt(0).toUpperCase();
+                            return (
+                              <div
+                                key={i}
+                                className="h-8 w-8 rounded-full bg-primary/15 border-2 border-background flex items-center justify-center text-xs font-semibold text-primary"
+                                title={a.name || 'Attendee'}
+                              >
+                                {initial}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="text-sm">
+                          <span className="font-semibold">{registrationCount}</span>{' '}
+                          <span className="text-muted-foreground">{registrationCount === 1 ? 'person is' : 'people are'} attending</span>
+                        </div>
+                      </div>
+                    </section>
                   )}
 
                   <section className="space-y-2">
