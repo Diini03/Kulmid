@@ -377,10 +377,11 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
                 <FormItem>
                   <FormLabel className="text-xs text-muted-foreground uppercase tracking-wide">Start</FormLabel>
                   <FormControl>
-                    <Input
-                      type="datetime-local"
+                    <DateTimePicker
+                      value={field.value}
+                      onChange={field.onChange}
                       min={new Date().toISOString().slice(0, 16)}
-                      {...field}
+                      placeholder="Pick start date & time"
                     />
                   </FormControl>
                   <FormMessage />
@@ -394,10 +395,11 @@ export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
                 <FormItem>
                   <FormLabel className="text-xs text-muted-foreground uppercase tracking-wide">End (Optional)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="datetime-local"
+                    <DateTimePicker
+                      value={field.value}
+                      onChange={field.onChange}
                       min={form.watch("date") || new Date().toISOString().slice(0, 16)}
-                      {...field}
+                      placeholder="Pick end date & time"
                     />
                   </FormControl>
                   <FormMessage />
