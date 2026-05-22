@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthRequiredModal } from "@/components/auth/AuthGuard";
 import { toast } from "@/hooks/use-toast";
-import { categories } from "@/constants/categories";
+import { useCategories } from "@/hooks/useCategories";
 import EventRegistrationDialog from "@/components/events/EventRegistrationDialog";
 import { ReportEventDialog } from "@/components/events/ReportEventDialog";
 import { ErrorCard } from "@/components/common/ErrorCard";
@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 
 const EventDetails = () => {
   const { id } = useParams();
+  const { categories } = useCategories();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [event, setEvent] = useState<any>(null);
