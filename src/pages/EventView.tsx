@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, MapPin, DollarSign, ExternalLink, Globe, Users, Video, Copy, Check, Building2, ArrowLeft, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { useState, useEffect } from "react";
-import { categories } from "@/constants/categories";
+import { useCategories } from "@/hooks/useCategories";
 import { toast } from "@/hooks/use-toast";
 import EventRegistrationDialog from "@/components/events/EventRegistrationDialog";
 import { ReportEventDialog } from "@/components/events/ReportEventDialog";
@@ -16,26 +16,37 @@ import { Progress } from "@/components/ui/progress";
 const EventView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { categories } = useCategories();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [registrationOpen, setRegistrationOpen] = useState(false);
   const [registrationCount, setRegistrationCount] = useState<number>(0);
+  const [attendees, setAttendees] = useState<Array<{ name: string | null; email: string }>>([]);
 
   const fetchEvent = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [{ data, error: fetchError }, countResult] = await Promise.all([
+      const [{ data, error: fetchError }, countResult, attendeesResult] = await Promise.all([
         supabase.from('events').select('*').eq('id', id).maybeSingle(),
         supabase.rpc('get_event_registration_count', { _event_id: id }),
+        supabase
+          .from('event_guests')
+          .select('name,email')
+          .eq('event_id', id as string)
+          .in('status', ['registered', 'approved'])
+          .limit(8),
       ]);
 
       if (fetchError) throw fetchError;
       setEvent(data);
       if (!countResult.error && typeof countResult.data === 'number') {
         setRegistrationCount(countResult.data);
+      }
+      if (!attendeesResult.error && Array.isArray(attendeesResult.data)) {
+        setAttendees(attendeesResult.data as any);
       }
     } catch (err: any) {
       setError(err.message || "Failed to load event");
