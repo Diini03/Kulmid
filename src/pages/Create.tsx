@@ -101,6 +101,7 @@ type EventFormData = z.infer<typeof eventSchema>;
 
 const Create = () => {
   const { user, isAdmin, loading: authLoading } = useAuth();
+  const { categories } = useCategories();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
