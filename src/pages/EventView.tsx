@@ -146,7 +146,7 @@ const EventView = () => {
   const eventTypeDisplay = getEventTypeDisplay();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="light min-h-screen bg-background text-foreground">
       <Seo 
         title={event.title} 
         description={event.description || `${event.category} event at ${event.location} • ${fullDate}`} 
