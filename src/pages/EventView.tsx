@@ -71,7 +71,7 @@ const EventView = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="light min-h-screen bg-background text-foreground">
         <Seo title="Loading..." />
         <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
           <Skeleton className="w-full h-[300px] rounded-xl" />
@@ -91,7 +91,7 @@ const EventView = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="light min-h-screen bg-background text-foreground flex items-center justify-center">
         <Seo title="Error" />
         <ErrorCard message={error} onRetry={fetchEvent} />
       </div>
@@ -100,7 +100,7 @@ const EventView = () => {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="light min-h-screen bg-background text-foreground flex items-center justify-center">
         <Seo title="Event Not Found" />
         <div className="text-center space-y-4 max-w-md mx-auto px-4">
           <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto">
