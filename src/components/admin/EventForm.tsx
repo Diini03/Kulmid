@@ -17,7 +17,8 @@ import { coverImages } from "@/constants/coverImages";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { StripeConnectDialog } from "@/components/events/StripeConnectDialog";
-import { categories } from "@/constants/categories";
+import { useCategories } from "@/hooks/useCategories";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
 
 const SOMALI_PHONE_REGEX = /^\+252(61|62|63|65|66|68|69|70|71|73|74|76|77|78|79|90)\d{7}$/;
 
@@ -28,7 +29,7 @@ const eventSchema = z.object({
   event_type: z.enum(["in-person", "online", "hybrid"]),
   location: z.string().optional(),
   meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  category: z.enum(["Seminar", "Workshop", "Conference", "Festival", "Webinar", "Meetup"]),
+  category: z.string().min(1, "Category is required"),
   price: z.number().min(0, "Price must be positive"),
   payout_phone: z.string()
     .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
@@ -83,6 +84,7 @@ interface EventFormProps {
 
 export const EventForm = ({ event, onSuccess, onCancel }: EventFormProps) => {
   const { toast } = useToast();
+  const { categories } = useCategories();
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
