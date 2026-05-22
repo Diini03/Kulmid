@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { categories } from "@/constants/categories";
+import { useCategories } from "@/hooks/useCategories";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Loader2, Calendar, MapPin, Globe, Users, Upload, Image as ImageIcon, Building2, Sparkles, ChevronDown, Check, X, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
@@ -37,7 +38,7 @@ const eventSchema = z.object({
   event_type: z.enum(["in-person", "online", "hybrid"]),
   location: z.string().optional(),
   meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  category: z.enum(["Seminar", "Workshop", "Conference", "Festival", "Webinar", "Meetup"]),
+  category: z.string().min(1, "Category is required"),
   price: z.number().min(0, "Price must be 0 or higher"),
   payout_phone: z.string()
     .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
@@ -100,6 +101,7 @@ type EventFormData = z.infer<typeof eventSchema>;
 
 const Create = () => {
   const { user, isAdmin, loading: authLoading } = useAuth();
+  const { categories } = useCategories();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
@@ -605,11 +607,11 @@ const Create = () => {
                           <FormItem>
                             <FormLabel className="text-xs text-muted-foreground uppercase tracking-wide">Start</FormLabel>
                             <FormControl>
-                              <Input
-                                type="datetime-local"
+                              <DateTimePicker
+                                value={field.value}
+                                onChange={field.onChange}
                                 min={new Date().toISOString().slice(0, 16)}
-                                className="text-base"
-                                {...field}
+                                placeholder="Pick start date & time"
                               />
                             </FormControl>
                             <FormMessage />
@@ -623,11 +625,11 @@ const Create = () => {
                           <FormItem>
                             <FormLabel className="text-xs text-muted-foreground uppercase tracking-wide">End (Optional)</FormLabel>
                             <FormControl>
-                              <Input
-                                type="datetime-local"
+                              <DateTimePicker
+                                value={field.value}
+                                onChange={field.onChange}
                                 min={form.watch("date") || new Date().toISOString().slice(0, 16)}
-                                className="text-base"
-                                {...field}
+                                placeholder="Pick end date & time"
                               />
                             </FormControl>
                             <FormMessage />
