@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { categories } from "@/constants/categories";
+import { useCategories } from "@/hooks/useCategories";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { Save, Sparkles, Lock, Unlock } from "lucide-react";
 import AIDescriptionDialog from "@/components/events/AIDescriptionDialog";
 import { StripeConnectDialog } from "@/components/events/StripeConnectDialog";
@@ -66,6 +67,7 @@ interface EventBuilderEditProps {
 
 const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
   const { toast } = useToast();
+  const { categories } = useCategories();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -270,7 +272,12 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="date">Date & Time</Label>
-                <Input id="date" type="datetime-local" {...register("date")} disabled={!editing} />
+                <DateTimePicker
+                  value={watch("date") as string}
+                  onChange={(v) => setValue("date", v, { shouldDirty: true })}
+                  disabled={!editing}
+                  placeholder="Pick date & time"
+                />
                 {errors.date && <p className="text-sm text-destructive mt-1">{errors.date.message}</p>}
               </div>
               <div>
