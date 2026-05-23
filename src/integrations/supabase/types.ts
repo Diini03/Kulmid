@@ -59,13 +59,6 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "attendance_stats_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       categories: {
@@ -197,13 +190,6 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "event_guests_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       event_invitations: {
@@ -246,13 +232,6 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_invitations_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_public"
             referencedColumns: ["id"]
           },
         ]
@@ -341,13 +320,6 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "event_registration_fields_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       event_registration_questions: {
@@ -393,13 +365,6 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_registration_questions_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_public"
             referencedColumns: ["id"]
           },
         ]
@@ -816,92 +781,7 @@ export type Database = {
       }
     }
     Views: {
-      events_public: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          created_by: string | null
-          date: string | null
-          description: string | null
-          end_date: string | null
-          event_type: string | null
-          facebook_url: string | null
-          host_name: string | null
-          id: string | null
-          image_url: string | null
-          instagram_url: string | null
-          linkedin_url: string | null
-          location: string | null
-          max_attendees: number | null
-          meeting_link: string | null
-          price: number | null
-          registration_deadline: string | null
-          status: string | null
-          title: string | null
-          twitter_url: string | null
-          updated_at: string | null
-          website_url: string | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          date?: string | null
-          description?: string | null
-          end_date?: string | null
-          event_type?: string | null
-          facebook_url?: string | null
-          host_name?: string | null
-          id?: string | null
-          image_url?: string | null
-          instagram_url?: string | null
-          linkedin_url?: string | null
-          location?: string | null
-          max_attendees?: number | null
-          meeting_link?: string | null
-          price?: number | null
-          registration_deadline?: string | null
-          status?: string | null
-          title?: string | null
-          twitter_url?: string | null
-          updated_at?: string | null
-          website_url?: string | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          date?: string | null
-          description?: string | null
-          end_date?: string | null
-          event_type?: string | null
-          facebook_url?: string | null
-          host_name?: string | null
-          id?: string | null
-          image_url?: string | null
-          instagram_url?: string | null
-          linkedin_url?: string | null
-          location?: string | null
-          max_attendees?: number | null
-          meeting_link?: string | null
-          price?: number | null
-          registration_deadline?: string | null
-          status?: string | null
-          title?: string | null
-          twitter_url?: string | null
-          updated_at?: string | null
-          website_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "events_created_by_profiles_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       generate_username_slug: {
