@@ -30,7 +30,7 @@ const EventView = () => {
     setError(null);
     try {
       const [{ data, error: fetchError }, countResult, attendeesResult] = await Promise.all([
-        supabase.from('events').select('*').eq('id', id).maybeSingle(),
+        supabase.from('events').select(EVENT_PUBLIC_COLUMNS).eq('id', id).maybeSingle(),
         supabase.rpc('get_event_registration_count', { _event_id: id }),
         supabase
           .from('event_guests')

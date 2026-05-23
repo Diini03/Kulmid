@@ -36,7 +36,7 @@ const EventDetails = () => {
     try {
       const eventPromise = supabase
         .from('events')
-        .select('*')
+        .select(EVENT_PUBLIC_COLUMNS)
         .eq('id', id)
         .maybeSingle();
 

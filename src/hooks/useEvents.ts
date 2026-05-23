@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { EventItem, EVENT_LIST_COLUMNS } from "@/types/event";
+import { EventItem, EVENT_LIST_COLUMNS, EVENT_PUBLIC_COLUMNS } from "@/types/event";
 
 interface UseEventsOptions {
   statuses?: string[];
@@ -50,7 +50,7 @@ export function useEventById(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("*")
+        .select(EVENT_PUBLIC_COLUMNS)
         .eq("id", id!)
         .maybeSingle();
       if (error) throw error;
