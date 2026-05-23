@@ -1,121 +1,108 @@
+## Security & Performance Hardening Plan
 
-# Plan: Categories backend + Modern Event Page + Datetime Picker
-
-Three connected upgrades, plus a short list of "what's missing" polish you should approve.
-
----
-
-## 1) Admin Categories — make them real (DB-backed, system-wide)
-
-**Problem today:** `AdminCategories.tsx` keeps categories in local React state, and the rest of the app reads from the hardcoded `src/constants/categories.ts`. So nothing the admin does actually saves or shows up anywhere — Create page, EventCard, Discover filters, and analytics all use the static list.
-
-**Fix:**
-
-**a. New table `categories`** (migration)
-- Fields: `name` (unique), `slug` (unique), `icon` (lucide name), `color` (gradient class), `description`, `is_active`, `sort_order`
-- RLS: anyone can SELECT active rows; only admins can INSERT/UPDATE/DELETE
-- Seed it with the current 6 defaults so nothing breaks
-
-**b. New hook `useCategories()`**
-- Fetches active categories from DB with React Query
-- Replaces every import of `src/constants/categories.ts` across:
-  `EventView.tsx`, `EventDetails.tsx`, `Discover.tsx`, `Create.tsx`, `EventForm.tsx`, `EventBuilderEdit.tsx`
-- Old constants file kept only as a type export (`EventCategory = string`) — no hardcoded array
-
-**c. Rewrite `AdminCategories.tsx`**
-- All CRUD hits Supabase (create, edit, toggle active, delete, drag-reorder updates `sort_order`)
-- Optimistic UI + toast on success/error
-- Bigger icon picker (full lucide icon search, ~40 curated options instead of 6)
-- Confirms before delete if any event currently uses it (count query)
-
-**d. Analytics auto-pickup**
-- `CategoryDistributionChart`, `TopCategoriesList`, `insightsCategorizer` all read from the live `categories` table, so a newly added category shows up in charts the moment an event uses it. No hardcoded keys.
+The security scan flagged **5 critical/high issues** plus several warnings. Here is the fix plan — grouped by severity.
 
 ---
 
-## 2) Public Event Page (`EventView.tsx`) — modern redesign, light-only
+### 🔴 CRITICAL — Data Exposure (fix immediately)
 
-**Locked light mode for this page** regardless of user theme: wrap the route in a `<div className="light">` + `bg-background` so even if a user enables dark in Settings, the public share page stays clean white/gray.
+**1. Public `events` table leaks host PII**
+The "Public can view approved events" policy lets anyone (even logged-out scrapers) read `host_email`, `host_phone`, and `payout_phone` of every event.
+- Create a SECURITY INVOKER view `public.events_public` that excludes `host_email`, `host_phone`, `payout_phone`, `host_description` (and any internal fields).
+- Update the public "Anyone can view pending events" + "Public can view approved events" policies to scope sensitive columns. Easiest: drop public SELECT on `events` and switch all public-facing reads (`Discover`, `EventView`, `EventCard`, `useEvents`, `HomePage`) to query `events_public`.
+- Owners + admins keep full access to `events` (already covered by existing policies).
 
-**New layout (desktop, 12-col):**
+**2. "Anyone can view pending events" leaks every pending event**
+Policy `(status = 'pending')` exposes ALL pending events. Drop this policy and instead allow public read of pending events only through the sanitized view (no PII), or require the requester to be the creator / hold a share token.
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  [< Back]                                       [Share]     │
-├──────────────────┬──────────────────────────────────────────┤
-│  IMAGE (4/12)    │  Category · Type badges                  │
-│  rounded-2xl     │  H1 Title                                │
-│  aspect-[4/3]    │  📅 Date  ·  📍 Location  ·  💰 Price    │
-│  shadow-lg       │                                          │
-│                  │  ┌────────────────────────────────────┐  │
-│  ── Hosted by ── │  │ CAPACITY  ◉ 12 / 50 spots         │  │
-│  [Avatar]        │  │ ████████░░░░░░░░░░░  24%          │  │
-│  Host Name       │  │ 38 spots left · Closing in 3 days │  │
-│  Contact info    │  └────────────────────────────────────┘  │
-│                  │                                          │
-│                  │  [  Register for this event  ]  ← teal   │
-│                  │                                          │
-│                  │  ── Who's going (avatars) ──             │
-│                  │  ●●●●● +27 attending                     │
-│                  │                                          │
-│                  │  About this event                        │
-│                  │  Long description...                     │
-└──────────────────┴──────────────────────────────────────────┘
-```
-
-**Specific upgrades vs. current page:**
-- **Always-visible capacity card** with progress bar + "X spots left" pill + urgency line ("Closing in 3 days" / "Almost full")
-- **"Who's going" strip**: avatar stack of approved registrants (first 5) + "+N attending" — pulls from `event_guests` where `status in ('registered','approved')`. Builds trust + social proof.
-- **Host card redesigned**: avatar, name, short bio, optional verified badge, social links — feels like a person, not a field dump
-- **Sticky right-rail CTA** on desktop, sticky bottom bar on mobile (already exists, polish styling)
-- **Tighter meta row** (date/location/price inline with icons, no 3 big cards)
-- **Image**: smaller, left-aligned, `aspect-[4/3]`, soft shadow — no full-bleed hero
-- **Microcopy**: "Free event" instead of "$0", "Online event" with meeting badge if virtual
-
-**Out of scope:** no schema changes for this section, just SELECT from existing `event_guests` for the "who's going" strip.
+**3. Realtime notifications can be subscribed to by any user**
+`notifications` is on Realtime with no `realtime.messages` RLS. Anyone authenticated can listen to another user's channel.
+- Add RLS on `realtime.messages` restricting subscription topics to `user:{auth.uid()}` pattern, OR remove `notifications` from the realtime publication and poll via REST.
 
 ---
 
-## 3) Create Event — modern Date & Time picker
+### 🟠 HIGH — Insert / Write Abuse
 
-**Problem:** `Create.tsx` lines 609 + 627 use native `<input type="datetime-local">` — browser-default, ugly, inconsistent across browsers.
+**4. `event_registration_answers` accepts inserts from anyone for any registration_id**
+WITH CHECK is `true`. An attacker can pollute any registration's answers.
+- Tighten the INSERT policy to require the `registration_id` to belong to a guest row created in the same request (match by recent timestamp + email), or move answer insertion into the same atomic RPC as the registration insert (SECURITY DEFINER function that creates guest + answers in one transaction).
 
-**Fix:** Build a small `<DateTimePicker>` component:
-- shadcn `Popover` + `Calendar` (date) + custom time grid (hour/minute selectors with 15-min steps)
-- Trigger button shows formatted "May 28, 2026 · 6:30 PM" with calendar icon
-- `pointer-events-auto` on the calendar wrapper (per shadcn rule)
-- Used in Create (start + end date) and in `EventBuilderEdit.tsx` so the whole app is consistent
-- Validates end ≥ start; show inline error
-
----
-
-## 4) What you're missing (my recommendations)
-
-Approve any of these and I'll fold them in:
-
-1. **Closing-soon urgency** on EventView: red-tinted pill when <48h to registration deadline or <5 spots left
-2. **OG image meta tags** on EventView so shared links on WhatsApp/Twitter render the event cover (huge for sharing in Somalia)
-3. **"Add to Calendar" button** (Google / Apple `.ics` download) next to Register — standard on every modern event platform
-4. **Map preview** for in-person events: small embedded map below location (improves trust)
-5. **Category color tokens** stored on the category row, so EventCard badges actually use each category's color (currently all use the same gradient)
-6. **Empty-state on AdminCategories** when no categories yet
-7. **Lock dark mode out of all public, unauthenticated pages** (EventView, SignIn, SignUp, Welcome) — not just EventView — so brand stays consistent
+**5. `event_guests` `check_in_token` stored in plaintext + over-broad owner read**
+- Hash `check_in_token` at rest (store `check_in_token_hash`); the QR code still carries the plaintext token, but DB leaks become safer.
+- Add a SELECT policy so a guest can read their own row by email + token combination (needed for the public confirmation page).
 
 ---
 
-## Technical summary
+### 🟡 WARN — Hardening
 
-**Migration:** new `categories` table + seed + RLS (admin write, public read active)
-**New files:**
-- `src/hooks/useCategories.ts`
-- `src/components/ui/datetime-picker.tsx`
-**Rewritten:** `src/pages/admin/AdminCategories.tsx`
-**Edited:** `EventView.tsx`, `Create.tsx`, `EventBuilderEdit.tsx`, `EventForm.tsx`, `Discover.tsx`, `EventCard.tsx`, `EventDetails.tsx`, analytics components that read categories
-**Light-mode lock:** route-level `.light` wrapper on EventView (and optionally other public pages per #7)
+**6. 19× "SECURITY DEFINER function callable by public/auth"**
+All our trigger / helper functions are exposed via PostgREST. Revoke EXECUTE from `anon` and `authenticated` on every `public.*` function that isn't meant to be RPC-called: `update_event_status`, `generate_username_slug`, `assign_username_on_profile_insert`, all `notify_*` / `send_*` trigger functions, `validate_admin_email`, `initialize_event_registration_fields`, `update_updated_at_column`, `handle_new_user`.
+Keep EXECUTE only on `has_role` and `get_event_registration_count` (these are read-only and used by RLS / RPC).
+
+**7. Public storage buckets allow listing**
+`event-images` and `avatars` are public but their SELECT policy allows `LIST`. Replace the bucket SELECT policy with one that allows `SELECT` on individual objects only — clients can still fetch by URL, but cannot enumerate the bucket.
+
+**8. Leaked password protection disabled**
+Enable Supabase Auth → "Leaked password protection" (Have-I-Been-Pwned check) in the dashboard. I'll add a one-line note in the migration description pointing the user to the dashboard toggle (it can't be set via SQL).
 
 ---
 
-**Questions before I build:**
-1. For "Who's going", should anonymous registrants show as initials only, or hide entirely if their profile is private?
-2. Should the new datetime picker also replace the date inputs in admin EventForm and EventBuilderEdit, or only the Create page?
-3. Which of the 7 "missing" items do you want included now vs. later?
+### 🔵 Code-side hardening (non-DB)
+
+**9. Edge functions with `verify_jwt = false`**
+`send-event-invitation`, `send-registration-confirmation`, `ai-assistant`, `validate-email-domain`, `verify-check-in`, `handle-registration-action`, `generate-description`, `predict-attendance` — review each:
+- Add per-IP rate-limiting (in-memory LRU keyed by `x-forwarded-for`, 20 req/min).
+- Validate all inputs with Zod (max length, email format, allowed enum values) — prevents prompt injection on `ai-assistant` & `generate-description`.
+- `send-event-invitation` / `send-registration-confirmation`: verify the caller actually owns the event (lookup by `event_id` + creator), don't trust the email field blindly — prevents using the platform as a spam relay.
+
+**10. Frontend XSS / input validation pass**
+- Audit any `dangerouslySetInnerHTML` (search & remove or wrap in DOMPurify).
+- Add Zod schemas everywhere user input touches Supabase (`EventForm`, `EventRegistrationDialog`, `ProfileSettings`, `AdminCategories`, `Create`).
+- Make sure `encodeURIComponent` is used on all URL params in calendar / share links.
+
+**11. Add security headers**
+Add a `vercel.json` headers block: `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and a starter CSP (allow self + supabase domain + Stripe + Google Fonts).
+
+---
+
+### ⚡ Performance pass (bundled with security work)
+
+- Convert remaining hardcoded `categories` consumers (already partially done) to use the cached `useCategories` hook → fewer re-renders.
+- Wrap heavy admin routes (`AdminAnalytics`, `AdminReports`, `AdminCategories`, `EventBuilder*`) in `React.lazy()` — they're never loaded by public users.
+- Add `staleTime: 60_000` to all React Query reads of events/categories.
+- Add explicit `width`/`height` (or `aspect-ratio`) on every `<img>` to kill CLS.
+- `loading="lazy"` + `decoding="async"` on non-hero images.
+- `fetchpriority="high"` on the EventView hero image.
+
+---
+
+### Migration / file plan
+
+**Migrations (one file):**
+- Create `events_public` view + grants
+- Drop overly-broad public SELECT policies on `events`
+- Tighten `event_registration_answers` INSERT
+- Hash `check_in_token`
+- REVOKE EXECUTE on internal SECURITY DEFINER functions
+- Tighten storage object SELECT policies on `event-images` & `avatars`
+- (Optional) realtime.messages policy for notifications
+
+**Code edits:**
+- `useEvents.ts`, `Discover.tsx`, `EventView.tsx`, `EventCard.tsx`, `EventDetails.tsx`, `HomePage.tsx` → switch reads to `events_public`
+- `EventRegistrationDialog.tsx` + new `register-for-event` edge function (atomic insert)
+- All edge functions: add Zod + rate-limit helper (`supabase/functions/_shared/rateLimit.ts`)
+- `vercel.json` → security headers
+- `App.tsx` → `React.lazy` admin chunks
+- `src/lib/validations.ts` → expand schemas
+
+**Manual (user must click):**
+- Enable "Leaked password protection" in Supabase Auth dashboard
+- Review the Realtime publication list and drop `notifications` if you want the simpler fix
+
+---
+
+### What I'd like to confirm before building
+
+1. For the public `events` view: OK to **strip `host_email`, `host_phone`, `payout_phone`, `host_description`** from public reads? (Owners still see them in their dashboard.)
+2. For notifications realtime: prefer **(a) add restrictive RLS on `realtime.messages`** or **(b) remove notifications from realtime and use polling** (simpler, slightly less instant)?
+3. Do you want me to do everything above in one pass, or split it into "critical only" first and the hardening/performance in a follow-up?
