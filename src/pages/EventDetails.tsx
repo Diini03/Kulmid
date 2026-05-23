@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
+import { EVENT_PUBLIC_COLUMNS } from "@/types/event";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, MapPin, DollarSign, Copy, Check, Video, Globe, Users, Mail, Phone, Building2, ExternalLink, ArrowLeft, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
