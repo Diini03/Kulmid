@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
+import { EVENT_PUBLIC_COLUMNS } from "@/types/event";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, MapPin, DollarSign, ExternalLink, Globe, Users, Video, Copy, Check, Building2, ArrowLeft, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
@@ -16,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 const EventView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { categories } = useCategories();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +33,7 @@ const EventView = () => {
     setError(null);
     try {
       const [{ data, error: fetchError }, countResult, attendeesResult] = await Promise.all([
-        supabase.from('events').select('*').eq('id', id).maybeSingle(),
+        supabase.from('events').select(user ? '*' : EVENT_PUBLIC_COLUMNS).eq('id', id).maybeSingle(),
         supabase.rpc('get_event_registration_count', { _event_id: id }),
         supabase
           .from('event_guests')

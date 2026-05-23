@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
+import { EVENT_PUBLIC_COLUMNS } from "@/types/event";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, MapPin, DollarSign, Copy, Check, Video, Globe, Users, Mail, Phone, Building2, ExternalLink, ArrowLeft, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
@@ -34,9 +35,12 @@ const EventDetails = () => {
     setLoading(true);
     setError(null);
     try {
+      // Authenticated viewers get the full row (including host contact info)
+      // because Postgres column-level grants only restrict anon. Anonymous
+      // visitors must use the safe column list to satisfy permissions.
       const eventPromise = supabase
         .from('events')
-        .select('*')
+        .select(user ? '*' : EVENT_PUBLIC_COLUMNS)
         .eq('id', id)
         .maybeSingle();
 
