@@ -35,9 +35,12 @@ const EventDetails = () => {
     setLoading(true);
     setError(null);
     try {
+      // Authenticated viewers get the full row (including host contact info)
+      // because Postgres column-level grants only restrict anon. Anonymous
+      // visitors must use the safe column list to satisfy permissions.
       const eventPromise = supabase
         .from('events')
-        .select(EVENT_PUBLIC_COLUMNS)
+        .select(user ? '*' : EVENT_PUBLIC_COLUMNS)
         .eq('id', id)
         .maybeSingle();
 
