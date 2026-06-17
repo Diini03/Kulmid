@@ -451,6 +451,46 @@ const AdminReports = () => {
 
   const handlePrint = () => window.print();
 
+  // ── Assignment Data Download (anonymized event_guests dataset) ──
+  const downloadAssignmentData = () => {
+    if (guests.length === 0) {
+      toast({ title: "No data available", variant: "destructive" });
+      return;
+    }
+    const headers = [
+      "guest_id", "event_id", "event_category", "name_length", "email_domain",
+      "has_phone", "has_organization", "status", "checked_in",
+      "days_since_registration", "registration_hour", "registration_weekday",
+    ];
+    const eventCatMap: Record<string, string> = {};
+    events.forEach(e => { eventCatMap[e.id] = e.category; });
+    const now = new Date();
+    const rows = guests.map((g, idx) => {
+      const created = new Date(g.created_at);
+      const days = Math.floor((now.getTime() - created.getTime()) / 86400000);
+      const emailDomain = g.email?.includes("@") ? g.email.split("@")[1].toLowerCase() : "unknown";
+      return [
+        `G${String(idx + 1).padStart(4, "0")}`,
+        `E${(events.findIndex(e => e.id === g.event_id) + 1).toString().padStart(3, "0")}`,
+        eventCatMap[g.event_id] || "unknown",
+        (g.name || "").trim().length,
+        emailDomain,
+        (g as any).phone_number ? 1 : 0,
+        (g as any).organization ? 1 : 0,
+        g.status,
+        g.checked_in ? 1 : 0,
+        days,
+        created.getHours(),
+        created.getDay(),
+      ];
+    });
+    const csv = [headers, ...rows]
+      .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    downloadBlob(csv, `assignment_dataset_${format(new Date(), "yyyyMMdd")}.csv`, "text/csv");
+    toast({ title: "Assignment dataset downloaded", description: `${rows.length} anonymized rows` });
+  };
+
   if (loading) return <div className="py-20 text-center text-muted-foreground"><Loader2 className="h-6 w-6 mx-auto animate-spin mb-2" />Loading reporting data...</div>;
 
   return (
@@ -470,6 +510,7 @@ const AdminReports = () => {
             <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 mr-1.5" />CSV</Button>
             <Button variant="outline" size="sm" onClick={exportPDF}><FileText className="h-4 w-4 mr-1.5" />PDF</Button>
             <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="h-4 w-4 mr-1.5" />Print</Button>
+            <Button variant="outline" size="sm" onClick={downloadAssignmentData}><Download className="h-4 w-4 mr-1.5" />Assignment Data Download</Button>
           </div>
         </div>
 
