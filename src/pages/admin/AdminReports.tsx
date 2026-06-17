@@ -470,6 +470,7 @@ const AdminReports = () => {
             <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 mr-1.5" />CSV</Button>
             <Button variant="outline" size="sm" onClick={exportPDF}><FileText className="h-4 w-4 mr-1.5" />PDF</Button>
             <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="h-4 w-4 mr-1.5" />Print</Button>
+            <Button variant="outline" size="sm" onClick={downloadAssignmentData}><Download className="h-4 w-4 mr-1.5" />Assignment Data Download</Button>
           </div>
         </div>
 
