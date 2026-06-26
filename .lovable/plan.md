@@ -1,39 +1,63 @@
-## Export `event_guests` as your assignment dataset (anonymized CSV)
+## Goal
+Transform Kulmid from a "submit-and-wait" platform into a Luma-style instant-publish event system, with admins curating Discover (not gating events), polished UX, default light mode, and locked-down security.
 
-A one-off data export from the `event_guests` table — no code or schema changes to the app.
+## 1. Instant publish — kill the "pending" gate
 
-### What you'll get
-A single file: `/mnt/documents/event_guests_dataset.csv`
+New status model for `events.status`:
+- `published` → default for every new event. Link is live, owner can share, guests can register and check in immediately.
+- `featured` → admin-curated; appears on **Discover**.
+- `rejected` / `removed` → admin moderation actions (with reason).
+- Keep `ongoing` / `past` for the scheduler.
 
-- **Rows:** ~115 (you said you may add more — this already passes the ≥50 requirement)
-- **Columns:** 12 features + 1 label (well above the ≥5 requirement)
+Changes:
+- `Create.tsx`: stop setting `pending`. Set `status = 'published'`.
+- Toast copy: **"Your event is published 🎉 — share your link. Want it on Discover? Message Kulmid."**
+- Redirect to the event's manage page (`/event/:id/builder`) with a "Copy link / Share" CTA.
+- `Discover.tsx` + public queries: filter on `status IN ('featured','ongoing')` instead of `approved/upcoming/ongoing`.
+- `Events.tsx` (My Events) + `EventView.tsx` + `/event/:id`: stop blocking on `pending`. Anyone with the link can view and register.
+- `AdminEventModeration.tsx` becomes **Discover Curation**: list all `published` events, admin promotes → `featured` or hides → `removed`. Notify creator.
+- Migration: `UPDATE events SET status='published' WHERE status IN ('pending','approved','upcoming','draft')`. Update `update_event_status()` + `notify_event_status_change()` + `notify_new_event_for_admin()` to match new statuses (admin gets an "event published" feed entry, not an approval queue).
 
-### Columns in the export
+## 2. Workflow polish (Luma-feel)
 
-| # | Column | Type | Role | Notes |
-|---|---|---|---|---|
-| 1 | `guest_id_short` | text | id | first 8 chars of UUID (anonymized) |
-| 2 | `email_domain` | categorical | feature | e.g. `gmail.com` — full email dropped |
-| 3 | `name_initials` | text | feature | e.g. `A.M.` — full name dropped |
-| 4 | `has_phone` | boolean | feature | derived from phone_number |
-| 5 | `organization` | categorical | feature | free-text (has typos/missing — quality issue) |
-| 6 | `job_title` | categorical | feature | free-text |
-| 7 | `degree` | categorical | feature | many nulls (quality issue) |
-| 8 | `heard_from` | categorical | feature | imbalanced (quality issue) |
-| 9 | `dietary_restrictions` | categorical | feature | mostly null |
-| 10 | `registration_type` | categorical | feature | rsvp / registration |
-| 11 | `status` | categorical | feature | registered / pending / rejected |
-| 12 | `days_between_register_and_event` | numeric | feature | computed: event.date − created_at |
-| 13 | **`checked_in`** | **boolean** | **label (y)** | **the target for supervised classification** |
+- **Create flow:** single-screen, autosave already exists — add live preview pane + share modal on success (copy link, WhatsApp, X, Facebook, QR).
+- **Manage event:** surface Share, Invite, Scan QR, Export Guests as the top 4 actions in `EventBuilderOverview`.
+- **Admin → Discover request:** add a one-click "Request feature on Discover" button on the event manage page that pings admin via notifications.
+- **Default landing:** keep `/events` for logged-in users; `/discover` becomes the public showcase of `featured` events.
 
-### Why this dataset fits the assignment
-- **Supervised — Binary Classification:** predict `checked_in` from the 12 features.
-- **Built-in quality issues** for your "Quality Issues" section: missing values (degree, dietary_restrictions), free-text typos (organization, job_title), class imbalance (most guests don't check in), duplicates possible across events.
-- **Lifecycle fit:** sits in the *Data Collection → Cleaning → Modeling* stages.
+## 3. UI / theme cleanup
 
-### Steps I'll run (after you approve)
-1. Query `event_guests` joined with `events` (only to compute `days_between_register_and_event`).
-2. Anonymize email → domain only, name → initials only, drop phone number.
-3. Write `/mnt/documents/event_guests_dataset.csv` and surface it as a downloadable artifact.
+- Force light mode as the only default. Remove the theme toggle from `Navbar.tsx` (desktop + mobile sheet).
+- Move theme control into `Settings → Appearance` (already exists in `AppearanceSettings.tsx`), labeled "Theme preference (optional)".
+- `ThemeProvider` stays `defaultTheme="light"`, `enableSystem={false}`.
+- Audit any hardcoded `text-white` / dark-only classes near the navbar/hero to prevent flashes.
 
-No database, RLS, or app code will be modified.
+## 4. Security & API hardening
+
+- **RLS audit** on `events`, `event_guests`, `event_invitations`, `notifications`, `user_roles`, `profiles` — ensure every write is scoped to `auth.uid()` and no anon writes except guest registration with `event_id` validation.
+- **Edge functions** (`predict-attendance`, `ai-assistant`, `handle-registration-action`, `send-*`): enforce `verify_jwt` where appropriate, validate inputs with Zod, rate-limit by user id, never echo service-role key.
+- Run `supabase--linter` and `security--run_security_scan`; fix every finding from the migration.
+- Confirm `service_role_key` is not referenced in any frontend file.
+- Re-confirm `event_guests` insert policy still works for public registration (anon insert with valid `event_id`, no PII leakage on select).
+
+## 5. Reliability / "no glitch"
+
+- Remove the one-shot `update_event_status` RPC call from `Discover.tsx` render path; move it to a scheduled function or fire-and-forget.
+- Wrap all Realtime subscriptions in `useEffect` + cleanup (per repo rule).
+- Add `<ErrorCard />` fallbacks everywhere data fetches (Events, Profile, EventView).
+- Make `EventView` always render for any published event ID — no auth required.
+
+## Out of scope (ask before doing)
+- Renaming routes, payment provider changes, deleting tables, removing the admin role check `kulmid@gmail.com`.
+
+## Technical Details
+- Migration: enum-less (status is `text`); rename values via `UPDATE` + adjust trigger functions in same migration. Keep `pending`/`approved` as accepted legacy values for one release so historical rows don't break.
+- Code refactor touches ~15 files; biggest are `Create.tsx`, `AdminEventModeration.tsx`, `Discover.tsx`, `Events.tsx`, `Navbar.tsx`, plus the three trigger functions.
+- No new tables, no new secrets.
+
+## Deliverable order
+1. DB migration (status model + trigger rewrites + backfill).
+2. Frontend status refactor (Create, Discover, Events, EventView, AdminEventModeration).
+3. Navbar theme removal + Settings entry.
+4. Security scan + fixes.
+5. Share modal + manage-page polish.
