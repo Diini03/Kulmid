@@ -56,7 +56,7 @@ const AdminOverview = () => {
         supabase.from("events").select("*", { count: "exact", head: true }),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("event_guests").select("*", { count: "exact", head: true }),
-        supabase.from("events").select("id, title, date, category, location, created_at, created_by, status, description, profiles:created_by(full_name)").eq("status", "pending").order("created_at", { ascending: false }).limit(5),
+        supabase.from("events").select("id, title, date, category, location, created_at, created_by, status, description, profiles:created_by(full_name)").in("status", ["published", "pending"]).order("created_at", { ascending: false }).limit(5),
         supabase.from("events").select("*", { count: "exact", head: true }).gte("date", todayStart.toISOString()).lte("date", todayEnd.toISOString()),
         supabase.from("events").select("*", { count: "exact", head: true }).in("status", ["approved", "upcoming", "ongoing"]),
         supabase.from("events").select("category"),
