@@ -172,8 +172,8 @@ const EventDetails = () => {
 
   const eventTypeDisplay = getEventTypeDisplay();
   const isCreator = user?.id === event.created_by;
-  const isPendingOrDraft = ['pending', 'draft'].includes(event.status);
-  const isApproved = event.status === 'approved';
+  const isPendingOrDraft = false; // instant publish removed pending gate
+  const isApproved = ['published', 'featured', 'approved', 'upcoming', 'ongoing'].includes(event.status);
 
   return (
     <>

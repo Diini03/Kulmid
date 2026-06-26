@@ -12,7 +12,7 @@ interface UseEventsOptions {
 
 export function useEvents(options: UseEventsOptions = {}) {
   const {
-    statuses = ["approved", "upcoming", "ongoing"],
+    statuses = ["published", "featured", "approved", "upcoming", "ongoing"],
     category,
     createdBy,
     limit = 100,

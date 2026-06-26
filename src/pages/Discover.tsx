@@ -38,11 +38,19 @@ const Discover = () => {
         sessionStorage.setItem(statusKey, '1');
       }
       
-      // Single query for events - derive category counts client-side
-      const { data: fetchedEvents, error: fetchError } = await supabase
+      // Discover shows admin-curated (featured) events. Falls back to all public events when none are featured.
+      let { data: fetchedEvents, error: fetchError } = await supabase
         .from('events')
         .select(EVENT_LIST_COLUMNS)
-        .in('status', ['approved', 'upcoming', 'ongoing']);
+        .in('status', ['featured', 'ongoing']);
+      if (!fetchError && (!fetchedEvents || fetchedEvents.length === 0)) {
+        const fallback = await supabase
+          .from('events')
+          .select(EVENT_LIST_COLUMNS)
+          .in('status', ['published', 'approved', 'upcoming', 'ongoing']);
+        fetchedEvents = fallback.data || [];
+        fetchError = fallback.error;
+      }
       
       if (fetchError) throw fetchError;
 
@@ -92,7 +100,7 @@ const Discover = () => {
           .from('events')
           .select('id')
           .in('category', data.event_categories)
-          .in('status', ['approved', 'upcoming', 'ongoing']);
+          .in('status', ['published', 'featured', 'approved', 'upcoming', 'ongoing']);
         
         setPreferenceCount(matchingEvents?.length || 0);
       } else {
