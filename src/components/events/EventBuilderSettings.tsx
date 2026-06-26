@@ -57,7 +57,7 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
       const { error } = await supabase
         .from("events")
         .update({ 
-          status: 'pending',
+          status: 'published',
           rejection_reason: null 
         })
         .eq("id", event.id)
@@ -66,8 +66,8 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
       if (error) throw error;
 
       toast({
-        title: "Resubmitted",
-        description: "Your event has been resubmitted for approval.",
+        title: "Republished 🎉",
+        description: "Your event link is live again.",
       });
 
       navigate("/events");

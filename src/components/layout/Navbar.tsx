@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar, Moon, Sun, Menu, User, LogOut, Compass, Search, Bell, Plus, Sparkles, Settings } from "lucide-react";
+import { Calendar, Menu, User, LogOut, Compass, Search, Bell, Plus, Sparkles, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { usePendingActions } from "@/contexts/PendingActionsContext";
@@ -23,7 +23,7 @@ interface NavbarProps {
 }
 
 export const Navbar = ({ onOpenSearch }: NavbarProps) => {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const { user, profile, signOut, isAdmin } = useAuth();
   const { unreadCount } = useNotifications();
   const { totalPendingCount } = usePendingActions();
@@ -65,10 +65,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
         ? "bg-primary/10 text-primary" 
         : "text-muted-foreground hover:bg-secondary hover:text-foreground"
     }`;
-
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
 
   return (
     <header className={`sticky top-0 z-50 transition-all duration-300 ${
@@ -150,11 +146,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           <div className="hidden md:flex">
             <LanguageSwitcher />
           </div>
-
-          {/* Theme Toggle */}
-          <Button variant="ghost" size="icon" className="hidden md:flex rounded-xl" aria-label="Toggle theme" onClick={toggleTheme}>
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
 
           {/* User Menu */}
           {user ? (
@@ -378,24 +369,15 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                     </div>
                   )}
 
-                  {/* Language & Theme */}
+                  {/* Language */}
                   <div className="border-t pt-4 space-y-3">
                     <div className="px-4 mb-2 text-sm text-muted-foreground font-medium">{t("nav_language")}</div>
                     <div className="px-4">
                       <LanguageSwitcher />
                     </div>
-                    <div className="px-4 mb-2 text-sm text-muted-foreground font-medium">{t("nav_theme")}</div>
-                    <div className="px-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={toggleTheme}
-                        className="rounded-xl gap-2"
-                      >
-                        {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                        {theme === "dark" ? t("nav_light_mode") : t("nav_dark_mode")}
-                      </Button>
-                    </div>
+                    <p className="px-4 text-xs text-muted-foreground">
+                      Theme preference lives in Settings → Appearance.
+                    </p>
                   </div>
                 </div>
               </SheetContent>

@@ -38,12 +38,12 @@ const AdminEventModeration = () => {
       const { data, error: fetchError } = await supabase
         .from("events")
         .select("*, profiles:created_by(full_name)")
-        .eq("status", "pending")
+        .in("status", ["published", "pending"])
         .order("created_at", { ascending: false });
       if (fetchError) throw fetchError;
       setEvents(data || []);
     } catch (err: any) {
-      setError(err.message || "Failed to load pending events");
+      setError(err.message || "Failed to load events");
     } finally {
       setDataLoading(false);
     }
@@ -52,11 +52,11 @@ const AdminEventModeration = () => {
   const handleApprove = async (eventId: string) => {
     if (isProcessing(eventId)) return;
     startProcessing(eventId);
-    const { error } = await supabase.from("events").update({ status: "approved" }).eq("id", eventId);
+    const { error } = await supabase.from("events").update({ status: "featured" }).eq("id", eventId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Event approved", description: "Now visible in Discover." });
+      toast({ title: "Featured on Discover ⭐", description: "Event is now promoted on the public Discover page." });
       setEvents(prev => prev.filter(e => e.id !== eventId));
     }
     stopProcessing(eventId);
@@ -72,7 +72,7 @@ const AdminEventModeration = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Event rejected" });
+      toast({ title: "Event removed", description: "Creator was notified." });
       setEvents(prev => prev.filter(e => e.id !== rejectEvent.id));
       setRejectEvent(null);
       setRejectionReason("");
@@ -110,18 +110,18 @@ const AdminEventModeration = () => {
 
   return (
     <>
-      <Seo title="Event Moderation" canonical="/admin/events/pending" />
+      <Seo title="Discover Curation" canonical="/admin/events/pending" />
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Event Moderation</h1>
-          <p className="text-sm text-muted-foreground mt-1">Review and approve events before they go live</p>
+          <h1 className="text-2xl font-bold">Discover Curation</h1>
+          <p className="text-sm text-muted-foreground mt-1">All events are live the moment they're created. Promote the best ones to Discover, or remove anything that violates guidelines.</p>
         </div>
 
         {events.length === 0 ? (
           <Card>
             <CardContent className="py-16 text-center">
               <ShieldCheck className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
-              <p className="text-muted-foreground">No pending events to review</p>
+              <p className="text-muted-foreground">No published events to curate right now.</p>
             </CardContent>
           </Card>
         ) : (
@@ -183,7 +183,7 @@ const AdminEventModeration = () => {
                         ) : (
                           <Check className="h-3 w-3 mr-1" />
                         )}
-                        {eventProcessing ? "Approving..." : "Approve"}
+                        {eventProcessing ? "Featuring..." : "Feature"}
                       </Button>
                       <Button
                         size="sm"
@@ -192,7 +192,7 @@ const AdminEventModeration = () => {
                         onClick={() => setRejectEvent(event)}
                         disabled={eventProcessing}
                       >
-                        <X className="h-3 w-3 mr-1" />Reject
+                        <X className="h-3 w-3 mr-1" />Remove
                       </Button>
                     </div>
                   </CardContent>
@@ -229,7 +229,7 @@ const AdminEventModeration = () => {
                   disabled={isProcessing(previewEvent.id)}
                 >
                   {isProcessing(previewEvent.id) ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
-                  Approve
+                  Feature on Discover
                 </Button>
                 <Button
                   variant="destructive"
@@ -237,7 +237,7 @@ const AdminEventModeration = () => {
                   onClick={() => { setRejectEvent(previewEvent); setPreviewEvent(null); }}
                   disabled={isProcessing(previewEvent.id)}
                 >
-                  <X className="h-4 w-4 mr-2" />Reject
+                  <X className="h-4 w-4 mr-2" />Remove
                 </Button>
               </div>
             </div>
@@ -248,12 +248,12 @@ const AdminEventModeration = () => {
       <Dialog open={!!rejectEvent} onOpenChange={() => setRejectEvent(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Event</DialogTitle>
-            <DialogDescription>Provide a reason for rejecting "{rejectEvent?.title}"</DialogDescription>
+            <DialogTitle>Remove Event</DialogTitle>
+            <DialogDescription>Optionally tell "{rejectEvent?.title}"'s creator why it was removed.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Rejection Reason (Optional)</Label>
+              <Label>Reason (optional)</Label>
               <Textarea placeholder="Let the creator know why..." value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} className="mt-2" />
             </div>
             <div className="flex gap-2 justify-end">
@@ -262,9 +262,9 @@ const AdminEventModeration = () => {
                 {rejectProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Rejecting...
+                    Removing...
                   </>
-                ) : "Reject Event"}
+                ) : "Remove Event"}
               </Button>
             </div>
           </div>

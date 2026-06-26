@@ -25,10 +25,11 @@ export const AdminBadgesProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const fetchPendingEvents = useCallback(async () => {
+    // Curation queue = live events not yet featured on Discover
     const { count } = await supabase
       .from("events")
       .select("*", { count: "exact", head: true })
-      .eq("status", "pending");
+      .in("status", ["published", "pending"]);
     setBadges((prev) => ({ ...prev, pendingEventsCount: count || 0 }));
   }, []);
 

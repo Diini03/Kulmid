@@ -281,8 +281,8 @@ const Create = () => {
         imageUrl = await uploadImage(imageFile);
       }
 
-      // Admin events get 'approved' status, user events get 'draft'
-      const eventStatus = isAdmin ? 'approved' : 'pending';
+      // All events are published instantly; admins can later feature on Discover
+      const eventStatus = 'published';
       const normalizedLocation = data.event_type === "online" ? "Online" : data.location?.trim();
 
       const eventId = (await import('@/lib/utils')).generateEventId();
@@ -322,20 +322,11 @@ const Create = () => {
       // Clear saved draft on successful submission
       sessionStorage.removeItem('event-draft');
       
-      // Different messages and redirects for admin vs regular user
-      if (isAdmin) {
-        toast({
-          title: "Event published!",
-          description: "Your event is now live and visible to all users.",
-        });
-        navigate("/admin");
-      } else {
-        toast({
-          title: "Event submitted for review!",
-          description: "Track your submission in My Events.",
-        });
-        navigate(`/events`);
-      }
+      toast({
+        title: "🎉 Your event is published",
+        description: "Share your link to start getting registrations. Talk to Kulmid to add your event in Discover for better engagement.",
+      });
+      navigate(`/event/${eventId}/builder`);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -370,9 +361,7 @@ const Create = () => {
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Create New Event</h1>
           <p className="text-muted-foreground">
-            {isAdmin 
-              ? "Create an event that will be published immediately" 
-              : "Submit your event for review and approval"}
+            Publish instantly — share your event link the moment you save.
           </p>
         </div>
 
