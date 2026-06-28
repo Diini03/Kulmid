@@ -30,6 +30,7 @@ export const Footer = () => {
             <Link to="/our-team" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_team")}</Link>
             <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_contact")}</Link>
             <Link to="/help" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_help")}</Link>
+            <Link to="/guide" className="text-muted-foreground hover:text-foreground transition-colors">Guide</Link>
           </nav>
 
           {/* Social Media Links */}
