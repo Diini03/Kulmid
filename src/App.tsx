@@ -43,6 +43,7 @@ const CheckIn = lazy(() => import("./pages/CheckIn"));
 const SystemDocumentation = lazy(() => import("./pages/SystemDocumentation"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Help = lazy(() => import("./pages/Help"));
+const Guide = lazy(() => import("./pages/Guide"));
 const Profile = lazy(() => import("./pages/Profile"));
 
 // Admin pages
@@ -136,6 +137,7 @@ const App = () => (
                     <Route path="/team" element={<SuspenseWrapper><OurTeam /></SuspenseWrapper>} />
                     <Route path="/contact" element={<SuspenseWrapper><Contact /></SuspenseWrapper>} />
                     <Route path="/help" element={<SuspenseWrapper><Help /></SuspenseWrapper>} />
+                    <Route path="/guide" element={<SuspenseWrapper><Guide /></SuspenseWrapper>} />
                     
                     {/* Protected User Routes */}
                     <Route path="/home" element={<ProtectedRoute><SuspenseWrapper><HomePage /></SuspenseWrapper></ProtectedRoute>} />
