@@ -229,9 +229,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <Button variant="ghost" size="sm" className="hidden md:flex rounded-xl" onClick={() => openAuthModal("signin")}>
                 {t("nav_sign_in")}
               </Button>
-              <Button size="sm" variant="default" className="hidden md:flex" onClick={() => openAuthModal("signup")}>
-                {t("nav_sign_up")}
-              </Button>
             </>
           )}
 
