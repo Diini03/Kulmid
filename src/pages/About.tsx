@@ -1,4 +1,5 @@
 import { Seo } from "@/components/Seo";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const About = () => {
   const milestones = [
@@ -11,6 +12,14 @@ const About = () => {
     { title: "Trust (Isku-Kalsooni)", desc: "Trust and unity are at the heart of everything we build." },
     { title: "Accessibility", desc: "Great experiences should be available to everyone." },
     { title: "Community", desc: "Communities thrive when people gather together." },
+  ];
+
+  const team = [
+    { name: "Eng. Muno Muqtar", role: "Backend Developer", bio: "Specializes in server architecture and database design.", initials: "MM" },
+    { name: "Eng. Ramadan Abdirahman", role: "UI/UX Designer", bio: "Crafts intuitive and accessible user experiences.", initials: "RA" },
+    { name: "Eng. Najiib Mohamed", role: "System Architect", bio: "Designs scalable infrastructure and ensures platform reliability.", initials: "NM" },
+    { name: "Eng. Abdulahi Jees", role: "Project Lead", bio: "Coordinates development and bridges technical requirements with product vision.", initials: "AJ" },
+    { name: "Eng. Diini Kahie", role: "Frontend Developer", bio: "Brings designs to life with clean, performant interfaces.", initials: "DK" },
   ];
 
   return (
@@ -93,6 +102,33 @@ const About = () => {
             <div key={index} className="border border-border rounded-lg p-6">
               <h3 className="font-medium mb-2">{value.title}</h3>
               <p className="text-sm text-muted-foreground">{value.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Team */}
+      <section className="container max-w-5xl px-4 py-16 border-t border-border">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">The Team</h2>
+        <p className="text-lg text-muted-foreground mb-8 max-w-2xl">
+          Engineers passionate about technology, collaboration, and community impact.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-1">
+          {team.map((member, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-4 py-6 border-b border-border last:border-b-0"
+            >
+              <Avatar className="h-14 w-14 flex-shrink-0">
+                <AvatarFallback className="bg-muted text-foreground text-sm font-medium">
+                  {member.initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium">{member.name}</h3>
+                <p className="text-sm text-primary">{member.role}</p>
+                <p className="text-sm text-muted-foreground mt-1">{member.bio}</p>
+              </div>
             </div>
           ))}
         </div>
