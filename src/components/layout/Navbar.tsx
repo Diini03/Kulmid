@@ -124,6 +124,11 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
               <Link to="/create">{t("nav_create_event")}</Link>
             </Button>
           )}
+          {!user && (
+            <Button size="sm" variant="default" className="hidden md:flex" onClick={() => openAuthModal("signup")}>
+              {t("nav_create_event")} →
+            </Button>
+          )}
 
           {/* Search Button */}
           <Button variant="ghost" size="icon" onClick={onOpenSearch} aria-label={t("nav_search")} className="rounded-xl">
