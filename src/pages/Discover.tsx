@@ -1,73 +1,67 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { EventCard } from "@/components/events/EventCard";
 import { smartShuffleEvents, fetchRegistrationCounts } from "@/utils/eventSorting";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useCategories } from "@/hooks/useCategories";
-import { Sparkles, Settings, ArrowRight } from "lucide-react";
+import { Search, Plus, CalendarPlus } from "lucide-react";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { EventItem, EVENT_LIST_COLUMNS } from "@/types/event";
 
 const Discover = () => {
   const { t } = useLanguage();
   const { categories } = useCategories();
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [allEvents, setAllEvents] = useState<EventItem[]>([]);
-  const [showAll, setShowAll] = useState(false);
-  const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
+  const [featured, setFeatured] = useState<EventItem[]>([]);
+  const [upcoming, setUpcoming] = useState<EventItem[]>([]);
+  const [visibleCount, setVisibleCount] = useState(9);
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const [hasPreferences, setHasPreferences] = useState(false);
-  const [preferenceCount, setPreferenceCount] = useState(0);
   const { user } = useAuth();
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim().toLowerCase()), 300);
+    return () => clearTimeout(t);
+  }, [query]);
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Call update_event_status only once per session
       const statusKey = 'kulmid_status_updated';
       if (!sessionStorage.getItem(statusKey)) {
         await supabase.rpc('update_event_status');
         sessionStorage.setItem(statusKey, '1');
       }
-      
-      // Discover shows admin-curated (featured) events. Falls back to all public events when none are featured.
-      let { data: fetchedEvents, error: fetchError } = await supabase
+
+      // Featured (admin-curated)
+      const featuredRes = await supabase
         .from('events')
         .select(EVENT_LIST_COLUMNS)
-        .in('status', ['featured', 'ongoing']);
-      if (!fetchError && (!fetchedEvents || fetchedEvents.length === 0)) {
-        const fallback = await supabase
-          .from('events')
-          .select(EVENT_LIST_COLUMNS)
-          .in('status', ['published', 'approved', 'upcoming', 'ongoing']);
-        fetchedEvents = fallback.data || [];
-        fetchError = fallback.error;
-      }
-      
-      if (fetchError) throw fetchError;
+        .eq('status', 'featured')
+        .order('date', { ascending: true });
+      if (featuredRes.error) throw featuredRes.error;
 
-      if (fetchedEvents) {
-        // Derive category counts from the same data
-        const counts: Record<string, number> = {};
-        fetchedEvents.forEach(event => {
-          counts[event.category] = (counts[event.category] || 0) + 1;
-        });
-        setEventCounts(counts);
+      // Upcoming pool (all live)
+      const upcomingRes = await supabase
+        .from('events')
+        .select(EVENT_LIST_COLUMNS)
+        .in('status', ['published', 'approved', 'upcoming', 'ongoing', 'featured'])
+        .order('date', { ascending: true });
+      if (upcomingRes.error) throw upcomingRes.error;
 
-        const eventIds = fetchedEvents.map(e => e.id);
-        const registrationCounts = await fetchRegistrationCounts(supabase, eventIds);
-        const shuffled = smartShuffleEvents(fetchedEvents, registrationCounts);
-        setAllEvents(shuffled);
-        setEvents(shuffled.slice(0, 6));
-      }
+      const upcomingList = upcomingRes.data || [];
+      const ids = upcomingList.map((e) => e.id);
+      const counts = await fetchRegistrationCounts(supabase, ids);
+      setFeatured(featuredRes.data || []);
+      setUpcoming(smartShuffleEvents(upcomingList, counts));
     } catch (err: any) {
       setError(err.message || "Failed to load events");
     } finally {
@@ -79,47 +73,34 @@ const Discover = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const checkPreferences = async () => {
-      if (!user) {
-        setHasPreferences(false);
-        setPreferenceCount(0);
-        return;
-      }
-      
-      const { data } = await supabase
-        .from('user_preferences')
-        .select('event_categories')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (data?.event_categories && data.event_categories.length > 0) {
-        setHasPreferences(true);
-        
-        const { data: matchingEvents } = await supabase
-          .from('events')
-          .select('id')
-          .in('category', data.event_categories)
-          .in('status', ['published', 'featured', 'approved', 'upcoming', 'ongoing']);
-        
-        setPreferenceCount(matchingEvents?.length || 0);
-      } else {
-        setHasPreferences(false);
-        setPreferenceCount(0);
-      }
-    };
-    
-    checkPreferences();
-  }, [user]);
+  const filteredUpcoming = useMemo(() => {
+    let list = upcoming;
+    if (activeCategory !== "All") {
+      list = list.filter((e) => e.category === activeCategory);
+    }
+    if (debouncedQuery) {
+      list = list.filter((e) =>
+        (e.title || "").toLowerCase().includes(debouncedQuery) ||
+        (e.location || "").toLowerCase().includes(debouncedQuery) ||
+        (e.category || "").toLowerCase().includes(debouncedQuery)
+      );
+    }
+    return list;
+  }, [upcoming, activeCategory, debouncedQuery]);
 
-  const handleViewAll = () => {
-    setShowAll(true);
-    setEvents(allEvents);
-  };
-  
-  const handleCategoryClick = (categoryName: string) => {
-    navigate(`/events?category=${categoryName}`);
-  };
+  const filteredFeatured = useMemo(() => {
+    if (activeCategory === "All" && !debouncedQuery) return featured;
+    return featured.filter((e) => {
+      const catOk = activeCategory === "All" || e.category === activeCategory;
+      const qOk = !debouncedQuery ||
+        (e.title || "").toLowerCase().includes(debouncedQuery) ||
+        (e.location || "").toLowerCase().includes(debouncedQuery);
+      return catOk && qOk;
+    });
+  }, [featured, activeCategory, debouncedQuery]);
+
+  const visibleUpcoming = filteredUpcoming.slice(0, visibleCount);
+  const hasResults = filteredFeatured.length + filteredUpcoming.length > 0;
 
   return (
     <>
@@ -129,130 +110,163 @@ const Discover = () => {
         canonical="/discover" 
       />
 
-      {/* Hero Section */}
-      <section className="border-b">
-        <div className="container max-w-5xl px-4 py-20 md:py-28">
-          <div className="max-w-2xl mx-auto text-center space-y-6">
-            {user && hasPreferences && (
-              <div className="animate-slide-up">
-                <span className="personalized-badge">
-                  <Sparkles className="h-4 w-4" />
-                  {t("discover_personalized")}
-                </span>
-              </div>
-            )}
-
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance animate-slide-up stagger-1">
+      {/* Hero / Search / Filters */}
+      <section className="border-b bg-card/40">
+        <div className="container max-w-5xl px-4 py-12 md:py-16">
+          <div className="max-w-2xl mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">
               {t("discover_title")}
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground text-balance animate-slide-up stagger-2">
+            <p className="text-lg text-muted-foreground">
               {t("discover_subtitle")}
             </p>
+          </div>
 
-            {user && hasPreferences && (
-              <div className="pt-6 animate-slide-up stagger-3">
-                <Button asChild size="lg" variant="default" className="gap-2">
-                  <Link to="/home">
-                    <Sparkles className="h-5 w-5" />
-                    {preferenceCount > 0 
-                      ? t("discover_view_matched", { count: preferenceCount })
-                      : t("discover_view_recommendations")
-                    }
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
-              </div>
-            )}
-            
-            {user && !hasPreferences && (
-              <div className="pt-6 animate-slide-up stagger-3">
-                <Button asChild size="lg" variant="outline" className="gap-2">
-                  <Link to="/onboarding">
-                    <Settings className="h-5 w-5" />
-                    {t("discover_set_preferences")}
-                  </Link>
-                </Button>
-              </div>
-            )}
+          {/* Inline search */}
+          <div className="relative mb-5">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search events, organizers, cities..."
+              className="h-12 pl-11 text-base"
+              aria-label="Search events"
+            />
+          </div>
+
+          {/* Category pill row */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
+            <CategoryPill
+              active={activeCategory === "All"}
+              onClick={() => setActiveCategory("All")}
+              label="All"
+            />
+            {categories.map((c) => (
+              <CategoryPill
+                key={c.name}
+                active={activeCategory === c.name}
+                onClick={() => setActiveCategory(c.name)}
+                label={c.name}
+              />
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Browse by Category */}
-      <section className="border-b">
-        <div className="container max-w-5xl px-4 py-16">
-          <h2 className="text-2xl font-bold mb-8">{t("discover_browse_category")}</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {categories.map((category, index) => {
-              const Icon = category.icon;
-              const count = eventCounts[category.name] || 0;
-              return (
-                <button 
-                  key={category.name} 
-                  onClick={() => handleCategoryClick(category.name)} 
-                  className={`category-card animate-slide-up stagger-${Math.min(index + 1, 6)}`}
-                >
-                  <div className="icon-wrapper">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold text-base">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground">{t("discover_events_count", { count })}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Events */}
-      <section className="container max-w-5xl px-4 py-16 md:py-20">
-        <div className="flex items-center justify-between mb-10">
-          <h2 className="text-2xl font-bold">{showAll ? t("discover_all_events") : t("discover_featured")}</h2>
-          {!showAll && allEvents.length > 6 && (
-            <Button onClick={handleViewAll} variant="ghost" className="gap-2">
-              {t("btn_view_all")}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-
-        {error ? (
+      {error ? (
+        <section className="container max-w-5xl px-4 py-12">
           <ErrorCard message={error} onRetry={fetchData} />
-        ) : loading ? (
+        </section>
+      ) : loading ? (
+        <section className="container max-w-5xl px-4 py-12">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-4 animate-pulse">
                 <div className="h-48 w-full rounded-xl bg-secondary" />
                 <div className="h-6 w-3/4 rounded-lg bg-secondary" />
-                <div className="space-y-2">
-                  <div className="h-4 w-full rounded bg-secondary" />
-                  <div className="h-4 w-2/3 rounded bg-secondary" />
-                </div>
+                <div className="h-4 w-2/3 rounded bg-secondary" />
               </div>
             ))}
           </div>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map((event, index) => (
-              <div key={event.id} className={`animate-slide-up stagger-${(index % 6) + 1}`}>
-                <EventCard event={event} basePath="/discover" />
+        </section>
+      ) : !hasResults ? (
+        <DiscoverEmptyState
+          query={debouncedQuery}
+          category={activeCategory}
+          loggedIn={!!user}
+        />
+      ) : (
+        <>
+          {/* Featured */}
+          {filteredFeatured.length > 0 && (
+            <section className="container max-w-5xl px-4 py-12 md:py-14">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Featured</h2>
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">Curated by Kulmid</span>
               </div>
-            ))}
-          </div>
-        )}
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredFeatured.map((event) => (
+                  <EventCard key={event.id} event={event} basePath="/discover" />
+                ))}
+              </div>
+            </section>
+          )}
 
-        {!showAll && allEvents.length > 6 && (
-          <div className="text-center mt-14">
-            <Button onClick={handleViewAll} size="lg" variant="outline" className="px-10">
-              {t("btn_view_all_count", { count: allEvents.length })}
-            </Button>
-          </div>
-        )}
-      </section>
+          {/* Upcoming */}
+          {filteredUpcoming.length > 0 && (
+            <section className="container max-w-5xl px-4 py-12 md:py-14 border-t">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">
+                  {activeCategory === "All" ? "Upcoming events" : `${activeCategory} events`}
+                </h2>
+                <span className="text-sm text-muted-foreground">
+                  {filteredUpcoming.length} {filteredUpcoming.length === 1 ? "event" : "events"}
+                </span>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {visibleUpcoming.map((event) => (
+                  <EventCard key={event.id} event={event} basePath="/discover" />
+                ))}
+              </div>
+              {visibleCount < filteredUpcoming.length && (
+                <div className="text-center mt-10">
+                  <Button onClick={() => setVisibleCount((c) => c + 9)} variant="outline" size="lg" className="px-10">
+                    Load more
+                  </Button>
+                </div>
+              )}
+            </section>
+          )}
+        </>
+      )}
     </>
+  );
+};
+
+const CategoryPill = ({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`shrink-0 px-4 h-9 rounded-full text-sm font-medium border transition-colors ${
+      active
+        ? "bg-primary text-primary-foreground border-primary"
+        : "bg-background text-foreground border-border hover:bg-secondary"
+    }`}
+  >
+    {label}
+  </button>
+);
+
+const DiscoverEmptyState = ({
+  query,
+  category,
+  loggedIn,
+}: { query: string; category: string; loggedIn: boolean }) => {
+  let title = "No events yet";
+  let description = "Be the first to create an event for this community.";
+  if (query) {
+    title = `No events match "${query}"`;
+    description = "Try a different keyword or clear the search.";
+  } else if (category !== "All") {
+    title = `No ${category} events yet`;
+    description = `Be the first to create a ${category.toLowerCase()} event.`;
+  }
+  return (
+    <section className="container max-w-5xl px-4 py-20">
+      <div className="max-w-md mx-auto text-center">
+        <div className="mx-auto mb-6 h-16 w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+          <CalendarPlus className="h-8 w-8" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2">{title}</h2>
+        <p className="text-muted-foreground mb-8">{description}</p>
+        <Button asChild variant="default" size="lg" className="gap-2">
+          <Link to={loggedIn ? "/create" : "/signup"}>
+            <Plus className="h-4 w-4" />
+            Be the first to create one
+          </Link>
+        </Button>
+      </div>
+    </section>
   );
 };
 
