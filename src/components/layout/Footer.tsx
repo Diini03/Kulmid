@@ -26,11 +26,13 @@ export const Footer = () => {
           {/* Navigation Links */}
           <nav className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm">
             <Link to="/events" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_events")}</Link>
+            <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
             <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_about")}</Link>
             <Link to="/our-team" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_team")}</Link>
             <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_contact")}</Link>
             <Link to="/help" className="text-muted-foreground hover:text-foreground transition-colors">{t("footer_help")}</Link>
-            <Link to="/guide" className="text-muted-foreground hover:text-foreground transition-colors">Guide</Link>
+            <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy</Link>
+            <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms</Link>
           </nav>
 
           {/* Social Media Links */}

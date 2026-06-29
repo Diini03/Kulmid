@@ -92,14 +92,21 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
 
           {!isAdmin && (
             <div className="hidden md:flex items-center ml-4">
-              <NavLink to="/events" className={linkCls}>
-                <Calendar className="h-4 w-4" />
-                {t("nav_events")}
-              </NavLink>
+              {user && (
+                <NavLink to="/events" className={linkCls}>
+                  <Calendar className="h-4 w-4" />
+                  {t("nav_events")}
+                </NavLink>
+              )}
               <NavLink to="/discover" className={linkCls}>
                 <Compass className="h-4 w-4" />
                 {t("nav_discover")}
               </NavLink>
+              {!user && (
+                <NavLink to="/pricing" className={linkCls}>
+                  Pricing
+                </NavLink>
+              )}
             </div>
           )}
         </div>
