@@ -32,7 +32,6 @@ const EventDetails = lazy(() => import("./pages/EventDetails"));
 const EventView = lazy(() => import("./pages/EventView"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const About = lazy(() => import("./pages/About"));
-const OurTeam = lazy(() => import("./pages/OurTeam"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const CalendarView = lazy(() => import("./pages/CalendarView"));
@@ -135,8 +134,8 @@ const App = () => (
                     <Route path="/about" element={<SuspenseWrapper><About /></SuspenseWrapper>} />
                     <Route path="/our-story" element={<Navigate to="/about" replace />} />
                     <Route path="/achievements" element={<Navigate to="/contact" replace />} />
-                    <Route path="/our-team" element={<SuspenseWrapper><OurTeam /></SuspenseWrapper>} />
-                    <Route path="/team" element={<SuspenseWrapper><OurTeam /></SuspenseWrapper>} />
+                    <Route path="/our-team" element={<Navigate to="/about" replace />} />
+                    <Route path="/team" element={<Navigate to="/about" replace />} />
                     <Route path="/contact" element={<SuspenseWrapper><Contact /></SuspenseWrapper>} />
                     <Route path="/help" element={<SuspenseWrapper><Help /></SuspenseWrapper>} />
                     <Route path="/guide" element={<Navigate to="/about" replace />} />
