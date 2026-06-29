@@ -103,8 +103,9 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
                 {t("nav_discover")}
               </NavLink>
               {!user && (
-                <NavLink to="/pricing" className={linkCls}>
-                  Pricing
+                <NavLink to="/events" className={linkCls}>
+                  <Calendar className="h-4 w-4" />
+                  {t("nav_events")}
                 </NavLink>
               )}
             </div>
