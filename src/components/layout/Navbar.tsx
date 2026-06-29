@@ -92,14 +92,21 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
 
           {!isAdmin && (
             <div className="hidden md:flex items-center ml-4">
-              <NavLink to="/events" className={linkCls}>
-                <Calendar className="h-4 w-4" />
-                {t("nav_events")}
-              </NavLink>
+              {user && (
+                <NavLink to="/events" className={linkCls}>
+                  <Calendar className="h-4 w-4" />
+                  {t("nav_events")}
+                </NavLink>
+              )}
               <NavLink to="/discover" className={linkCls}>
                 <Compass className="h-4 w-4" />
                 {t("nav_discover")}
               </NavLink>
+              {!user && (
+                <NavLink to="/pricing" className={linkCls}>
+                  Pricing
+                </NavLink>
+              )}
             </div>
           )}
         </div>
@@ -115,6 +122,11 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
           {user && !isAdmin && (
             <Button asChild size="sm" variant="default" className="hidden md:flex">
               <Link to="/create">{t("nav_create_event")}</Link>
+            </Button>
+          )}
+          {!user && (
+            <Button size="sm" variant="default" className="hidden md:flex" onClick={() => openAuthModal("signup")}>
+              {t("nav_create_event")} →
             </Button>
           )}
 
@@ -216,9 +228,6 @@ export const Navbar = ({ onOpenSearch }: NavbarProps) => {
             <>
               <Button variant="ghost" size="sm" className="hidden md:flex rounded-xl" onClick={() => openAuthModal("signin")}>
                 {t("nav_sign_in")}
-              </Button>
-              <Button size="sm" variant="default" className="hidden md:flex" onClick={() => openAuthModal("signup")}>
-                {t("nav_sign_up")}
               </Button>
             </>
           )}

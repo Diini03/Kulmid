@@ -100,6 +100,33 @@ export type Database = {
         }
         Relationships: []
       }
+      early_access_leads: {
+        Row: {
+          created_at: string
+          email: string
+          events_per_month: string | null
+          id: string
+          name: string
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          events_per_month?: string | null
+          id?: string
+          name: string
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          events_per_month?: string | null
+          id?: string
+          name?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       event_guests: {
         Row: {
           about: string | null
