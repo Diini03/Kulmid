@@ -42,6 +42,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`[verify-check-in] action=${action}, token=${token}, eventId=${eventId}`);
 
+    // Load event to check expiry — QR codes stop working after the event ends (+24h grace).
+    const { data: event, error: eventError } = await supabase
+      .from("events")
+      .select("date, end_date, status")
+      .eq("id", eventId)
+      .single();
+
+    if (eventError || !event) {
+      return new Response(
+        JSON.stringify({ status: "invalid", error: "Event not found" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const eventEnd = event.end_date
+      ? new Date(event.end_date as string)
+      : new Date(new Date(event.date as string).getTime() + 24 * 60 * 60 * 1000);
+    const isExpired = new Date() > eventEnd || event.status === "past" || event.status === "rejected";
+
+    if (isExpired) {
+      return new Response(
+        JSON.stringify({
+          status: "expired",
+          error: "Check-in is closed — this event has ended.",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     // Find guest by token
     const { data: guest, error: guestError } = await supabase
       .from("event_guests")

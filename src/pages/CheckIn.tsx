@@ -45,12 +45,19 @@ const CheckIn = () => {
 
         const { data: event } = await supabase
           .from("events")
-          .select("title, date, location")
+          .select("title, date, end_date, location, status")
           .eq("id", guest.event_id)
           .single();
 
-        const eventDate = event?.date ? new Date(event.date) : null;
-        const isExpired = eventDate ? eventDate < new Date() : false;
+        // QR codes stop being valid after the event end (or date + 24h grace).
+        const eventEnd = event?.end_date
+          ? new Date(event.end_date)
+          : event?.date
+          ? new Date(new Date(event.date).getTime() + 24 * 60 * 60 * 1000)
+          : null;
+        const isExpired = eventEnd
+          ? new Date() > eventEnd || event?.status === "past" || event?.status === "rejected"
+          : false;
 
         setData({
           guestName: guest.name || "Guest",

@@ -38,7 +38,7 @@ const eventSchema = z.object({
   event_type: z.enum(["in-person", "online", "hybrid"]),
   location: z.string().optional(),
   meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  category: z.string().min(1, "Category is required"),
+  category: z.string().max(40, "Category must be 40 characters or fewer").optional().or(z.literal("")),
   price: z.number().min(0, "Price must be 0 or higher"),
   payout_phone: z.string()
     .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
@@ -295,7 +295,7 @@ const Create = () => {
         event_type: data.event_type,
         location: normalizedLocation,
         meeting_link: data.meeting_link || null,
-        category: data.category,
+        category: data.category && data.category.trim() && data.category !== "__custom__" ? data.category.trim() : null,
         price: data.price,
         payout_phone: data.payout_phone || null,
         max_attendees: data.capacity_type === "limited" ? data.max_attendees ?? null : null,
@@ -524,7 +524,48 @@ const Create = () => {
                               </button>
                             );
                           })}
+                          {(() => {
+                            const presetNames = categories.map((c) => c.name);
+                            const isOther = !!field.value && !presetNames.includes(field.value);
+                            const isSkip = field.value === "";
+                            return (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => field.onChange(isOther ? field.value : "__custom__")}
+                                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border-2 transition-all ${
+                                    isOther || field.value === "__custom__"
+                                      ? "border-primary bg-primary/10 text-primary"
+                                      : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                                  }`}
+                                >
+                                  + Other
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => field.onChange("")}
+                                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border-2 transition-all ${
+                                    isSkip
+                                      ? "border-primary bg-primary/10 text-primary"
+                                      : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                                  }`}
+                                >
+                                  No category
+                                </button>
+                              </>
+                            );
+                          })()}
                         </div>
+                        {(field.value === "__custom__" || (field.value && !categories.map((c) => c.name).includes(field.value) && field.value !== "")) && (
+                          <Input
+                            autoFocus
+                            placeholder="Type your category (e.g. Hackathon, Iftar, Career Fair)"
+                            value={field.value === "__custom__" ? "" : field.value}
+                            maxLength={40}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            className="mt-2 max-w-sm"
+                          />
+                        )}
                         {selectedCategory === "Webinar" && (
                           <p className="text-xs text-muted-foreground">Webinars are automatically set as online events</p>
                         )}

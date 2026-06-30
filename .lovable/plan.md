@@ -1,63 +1,85 @@
-## Goal
-Transform Kulmid from a "submit-and-wait" platform into a Luma-style instant-publish event system, with admins curating Discover (not gating events), polished UX, default light mode, and locked-down security.
 
-## 1. Instant publish — kill the "pending" gate
+## Scope
 
-New status model for `events.status`:
-- `published` → default for every new event. Link is live, owner can share, guests can register and check in immediately.
-- `featured` → admin-curated; appears on **Discover**.
-- `rejected` / `removed` → admin moderation actions (with reason).
-- Keep `ongoing` / `past` for the scheduler.
+Four independent tracks. None touches unrelated code.
 
-Changes:
-- `Create.tsx`: stop setting `pending`. Set `status = 'published'`.
-- Toast copy: **"Your event is published 🎉 — share your link. Want it on Discover? Message Kulmid."**
-- Redirect to the event's manage page (`/event/:id/builder`) with a "Copy link / Share" CTA.
-- `Discover.tsx` + public queries: filter on `status IN ('featured','ongoing')` instead of `approved/upcoming/ongoing`.
-- `Events.tsx` (My Events) + `EventView.tsx` + `/event/:id`: stop blocking on `pending`. Anyone with the link can view and register.
-- `AdminEventModeration.tsx` becomes **Discover Curation**: list all `published` events, admin promotes → `featured` or hides → `removed`. Notify creator.
-- Migration: `UPDATE events SET status='published' WHERE status IN ('pending','approved','upcoming','draft')`. Update `update_event_status()` + `notify_event_status_change()` + `notify_new_event_for_admin()` to match new statuses (admin gets an "event published" feed entry, not an approval queue).
+---
 
-## 2. Workflow polish (Luma-feel)
+### 1. Help page redesign (`src/pages/Help.tsx`)
 
-- **Create flow:** single-screen, autosave already exists — add live preview pane + share modal on success (copy link, WhatsApp, X, Facebook, QR).
-- **Manage event:** surface Share, Invite, Scan QR, Export Guests as the top 4 actions in `EventBuilderOverview`.
-- **Admin → Discover request:** add a one-click "Request feature on Discover" button on the event manage page that pings admin via notifications.
-- **Default landing:** keep `/events` for logged-in users; `/discover` becomes the public showcase of `featured` events.
+Problem: current layout is a generic hero + chat box + topic grid + FAQ stack. Feels like a template.
 
-## 3. UI / theme cleanup
+Redesign:
+- **Two-column app layout** (desktop): left sidebar with searchable category nav (Getting Started, Events, Registration, Check-in, Insights, Billing, Account). Right pane shows either article content or the AI chat.
+- **Hero strip** at top: one big search input ("Search help…") with quick-suggestion chips below it (popular questions).
+- **Article cards**: each FAQ becomes a card with icon, title, 1-line summary, and "Read more" → opens a Sheet/Dialog with full content. Replaces the cramped accordion.
+- **Floating "Ask AI" button** (bottom-right) opens chat in a side Sheet instead of embedding it inline. Keeps focus on self-serve docs, AI is a fallback.
+- Mobile: sidebar collapses into a horizontal pill scroller above the cards; floating button stays.
+- Uses existing Monochrome Teal tokens, `max-w-6xl`, 12px radius, no new colors.
 
-- Force light mode as the only default. Remove the theme toggle from `Navbar.tsx` (desktop + mobile sheet).
-- Move theme control into `Settings → Appearance` (already exists in `AppearanceSettings.tsx`), labeled "Theme preference (optional)".
-- `ThemeProvider` stays `defaultTheme="light"`, `enableSystem={false}`.
-- Audit any hardcoded `text-white` / dark-only classes near the navbar/hero to prevent flashes.
+---
 
-## 4. Security & API hardening
+### 2. About page polish (`src/pages/About.tsx`)
 
-- **RLS audit** on `events`, `event_guests`, `event_invitations`, `notifications`, `user_roles`, `profiles` — ensure every write is scoped to `auth.uid()` and no anon writes except guest registration with `event_id` validation.
-- **Edge functions** (`predict-attendance`, `ai-assistant`, `handle-registration-action`, `send-*`): enforce `verify_jwt` where appropriate, validate inputs with Zod, rate-limit by user id, never echo service-role key.
-- Run `supabase--linter` and `security--run_security_scan`; fix every finding from the migration.
-- Confirm `service_role_key` is not referenced in any frontend file.
-- Re-confirm `event_guests` insert policy still works for public registration (anon insert with valid `event_id`, no PII leakage on select).
+Light pass only (full redesign + content cuts deferred per user):
+- Tighten section spacing, add subtle section dividers, replace plain text blocks with a values grid (icon + title + 1 line).
+- Team section: avatar + name + role cards in a 3-col grid; remove any duplicated mission copy.
+- Add a single CTA strip at the bottom ("Create your first event").
 
-## 5. Reliability / "no glitch"
+---
 
-- Remove the one-shot `update_event_status` RPC call from `Discover.tsx` render path; move it to a scheduled function or fire-and-forget.
-- Wrap all Realtime subscriptions in `useEffect` + cleanup (per repo rule).
-- Add `<ErrorCard />` fallbacks everywhere data fetches (Events, Profile, EventView).
-- Make `EventView` always render for any published event ID — no auth required.
+### 3. Category picker — allow "Other" / custom (Create + Edit event)
 
-## Out of scope (ask before doing)
-- Renaming routes, payment provider changes, deleting tables, removing the admin role check `kulmid@gmail.com`.
+Files: `src/pages/Create.tsx`, `src/components/events/EventBuilderEdit.tsx`, `src/hooks/useCategories.ts`.
 
-## Technical Details
-- Migration: enum-less (status is `text`); rename values via `UPDATE` + adjust trigger functions in same migration. Keep `pending`/`approved` as accepted legacy values for one release so historical rows don't break.
-- Code refactor touches ~15 files; biggest are `Create.tsx`, `AdminEventModeration.tsx`, `Discover.tsx`, `Events.tsx`, `Navbar.tsx`, plus the three trigger functions.
-- No new tables, no new secrets.
+- Category field becomes a Combobox: shows admin-managed categories + an **"Other (type your own)"** option and a **"Skip / No category"** option.
+- When "Other" is picked → reveal a small text input (max 30 chars, validated). Stored in `events.category` as free text.
+- When "Skip" is picked → store `null`. Discover filters already tolerate null.
+- No DB migration needed (column is already free text). No change to admin Categories CRUD.
 
-## Deliverable order
-1. DB migration (status model + trigger rewrites + backfill).
-2. Frontend status refactor (Create, Discover, Events, EventView, AdminEventModeration).
-3. Navbar theme removal + Settings entry.
-4. Security scan + fixes.
-5. Share modal + manage-page polish.
+---
+
+### 4. Registration Fields builder — Google-Forms style
+
+File: `src/components/events/EventBuilderRegistration.tsx` (+ small extracted subcomponents).
+
+Current pain: dense form with toggles and dropdowns mixed in one row. Hard to scan.
+
+New UX (mirrors Google Forms):
+- **Question cards stacked vertically**, each card = one question. Card shows:
+  - Big title input (placeholder "Question") at top.
+  - Type selector on the right (Short answer / Long answer / Single choice / Multiple choice / Dropdown / Email / Phone / Number / Date).
+  - Body area renders a **preview of the answer control** (e.g. radio list for single choice) with inline "+ Add option" and per-option delete.
+  - Footer row: Required toggle · Duplicate · Delete · drag handle.
+- **Selected card is highlighted** with a left accent bar (teal) and elevated shadow; others are flat — exactly like Google Forms.
+- **Floating right-side action rail** next to the selected card: + Add question, + Add section, + Image (future), + Description.
+- Drag-and-drop reordering via existing dnd primitives (or simple up/down arrows if dnd not present — confirm during build).
+- Built-in fields (Name/Email/Phone/Org) stay in a separate "Required basics" card at the top, with only Enable/Required toggles — not editable as questions.
+- Mobile: cards full-width, action rail collapses into a sticky bottom "+ Add question" button.
+
+No schema changes — uses existing `event_registration_questions` table.
+
+---
+
+### 5. QR code expiry after event ends
+
+Files: `supabase/functions/verify-check-in/index.ts`, optionally `src/pages/CheckIn.tsx` for the public view.
+
+- In `verify-check-in`, after loading the event, compute `expiry = event.date + 24h` (matches existing "past" rollover). If `now() > expiry`, return `{ success: false, message: "Check-in closed for this event" }` before any DB write.
+- Also block check-in if `event.status = 'past'` or `'rejected'`.
+- Public `/checkin?token=…` page shows a friendly "This event has ended" state when the function returns the expired error.
+- No new DB column needed; date-based check is sufficient and survives token regeneration.
+
+---
+
+## Technical notes
+
+- All four tracks are frontend-only except #5 which only edits one edge function. No migrations.
+- Help redesign extracts `HelpSidebar.tsx`, `HelpArticleCard.tsx`, `HelpArticleSheet.tsx` under `src/components/help/`.
+- Registration builder extracts `QuestionCard.tsx`, `QuestionTypeSelect.tsx`, `OptionEditor.tsx` under `src/components/events/registration/builder/`.
+- Combobox uses existing `src/components/ui/command.tsx` + `popover.tsx`.
+
+## Out of scope (per user)
+
+- Full About content rewrite + removing sections — explicitly deferred to a later pass.
+- Email-sending changes beyond the QR expiry — user mentioned email/QR as the functional area, but only QR expiry is concrete; will ask if anything email-specific is needed after this lands.
