@@ -57,13 +57,6 @@ interface CustomQuestion {
   is_active: boolean;
 }
 
-type QuestionDraft = {
-  question_text: string;
-  question_type: string;
-  is_required: boolean;
-  options: string[];
-};
-
 const QUESTION_TYPES = [
   { value: "text", label: "Text", description: "Short answer", icon: Type },
   { value: "textarea", label: "Paragraph", description: "Long answer", icon: AlignLeft },
@@ -88,13 +81,6 @@ const CHOICE_TYPES = ["multiple_choice", "checkbox", "dropdown", "single_select"
 interface EventBuilderRegistrationProps {
   eventId: string;
 }
-
-const createBlankQuestion = (): QuestionDraft => ({
-  question_text: "",
-  question_type: "text",
-  is_required: false,
-  options: ["", ""],
-});
 
 const getQuestionType = (type: string) => LEGACY_TYPE_MAP[type] || type;
 const getQuestionTypeMeta = (type: string) => QUESTION_TYPES.find((t) => t.value === getQuestionType(type)) || QUESTION_TYPES[0];
