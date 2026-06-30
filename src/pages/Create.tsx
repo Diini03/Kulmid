@@ -524,7 +524,48 @@ const Create = () => {
                               </button>
                             );
                           })}
+                          {(() => {
+                            const presetNames = categories.map((c) => c.name);
+                            const isOther = !!field.value && !presetNames.includes(field.value);
+                            const isSkip = field.value === "";
+                            return (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => field.onChange(isOther ? field.value : "__custom__")}
+                                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border-2 transition-all ${
+                                    isOther || field.value === "__custom__"
+                                      ? "border-primary bg-primary/10 text-primary"
+                                      : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                                  }`}
+                                >
+                                  + Other
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => field.onChange("")}
+                                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border-2 transition-all ${
+                                    isSkip
+                                      ? "border-primary bg-primary/10 text-primary"
+                                      : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                                  }`}
+                                >
+                                  No category
+                                </button>
+                              </>
+                            );
+                          })()}
                         </div>
+                        {(field.value === "__custom__" || (field.value && !categories.map((c) => c.name).includes(field.value) && field.value !== "")) && (
+                          <Input
+                            autoFocus
+                            placeholder="Type your category (e.g. Hackathon, Iftar, Career Fair)"
+                            value={field.value === "__custom__" ? "" : field.value}
+                            maxLength={40}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            className="mt-2 max-w-sm"
+                          />
+                        )}
                         {selectedCategory === "Webinar" && (
                           <p className="text-xs text-muted-foreground">Webinars are automatically set as online events</p>
                         )}
