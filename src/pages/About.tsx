@@ -1,5 +1,8 @@
 import { Seo } from "@/components/Seo";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ShieldCheck, Heart, Users, ArrowRight } from "lucide-react";
 
 const About = () => {
   const milestones = [
@@ -9,9 +12,9 @@ const About = () => {
   ];
 
   const values = [
-    { title: "Trust (Isku-Kalsooni)", desc: "Trust and unity are at the heart of everything we build." },
-    { title: "Accessibility", desc: "Great experiences should be available to everyone." },
-    { title: "Community", desc: "Communities thrive when people gather together." },
+    { icon: ShieldCheck, title: "Trust (Isku-Kalsooni)", desc: "Trust and unity are at the heart of everything we build." },
+    { icon: Heart, title: "Accessibility", desc: "Great experiences should be available to everyone." },
+    { icon: Users, title: "Community", desc: "Communities thrive when people gather together." },
   ];
 
   const team = [
@@ -99,7 +102,10 @@ const About = () => {
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-8">Our Values</h2>
         <div className="grid md:grid-cols-3 gap-8">
           {values.map((value, index) => (
-            <div key={index} className="border border-border rounded-lg p-6">
+            <div key={index} className="border border-border rounded-xl p-6 hover:border-primary/40 transition-colors">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
+                <value.icon className="h-5 w-5" />
+              </div>
               <h3 className="font-medium mb-2">{value.title}</h3>
               <p className="text-sm text-muted-foreground">{value.desc}</p>
             </div>
@@ -131,6 +137,19 @@ const About = () => {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* CTA strip */}
+      <section className="container max-w-5xl px-4 py-16">
+        <div className="rounded-2xl bg-primary/5 border border-primary/20 p-8 md:p-12 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">Ready to bring people together?</h2>
+            <p className="text-muted-foreground">Create your first event in minutes — share the link instantly.</p>
+          </div>
+          <Button asChild size="lg" className="gap-2 self-start md:self-auto">
+            <Link to="/create">Create your first event <ArrowRight className="h-4 w-4" /></Link>
+          </Button>
         </div>
       </section>
     </>
