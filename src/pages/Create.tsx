@@ -295,7 +295,7 @@ const Create = () => {
         event_type: data.event_type,
         location: normalizedLocation,
         meeting_link: data.meeting_link || null,
-        category: data.category && data.category.trim() ? data.category.trim() : null,
+        category: data.category && data.category.trim() && data.category !== "__custom__" ? data.category.trim() : null,
         price: data.price,
         payout_phone: data.payout_phone || null,
         max_attendees: data.capacity_type === "limited" ? data.max_attendees ?? null : null,
