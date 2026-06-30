@@ -28,7 +28,7 @@ const eventSchema = z.object({
   event_type: z.enum(["in-person", "online", "hybrid"]),
   location: z.string().optional(),
   meeting_link: z.string().url().optional().or(z.literal("")),
-  category: z.string().min(1, "Category is required"),
+  category: z.string().max(40).optional().or(z.literal("")),
   price: z.number().min(0).default(0),
   payout_phone: z.string()
     .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
@@ -173,7 +173,8 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
       const { error } = await supabase
         .from("events")
         .update({
-          ...(() => { const { capacity_type, ...rest } = data; return rest; })(),
+          ...(() => { const { capacity_type, category, ...rest } = data; return rest; })(),
+          category: data.category && data.category.trim() && data.category !== "__custom__" ? data.category.trim() : null,
           max_attendees: data.capacity_type === "limited" ? data.max_attendees ?? null : null,
           location: normalizedLocation,
           image_url: imageUrl,
@@ -282,14 +283,67 @@ const EventBuilderEdit = ({ event, onUpdate }: EventBuilderEditProps) => {
               </div>
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select value={watch("category")} onValueChange={(value) => setValue("category", value)} disabled={!editing}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.name} value={cat.name}>{cat.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((cat) => {
+                    const isSelected = watch("category") === cat.name;
+                    return (
+                      <button
+                        key={cat.name}
+                        type="button"
+                        disabled={!editing}
+                        onClick={() => setValue("category", cat.name, { shouldDirty: true })}
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium border-2 transition-all ${
+                          isSelected ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                  {(() => {
+                    const value = watch("category") || "";
+                    const presetNames = categories.map((c) => c.name);
+                    const isOther = !!value && !presetNames.includes(value);
+                    const isSkip = value === "";
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          disabled={!editing}
+                          onClick={() => setValue("category", isOther ? value : "__custom__", { shouldDirty: true })}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium border-2 transition-all ${
+                            isOther || value === "__custom__" ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                          }`}
+                        >+ Other</button>
+                        <button
+                          type="button"
+                          disabled={!editing}
+                          onClick={() => setValue("category", "", { shouldDirty: true })}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium border-2 transition-all ${
+                            isSkip ? "border-primary bg-primary/10 text-primary" : "border-muted bg-background text-muted-foreground hover:border-muted-foreground/30"
+                          }`}
+                        >No category</button>
+                      </>
+                    );
+                  })()}
+                </div>
+                {(() => {
+                  const value = watch("category") || "";
+                  const presetNames = categories.map((c) => c.name);
+                  const showInput = value === "__custom__" || (!!value && !presetNames.includes(value));
+                  if (!showInput) return null;
+                  return (
+                    <Input
+                      autoFocus
+                      disabled={!editing}
+                      placeholder="Type your category"
+                      maxLength={40}
+                      value={value === "__custom__" ? "" : value}
+                      onChange={(e) => setValue("category", e.target.value, { shouldDirty: true })}
+                      className="mt-2 max-w-sm"
+                    />
+                  );
+                })()}
               </div>
             </div>
 
