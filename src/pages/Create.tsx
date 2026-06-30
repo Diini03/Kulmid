@@ -38,7 +38,7 @@ const eventSchema = z.object({
   event_type: z.enum(["in-person", "online", "hybrid"]),
   location: z.string().optional(),
   meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  category: z.string().min(1, "Category is required"),
+  category: z.string().max(40, "Category must be 40 characters or fewer").optional().or(z.literal("")),
   price: z.number().min(0, "Price must be 0 or higher"),
   payout_phone: z.string()
     .regex(SOMALI_PHONE_REGEX, "Enter a valid Somali phone number (e.g. +252611234567)")
@@ -295,7 +295,7 @@ const Create = () => {
         event_type: data.event_type,
         location: normalizedLocation,
         meeting_link: data.meeting_link || null,
-        category: data.category,
+        category: data.category && data.category.trim() ? data.category.trim() : null,
         price: data.price,
         payout_phone: data.payout_phone || null,
         max_attendees: data.capacity_type === "limited" ? data.max_attendees ?? null : null,
