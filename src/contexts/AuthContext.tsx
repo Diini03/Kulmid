@@ -256,22 +256,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           description = "Too many attempts. Please wait a few minutes and try again.";
         } else if (message.includes('already registered') || message.includes('already been registered')) {
           description = "This email is already registered. Try signing in instead.";
+        } else if (message.includes('password')) {
+          description = "Password is too weak. Use at least 6 characters with a letter and a number.";
+        } else if (message.includes('network') || message.includes('failed to fetch')) {
+          description = "Connection problem. Please check your internet and try again.";
+        } else if (message.includes('invalid') && message.includes('email')) {
+          description = "Please enter a valid email address.";
         }
         
         toast({ title: "Sign up failed", description, variant: "destructive" });
         return { error, needsEmailConfirmation: false };
       }
 
-      // Check if we got a session back (email confirmation disabled) or not (confirmation required)
       if (data.session) {
-        // User is signed in immediately — run reconciliation
         await handlePostAuth(data.session.user);
-        toast({ title: "Account created successfully", description: "Welcome! Let's set up your preferences." });
+        toast({ title: "Welcome to Kulmid!", description: "Your account is ready." });
         return { error: null, needsEmailConfirmation: false };
       } else {
-        // No session = email confirmation is required
-        // Don't show misleading "you're signed in" toast
-        return { error: null, needsEmailConfirmation: true };
+        // Email confirmation is still enabled on the Supabase project.
+        // Try to sign the user in immediately so they don't get stuck.
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          toast({
+            title: "Account created",
+            description: "Please check your email to verify your account before signing in.",
+          });
+          return { error: null, needsEmailConfirmation: true };
+        }
+        toast({ title: "Welcome to Kulmid!", description: "Your account is ready." });
+        return { error: null, needsEmailConfirmation: false };
       }
     } catch (error: any) {
       toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
@@ -287,9 +300,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         let description = error.message;
 
         if (msg.includes('email not confirmed')) {
-          description = "Your email hasn't been verified yet. Please check your inbox for a confirmation link.";
+          description = "Your email hasn't been verified yet. Check your inbox for a confirmation link.";
         } else if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
-          description = "Invalid email or password. Please check your credentials and try again.";
+          description = "Wrong email or password. If you forgot your password, use \"Forgot password?\" below.";
+        } else if (msg.includes('rate limit') || msg.includes('too many requests')) {
+          description = "Too many attempts. Please wait a few minutes and try again.";
+        } else if (msg.includes('network') || msg.includes('failed to fetch')) {
+          description = "Connection problem. Please check your internet and try again.";
         }
 
         toast({ title: "Sign in failed", description, variant: "destructive" });
