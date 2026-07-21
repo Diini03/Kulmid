@@ -31,6 +31,20 @@ serve(async (req: Request) => {
 
     const domain = parts[1].toLowerCase();
 
+    // Reject known disposable / temporary email providers
+    const disposableDomains = new Set([
+      "mailinator.com","tempmail.com","10minutemail.com","guerrillamail.com",
+      "yopmail.com","trashmail.com","throwawaymail.com","getnada.com",
+      "temp-mail.org","fakeinbox.com","sharklasers.com","maildrop.cc",
+      "dispostable.com","mintemail.com","mailnesia.com","spambox.us",
+    ]);
+    if (disposableDomains.has(domain)) {
+      return new Response(
+        JSON.stringify({ valid: false, reason: "Please use a permanent email address" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     // Check if domain has MX records (can receive email)
     try {
       const mxRecords = await Deno.resolveDns(domain, "MX");
@@ -41,7 +55,7 @@ serve(async (req: Request) => {
         );
       } else {
         return new Response(
-          JSON.stringify({ valid: false, reason: "This email domain cannot receive emails" }),
+          JSON.stringify({ valid: false, reason: "This email address doesn't exist" }),
           { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
@@ -49,15 +63,16 @@ serve(async (req: Request) => {
       // DNS resolution failed — domain doesn't exist
       console.log("DNS resolution failed for domain:", domain, dnsError);
       return new Response(
-        JSON.stringify({ valid: false, reason: "This email domain doesn't exist" }),
+        JSON.stringify({ valid: false, reason: "This email address doesn't exist" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
   } catch (error) {
     console.error("Error in validate-email-domain:", error);
     return new Response(
-      JSON.stringify({ valid: false, reason: "Validation failed" }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      // Fail-open on unexpected server errors so DNS outages don't block real users
+      JSON.stringify({ valid: true, warning: "Validation unavailable" }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 });
