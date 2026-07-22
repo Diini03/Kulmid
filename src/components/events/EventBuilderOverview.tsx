@@ -227,6 +227,50 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
         </div>
       )}
 
+      {/* Pending Registrations — quick actions */}
+      {pendingGuests.length > 0 && (
+        <div className="border border-primary/30 bg-primary/5 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-primary/20 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Clock className="h-4 w-4 text-primary flex-shrink-0" />
+              <h3 className="text-sm font-semibold truncate">
+                {pendingGuests.length} pending {pendingGuests.length === 1 ? "registration" : "registrations"}
+              </h3>
+            </div>
+            <Button size="sm" onClick={handleApproveAll} disabled={bulkProcessing}>
+              {bulkProcessing ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1.5" />}
+              Approve all
+            </Button>
+          </div>
+          <div className="divide-y divide-border">
+            {pendingGuests.slice(0, 5).map((g) => {
+              const busy = processingIds.has(g.id);
+              return (
+                <div key={g.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium truncate">{g.name || g.email}</div>
+                    {g.name && <div className="text-xs text-muted-foreground truncate">{g.email}</div>}
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive hover:text-destructive" disabled={busy} onClick={() => handleGuestAction(g.id, "reject")} aria-label="Reject">
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" className="h-8" disabled={busy} onClick={() => handleGuestAction(g.id, "approve")}>
+                      {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Check className="h-3.5 w-3.5 mr-1" />Approve</>}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+            {pendingGuests.length > 5 && (
+              <div className="px-4 py-2 text-xs text-muted-foreground text-center">
+                +{pendingGuests.length - 5} more in the Guests tab
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Event Link Section */}
       <div className="border border-border rounded-lg overflow-hidden">
         <div className="px-4 py-3 bg-muted/30 border-b border-border">
