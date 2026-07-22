@@ -293,7 +293,7 @@ const EventBuilderRegistration = ({ eventId }: EventBuilderRegistrationProps) =>
           />
         ))}
 
-        {questions.length === 0 && (
+        {questions.length === 0 ? (
           <button
             type="button"
             onClick={addQuestion}
@@ -306,21 +306,18 @@ const EventBuilderRegistration = ({ eventId }: EventBuilderRegistrationProps) =>
             <p className="font-medium">Add your first question</p>
             <p className="text-sm text-muted-foreground mt-1">Short answer, multiple choice, dropdown, and more.</p>
           </button>
+        ) : (
+          <button
+            type="button"
+            onClick={addQuestion}
+            disabled={saving}
+            className="w-full rounded-xl border-2 border-dashed border-border py-5 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30 transition-colors disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            Add question
+          </button>
         )}
       </div>
-
-      {/* Floating add button */}
-      {questions.length > 0 && (
-        <button
-          type="button"
-          onClick={addQuestion}
-          disabled={saving}
-          className="fixed bottom-6 right-6 z-30 h-14 px-5 rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 flex items-center gap-2 transition-all disabled:opacity-50"
-        >
-          {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
-          <span className="font-medium">Add question</span>
-        </button>
-      )}
     </div>
   );
 };
