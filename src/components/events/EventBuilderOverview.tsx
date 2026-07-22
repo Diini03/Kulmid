@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, MapPin, Users, Clock, CheckCircle, AlertTriangle, UserPlus, Eye, Globe, Video, Link, Copy, ExternalLink, Phone, Download } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, CheckCircle, AlertTriangle, UserPlus, Eye, Globe, Video, Link, Copy, ExternalLink, Phone, Download, Check, X, Loader2 } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -30,10 +30,20 @@ interface RecentGuest {
   created_at: string;
 }
 
+interface PendingGuest {
+  id: string;
+  name: string | null;
+  email: string;
+  created_at: string;
+}
+
 const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) => {
   const [guestStats, setGuestStats] = useState<GuestStats>({ total: 0, confirmed: 0, pending: 0, checkedIn: 0, withPhone: 0 });
   const [recentGuests, setRecentGuests] = useState<RecentGuest[]>([]);
   const [guestsForExport, setGuestsForExport] = useState<GuestExportData[]>([]);
+  const [pendingGuests, setPendingGuests] = useState<PendingGuest[]>([]);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -78,11 +88,61 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
         });
         setRecentGuests(guests.slice(0, 5));
         setGuestsForExport(guests);
+        setPendingGuests(
+          guests
+            .filter((g) => g.status === "pending")
+            .map((g) => ({ id: g.id, name: g.name, email: g.email, created_at: g.created_at }))
+        );
       }
     } catch (error) {
       console.error("Error fetching guests:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGuestAction = async (id: string, action: "approve" | "reject") => {
+    setProcessingIds((prev) => new Set(prev).add(id));
+    try {
+      const { error } = await supabase.functions.invoke("handle-registration-action", {
+        body: { guestId: id, action },
+      });
+      if (error) throw error;
+      toast({ title: action === "approve" ? "Approved" : "Rejected" });
+      await fetchGuestData();
+      onRefresh?.();
+    } catch (e: any) {
+      toast({ title: "Failed", description: e.message, variant: "destructive" });
+    } finally {
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
+  const handleApproveAll = async () => {
+    if (pendingGuests.length === 0) return;
+    setBulkProcessing(true);
+    try {
+      const results = await Promise.allSettled(
+        pendingGuests.map((g) =>
+          supabase.functions.invoke("handle-registration-action", {
+            body: { guestId: g.id, action: "approve" },
+          })
+        )
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      toast({
+        title: failed === 0 ? "All approved" : `${pendingGuests.length - failed} approved`,
+        description: failed > 0 ? `${failed} failed` : `${pendingGuests.length} registrations approved`,
+        variant: failed === pendingGuests.length ? "destructive" : "default",
+      });
+      await fetchGuestData();
+      onRefresh?.();
+    } finally {
+      setBulkProcessing(false);
     }
   };
 
