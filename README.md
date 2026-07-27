@@ -1,8 +1,8 @@
-# Welcome to your Lovable project
+# Welcome to Kulmid project
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/ea85dc00-c4f3-4d81-9e6a-3fcd8168e6c9
+**URL**: https://www.kulmid.com/
 
 ## How can I edit this code?
 
