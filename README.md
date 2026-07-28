@@ -4,7 +4,7 @@
 
 **URL**: https://www.kulmid.com/
 
-## How can I edit this code?
+## How can you edit this code?
 
 There are several ways of editing your application.
 
