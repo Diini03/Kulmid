@@ -176,7 +176,27 @@ const EventView = () => {
 
       {(() => {
         const cap = event.max_attendees as number | null | undefined;
-        const isFull = cap != null && registrationCount >= cap;
+        const regStatus = getRegistrationStatus(event as any, registrationCount);
+        const canRegister = regStatus === "open";
+        const isFull = regStatus === "full";
+        const ctaLabel =
+          regStatus === "open"
+            ? "Register for Event"
+            : regStatus === "full"
+              ? "Event Full"
+              : regStatus === "upcoming"
+                ? "Registration Not Open"
+                : regStatus === "cancelled"
+                  ? "Registration Cancelled"
+                  : "Registration Closed";
+        const opensLabel = formatRegistrationDate(event.registration_open_at);
+        const closesLabel = formatRegistrationDate(event.registration_close_at ?? event.registration_deadline);
+        const statusNote =
+          regStatus === "upcoming" && opensLabel
+            ? `Registration opens on ${opensLabel}`
+            : regStatus === "open" && closesLabel
+              ? `Registration closes on ${closesLabel}`
+              : REGISTRATION_STATUS_META[regStatus].message;
         const spotsLeft = cap != null ? cap - registrationCount : null;
         const lowSpots = cap != null && spotsLeft != null && spotsLeft > 0 && spotsLeft <= Math.max(1, Math.floor(cap * 0.1));
 
