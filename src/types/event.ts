@@ -23,6 +23,7 @@ export const EVENT_PUBLIC_COLUMNS = `
   id, title, date, end_date, location, category, price, image_url,
   description, status, event_type, meeting_link, host_name,
   max_attendees, registration_deadline,
+  registration_open_at, registration_close_at, registration_override, allow_waitlist,
   facebook_url, twitter_url, instagram_url, linkedin_url, website_url,
   created_at, updated_at, created_by, rejection_reason,
   auto_approve_registrations
