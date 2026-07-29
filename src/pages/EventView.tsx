@@ -331,15 +331,27 @@ const EventView = () => {
                   {/* Capacity + CTA (desktop) */}
                   <div className="hidden md:block space-y-3">
                     {showCapacity && CapacityCard}
+                    {regStatus !== "open" && (
+                      <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                        <RegistrationStatusBadge status={regStatus} />
+                        <span className="text-xs">{statusNote}</span>
+                      </div>
+                    )}
                     <Button
                       onClick={() => setRegistrationOpen(true)}
                       variant="primary"
                       size="xl"
                       className="w-full shadow-md shadow-primary/20"
-                      disabled={isFull}
+                      disabled={!canRegister}
                     >
-                      {isFull ? 'Event is Full' : 'Register for Event'}
+                      {ctaLabel}
                     </Button>
+                    {regStatus === "open" && closesLabel && (
+                      <p className="text-xs text-center text-muted-foreground">Registration closes on {closesLabel}</p>
+                    )}
+                    {isFull && event.allow_waitlist && (
+                      <p className="text-xs text-center text-muted-foreground">A waitlist will open soon.</p>
+                    )}
                     <Button asChild variant="outline" size="sm" className="w-full">
                       <a
                         href={(() => {
@@ -480,18 +492,17 @@ const EventView = () => {
 
             {/* Mobile sticky CTA */}
             <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md px-4 py-3">
+              {regStatus !== "open" && (
+                <p className="text-xs text-muted-foreground mb-2 text-center">{statusNote}</p>
+              )}
               <Button
                 onClick={() => setRegistrationOpen(true)}
                 variant="primary"
                 size="lg"
                 className="w-full shadow-md shadow-primary/20"
-                disabled={isFull}
+                disabled={!canRegister}
               >
-                {isFull
-                  ? 'Event is Full'
-                  : cap != null
-                    ? `Register · ${spotsLeft} spots left`
-                    : 'Register for Event'}
+                {regStatus === "open" && cap != null ? `Register · ${spotsLeft} spots left` : ctaLabel}
               </Button>
             </div>
           </>
