@@ -8,6 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import InviteGuestsDialog from "./InviteGuestsDialog";
 import { GuestExportData, generateGuestPhoneCSV, generateGuestContactsCSV } from "@/lib/csvParser";
+import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge";
+import {
+  getRegistrationStatus,
+  getRegistrationCloseDate,
+  daysRemaining,
+  formatRegistrationDate,
+} from "@/lib/registrationStatus";
 
 interface EventBuilderOverviewProps {
   event: any;
@@ -395,6 +402,31 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Registration availability */}
+              {(() => {
+                const status = getRegistrationStatus(event as any, guestStats.confirmed);
+                const opens = formatRegistrationDate(event.registration_open_at);
+                const closes = formatRegistrationDate(event.registration_close_at ?? event.registration_deadline);
+                const days = daysRemaining(getRegistrationCloseDate(event as any));
+                return (
+                  <div className="rounded-lg border bg-muted/40 p-3 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs uppercase tracking-wide text-muted-foreground">Registration</span>
+                      <RegistrationStatusBadge status={status} />
+                    </div>
+                    <div className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+                      <span>Opens: {opens || "Immediately"}</span>
+                      <span>Closes: {closes || "When the event ends"}</span>
+                    </div>
+                    {days != null && status === "open" && (
+                      <p className="text-xs font-medium text-foreground">
+                        {days} day{days === 1 ? "" : "s"} remaining until registration closes
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
