@@ -14,6 +14,12 @@ import { ReportEventDialog } from "@/components/events/ReportEventDialog";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge";
+import {
+  getRegistrationStatus,
+  formatRegistrationDate,
+  REGISTRATION_STATUS_META,
+} from "@/lib/registrationStatus";
 
 const EventView = () => {
   const { id } = useParams();
