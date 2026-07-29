@@ -1,4 +1,6 @@
 import { Seo } from "@/components/Seo";
+import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge";
+import { getRegistrationStatus } from "@/lib/registrationStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
