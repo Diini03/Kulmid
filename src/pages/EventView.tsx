@@ -14,6 +14,12 @@ import { ReportEventDialog } from "@/components/events/ReportEventDialog";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge";
+import {
+  getRegistrationStatus,
+  formatRegistrationDate,
+  REGISTRATION_STATUS_META,
+} from "@/lib/registrationStatus";
 
 const EventView = () => {
   const { id } = useParams();
@@ -176,7 +182,27 @@ const EventView = () => {
 
       {(() => {
         const cap = event.max_attendees as number | null | undefined;
-        const isFull = cap != null && registrationCount >= cap;
+        const regStatus = getRegistrationStatus(event as any, registrationCount);
+        const canRegister = regStatus === "open";
+        const isFull = regStatus === "full";
+        const ctaLabel =
+          regStatus === "open"
+            ? "Register for Event"
+            : regStatus === "full"
+              ? "Event Full"
+              : regStatus === "upcoming"
+                ? "Registration Not Open"
+                : regStatus === "cancelled"
+                  ? "Registration Cancelled"
+                  : "Registration Closed";
+        const opensLabel = formatRegistrationDate(event.registration_open_at);
+        const closesLabel = formatRegistrationDate(event.registration_close_at ?? event.registration_deadline);
+        const statusNote =
+          regStatus === "upcoming" && opensLabel
+            ? `Registration opens on ${opensLabel}`
+            : regStatus === "open" && closesLabel
+              ? `Registration closes on ${closesLabel}`
+              : REGISTRATION_STATUS_META[regStatus].message;
         const spotsLeft = cap != null ? cap - registrationCount : null;
         const lowSpots = cap != null && spotsLeft != null && spotsLeft > 0 && spotsLeft <= Math.max(1, Math.floor(cap * 0.1));
 
@@ -305,15 +331,27 @@ const EventView = () => {
                   {/* Capacity + CTA (desktop) */}
                   <div className="hidden md:block space-y-3">
                     {showCapacity && CapacityCard}
+                    {regStatus !== "open" && (
+                      <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                        <RegistrationStatusBadge status={regStatus} />
+                        <span className="text-xs">{statusNote}</span>
+                      </div>
+                    )}
                     <Button
                       onClick={() => setRegistrationOpen(true)}
                       variant="primary"
                       size="xl"
                       className="w-full shadow-md shadow-primary/20"
-                      disabled={isFull}
+                      disabled={!canRegister}
                     >
-                      {isFull ? 'Event is Full' : 'Register for Event'}
+                      {ctaLabel}
                     </Button>
+                    {regStatus === "open" && closesLabel && (
+                      <p className="text-xs text-center text-muted-foreground">Registration closes on {closesLabel}</p>
+                    )}
+                    {isFull && event.allow_waitlist && (
+                      <p className="text-xs text-center text-muted-foreground">A waitlist will open soon.</p>
+                    )}
                     <Button asChild variant="outline" size="sm" className="w-full">
                       <a
                         href={(() => {
@@ -454,18 +492,17 @@ const EventView = () => {
 
             {/* Mobile sticky CTA */}
             <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md px-4 py-3">
+              {regStatus !== "open" && (
+                <p className="text-xs text-muted-foreground mb-2 text-center">{statusNote}</p>
+              )}
               <Button
                 onClick={() => setRegistrationOpen(true)}
                 variant="primary"
                 size="lg"
                 className="w-full shadow-md shadow-primary/20"
-                disabled={isFull}
+                disabled={!canRegister}
               >
-                {isFull
-                  ? 'Event is Full'
-                  : cap != null
-                    ? `Register · ${spotsLeft} spots left`
-                    : 'Register for Event'}
+                {regStatus === "open" && cap != null ? `Register · ${spotsLeft} spots left` : ctaLabel}
               </Button>
             </div>
           </>

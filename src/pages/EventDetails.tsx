@@ -15,6 +15,12 @@ import { ReportEventDialog } from "@/components/events/ReportEventDialog";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge";
+import {
+  getRegistrationStatus,
+  formatRegistrationDate,
+  REGISTRATION_STATUS_META,
+} from "@/lib/registrationStatus";
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -278,7 +284,21 @@ const EventDetails = () => {
           </div>
         ) : (() => {
           const cap = event.max_attendees as number | null | undefined;
-          const isFull = cap != null && registrationCount >= cap;
+          const regStatus = getRegistrationStatus(event as any, registrationCount);
+          const isFull = regStatus === "full";
+          const canRegister = regStatus === "open";
+          const opensLabel = formatRegistrationDate((event as any).registration_open_at);
+          const closesLabel = formatRegistrationDate((event as any).registration_close_at ?? (event as any).registration_deadline);
+          const ctaLabel =
+            regStatus === "open"
+              ? "Register for Event"
+              : regStatus === "full"
+                ? "Event Full"
+                : regStatus === "upcoming"
+                  ? "Registration Not Open"
+                  : regStatus === "cancelled"
+                    ? "Registration Cancelled"
+                    : "Registration Closed";
           return (
             <>
               {cap != null ? (
@@ -300,9 +320,22 @@ const EventDetails = () => {
                   <span>{registrationCount} {registrationCount === 1 ? 'person' : 'people'} registered</span>
                 </div>
               ) : null}
-              <Button onClick={handleRegisterClick} size="lg" className="w-full" disabled={isFull}>
-                {isFull ? 'Event is Full' : 'Register for Event'}
+              {regStatus !== "open" && (
+                <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2">
+                  <RegistrationStatusBadge status={regStatus} />
+                  <span className="text-xs text-muted-foreground">
+                    {regStatus === "upcoming" && opensLabel
+                      ? `Registration opens on ${opensLabel}`
+                      : REGISTRATION_STATUS_META[regStatus].message}
+                  </span>
+                </div>
+              )}
+              <Button onClick={handleRegisterClick} size="lg" className="w-full" disabled={!canRegister}>
+                {ctaLabel}
               </Button>
+              {regStatus === "open" && closesLabel && (
+                <p className="text-xs text-center text-muted-foreground">Registration closes on {closesLabel}</p>
+              )}
             </>
           );
         })()}

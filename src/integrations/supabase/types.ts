@@ -398,6 +398,7 @@ export type Database = {
       }
       events: {
         Row: {
+          allow_waitlist: boolean
           auto_approve_registrations: boolean | null
           category: string
           created_at: string | null
@@ -420,7 +421,10 @@ export type Database = {
           meeting_link: string | null
           payout_phone: string | null
           price: number
+          registration_close_at: string | null
           registration_deadline: string | null
+          registration_open_at: string | null
+          registration_override: string | null
           rejection_reason: string | null
           status: string
           title: string
@@ -429,6 +433,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          allow_waitlist?: boolean
           auto_approve_registrations?: boolean | null
           category: string
           created_at?: string | null
@@ -451,7 +456,10 @@ export type Database = {
           meeting_link?: string | null
           payout_phone?: string | null
           price?: number
+          registration_close_at?: string | null
           registration_deadline?: string | null
+          registration_open_at?: string | null
+          registration_override?: string | null
           rejection_reason?: string | null
           status?: string
           title: string
@@ -460,6 +468,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          allow_waitlist?: boolean
           auto_approve_registrations?: boolean | null
           category?: string
           created_at?: string | null
@@ -482,7 +491,10 @@ export type Database = {
           meeting_link?: string | null
           payout_phone?: string | null
           price?: number
+          registration_close_at?: string | null
           registration_deadline?: string | null
+          registration_open_at?: string | null
+          registration_override?: string | null
           rejection_reason?: string | null
           status?: string
           title?: string
@@ -818,6 +830,10 @@ export type Database = {
       get_event_registration_count: {
         Args: { _event_id: string }
         Returns: number
+      }
+      get_event_registration_status: {
+        Args: { _event_id: string }
+        Returns: string
       }
       has_role: {
         Args: {

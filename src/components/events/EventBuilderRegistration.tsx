@@ -35,6 +35,7 @@ import {
   Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import RegistrationAvailabilityCard from "@/components/events/RegistrationAvailabilityCard";
 
 interface RegistrationField {
   id: string;
@@ -239,6 +240,11 @@ const EventBuilderRegistration = ({ eventId }: EventBuilderRegistrationProps) =>
       <div className="mb-4">
         <h2 className="text-xl font-semibold">Registration form</h2>
         <p className="text-sm text-muted-foreground">Click a question to edit it. Changes save automatically.</p>
+      </div>
+
+      {/* Availability window */}
+      <div className="mb-6">
+        <RegistrationAvailabilityCard eventId={eventId} />
       </div>
 
       {/* Required basics — built-in fields */}
