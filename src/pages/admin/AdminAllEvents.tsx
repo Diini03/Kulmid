@@ -342,6 +342,9 @@ const AdminAllEvents = () => {
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium capitalize border ${STATUS_STYLES[event.status] || STATUS_STYLES.draft}`}>
                             {event.status}
                           </span>
+                          <div className="mt-1">
+                            <RegistrationStatusBadge status={getRegistrationStatus(event as any, guests)} />
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-xs text-muted-foreground flex items-center gap-1">
