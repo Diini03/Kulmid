@@ -46,6 +46,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const CancelRegistration = lazy(() => import("./pages/CancelRegistration"));
 
 // Admin pages
 const AdminOverview = lazy(() => import("./pages/admin/AdminOverview"));
@@ -58,6 +59,7 @@ const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
 const AdminPlatformSettings = lazy(() => import("./pages/admin/AdminPlatformSettings"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
+const AdminAuditLog = lazy(() => import("./pages/admin/AdminAuditLog"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -168,6 +170,7 @@ const App = () => (
                   <Route path="/event/:id" element={<SuspenseWrapper><EventView /></SuspenseWrapper>} />
                   <Route path="/e/:id" element={<ShortEventRedirect />} />
                   <Route path="/check-in/:token" element={<SuspenseWrapper><CheckIn /></SuspenseWrapper>} />
+                  <Route path="/r/cancel/:token" element={<SuspenseWrapper><CancelRegistration /></SuspenseWrapper>} />
                   
                   <Route path="/event/:eventId/scanner" element={<ProtectedRoute><SuspenseWrapper><EventScanner /></SuspenseWrapper></ProtectedRoute>} />
                   <Route path="/my-events" element={<Navigate to="/events" replace />} />
@@ -182,6 +185,7 @@ const App = () => (
                     <Route path="/admin/categories" element={<SuspenseWrapper><AdminCategories /></SuspenseWrapper>} />
                     <Route path="/admin/analytics" element={<SuspenseWrapper><AdminAnalytics /></SuspenseWrapper>} />
                     <Route path="/admin/reports" element={<SuspenseWrapper><AdminReports /></SuspenseWrapper>} />
+                    <Route path="/admin/audit" element={<SuspenseWrapper><AdminAuditLog /></SuspenseWrapper>} />
                     <Route path="/admin/settings/platform" element={<SuspenseWrapper><AdminPlatformSettings /></SuspenseWrapper>} />
                     <Route path="/admin/settings/admin" element={<SuspenseWrapper><AdminSettingsPage /></SuspenseWrapper>} />
                     <Route path="/admin/settings" element={<Navigate to="/admin/settings/platform" replace />} />

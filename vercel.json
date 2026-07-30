@@ -1,5 +1,29 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
+  "rewrites": [
+    {
+      "source": "/event/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|WhatsApp|Twitterbot|Slackbot|LinkedInBot|TelegramBot|Discordbot|Pinterest|redditbot|Googlebot|bingbot|Applebot).*"
+        }
+      ],
+      "destination": "https://txjglujklpxsfhedwwkl.supabase.co/functions/v1/event-meta?id=:id"
+    },
+    {
+      "source": "/e/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|WhatsApp|Twitterbot|Slackbot|LinkedInBot|TelegramBot|Discordbot|Pinterest|redditbot|Googlebot|bingbot|Applebot).*"
+        }
+      ],
+      "destination": "https://txjglujklpxsfhedwwkl.supabase.co/functions/v1/event-meta?id=:id"
+    },
+    { "source": "/(.*)", "destination": "/" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

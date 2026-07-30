@@ -26,3 +26,15 @@ verify_jwt = false
 
 [functions.verify-check-in]
 verify_jwt = false
+
+[functions.cancel-registration]
+verify_jwt = false
+
+[functions.send-event-reminders]
+verify_jwt = false
+
+[functions.send-bulk-email]
+verify_jwt = false
+
+[functions.event-meta]
+verify_jwt = false
