@@ -52,6 +52,58 @@ const formatAnswer = (answer: Answer | undefined): string => {
   return "";
 };
 
+const buildTable = (guests: Guest[], questions: Question[], answers: Answer[]) => {
+  const headers = [
+    "Name",
+    "Email",
+    "Phone",
+    "Organization",
+    "Status",
+    "Checked In",
+    "Registered At",
+    ...questions.map((q) =>
+      q.is_active === false ? `${q.question_text} (removed)` : q.question_text
+    ),
+  ];
+
+  const answerMap = new Map<string, Answer>();
+  for (const a of answers) answerMap.set(`${a.registration_id}::${a.question_id}`, a);
+
+  const rows = guests.map((g) => [
+    g.name || "",
+    g.email,
+    g.phone_number || "",
+    g.organization || "",
+    g.status,
+    g.checked_in ? "Yes" : "No",
+    new Date(g.created_at).toLocaleString(),
+    ...questions.map((q) => formatAnswer(answerMap.get(`${g.id}::${q.id}`))),
+  ]);
+
+  return { headers, rows };
+};
+
+const fileBase = (eventTitle: string) =>
+  `${eventTitle.replace(/[^a-z0-9]+/gi, "-").toLowerCase().slice(0, 40) || "event"}-registrations-${new Date()
+    .toISOString()
+    .slice(0, 10)}`;
+
+/** Downloads all registrations as .xlsx, with every dynamic question as its own column. */
+export const exportRegistrationsToExcel = async (
+  eventTitle: string,
+  guests: Guest[],
+  questions: Question[],
+  answers: Answer[]
+) => {
+  const XLSX = await import("xlsx");
+  const { headers, rows } = buildTable(guests, questions, answers);
+  const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  sheet["!cols"] = headers.map((h) => ({ wch: Math.min(40, Math.max(12, h.length + 4)) }));
+  const book = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(book, sheet, "Registrations");
+  XLSX.writeFile(book, `${fileBase(eventTitle)}.xlsx`);
+};
+
 export const exportRegistrationsToCsv = (
   eventTitle: string,
   guests: Guest[],

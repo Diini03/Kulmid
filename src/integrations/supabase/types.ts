@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: []
+      }
       attendance_stats: {
         Row: {
           actual_rate: number | null
@@ -127,9 +160,44 @@ export type Database = {
         }
         Relationships: []
       }
+      email_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_id: string | null
+          guest_id: string | null
+          id: string
+          kind: string
+          recipient: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_id?: string | null
+          guest_id?: string | null
+          id?: string
+          kind: string
+          recipient: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_id?: string | null
+          guest_id?: string | null
+          id?: string
+          kind?: string
+          recipient?: string
+          status?: string
+        }
+        Relationships: []
+      }
       event_guests: {
         Row: {
           about: string | null
+          cancel_token: string
+          cancelled_at: string | null
           check_in_token: string | null
           checked_in: boolean | null
           checked_in_at: string | null
@@ -146,17 +214,21 @@ export type Database = {
           notes: string | null
           organization: string | null
           phone_number: string | null
+          promoted_at: string | null
           questions: string | null
           registration_type: string | null
           rsvp_at: string | null
           special_requirements: string | null
           status: string
           updated_at: string | null
+          waitlist_position: number | null
           what_to_gain: string | null
           why_interested: string | null
         }
         Insert: {
           about?: string | null
+          cancel_token?: string
+          cancelled_at?: string | null
           check_in_token?: string | null
           checked_in?: boolean | null
           checked_in_at?: string | null
@@ -173,17 +245,21 @@ export type Database = {
           notes?: string | null
           organization?: string | null
           phone_number?: string | null
+          promoted_at?: string | null
           questions?: string | null
           registration_type?: string | null
           rsvp_at?: string | null
           special_requirements?: string | null
           status?: string
           updated_at?: string | null
+          waitlist_position?: number | null
           what_to_gain?: string | null
           why_interested?: string | null
         }
         Update: {
           about?: string | null
+          cancel_token?: string
+          cancelled_at?: string | null
           check_in_token?: string | null
           checked_in?: boolean | null
           checked_in_at?: string | null
@@ -200,12 +276,14 @@ export type Database = {
           notes?: string | null
           organization?: string | null
           phone_number?: string | null
+          promoted_at?: string | null
           questions?: string | null
           registration_type?: string | null
           rsvp_at?: string | null
           special_requirements?: string | null
           status?: string
           updated_at?: string | null
+          waitlist_position?: number | null
           what_to_gain?: string | null
           why_interested?: string | null
         }
@@ -426,6 +504,7 @@ export type Database = {
           registration_open_at: string | null
           registration_override: string | null
           rejection_reason: string | null
+          slug: string | null
           status: string
           title: string
           twitter_url: string | null
@@ -461,6 +540,7 @@ export type Database = {
           registration_open_at?: string | null
           registration_override?: string | null
           rejection_reason?: string | null
+          slug?: string | null
           status?: string
           title: string
           twitter_url?: string | null
@@ -496,6 +576,7 @@ export type Database = {
           registration_open_at?: string | null
           registration_override?: string | null
           rejection_reason?: string | null
+          slug?: string | null
           status?: string
           title?: string
           twitter_url?: string | null
@@ -677,6 +758,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_counters: {
+        Row: {
+          bucket: string
+          count: number
+          id: string
+          identifier: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          id?: string
+          identifier: string
+          window_start?: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          id?: string
+          identifier?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           admin_notes: string | null
@@ -823,6 +928,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_event_slug: {
+        Args: { _event_id: string; _title: string }
+        Returns: string
+      }
       generate_username_slug: {
         Args: { _name: string; _user_id: string }
         Returns: string
@@ -835,6 +944,10 @@ export type Database = {
         Args: { _event_id: string }
         Returns: string
       }
+      get_organizer_aggregate_stats: {
+        Args: { _user_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -842,6 +955,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      promote_event_waitlist: { Args: { _event_id: string }; Returns: number }
       update_event_status: { Args: never; Returns: undefined }
     }
     Enums: {
