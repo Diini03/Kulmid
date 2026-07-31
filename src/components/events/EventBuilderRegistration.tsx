@@ -239,7 +239,17 @@ const EventBuilderRegistration = ({ eventId }: EventBuilderRegistrationProps) =>
       {/* Header */}
       <div className="mb-4">
         <h2 className="text-xl font-semibold">Registration form</h2>
-        <p className="text-sm text-muted-foreground">Click a question to edit it. Changes save automatically.</p>
+        <p className="text-sm text-muted-foreground">
+          Click a question to edit it. Changes save automatically.{" "}
+          <a
+            href="/guides/build-your-registration-form"
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary hover:underline"
+          >
+            Read the guide
+          </a>
+        </p>
       </div>
 
       {/* Availability window */}
