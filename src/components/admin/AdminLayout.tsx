@@ -31,7 +31,7 @@ type BadgeKey = "pendingEvents" | "openReports" | "pendingRegistrations";
 
 const menuItems: { icon: typeof LayoutDashboard; label: string; path: string; badgeKey?: BadgeKey }[] = [
   { icon: LayoutDashboard, label: "Overview", path: "/admin" },
-  { icon: ShieldCheck, label: "Event Moderation", path: "/admin/events/pending", badgeKey: "pendingEvents" },
+  { icon: ShieldCheck, label: "Curation", path: "/admin/events/pending", badgeKey: "pendingEvents" },
   { icon: Calendar, label: "All Events", path: "/admin/events" },
   { icon: Users, label: "Users", path: "/admin/users" },
   { icon: ClipboardList, label: "Registrations", path: "/admin/registrations", badgeKey: "pendingRegistrations" },

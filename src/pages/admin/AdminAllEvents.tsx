@@ -15,26 +15,60 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MoreHorizontal, Search, Trash2, Eye, Check, X, Calendar, MapPin, Users, Clock, Filter, Loader2 } from "lucide-react";
+import { MoreHorizontal, Search, Trash2, Eye, X, Calendar, MapPin, Users, Clock, Filter, Loader2, Star, StarOff, Settings2, ArrowUpDown, RotateCcw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
+import { logAdminAction } from "@/lib/auditLog";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { useProcessingSet } from "@/hooks/useAsyncAction";
 
+const LIVE_STATUSES = ["published", "pending", "approved", "upcoming", "ongoing"];
+
 const STATUS_TABS = [
   { key: "all", label: "All Events" },
-  { key: "pending", label: "Pending" },
-  { key: "approved", label: "Approved" },
+  { key: "featured", label: "Featured" },
+  { key: "live", label: "Live" },
   { key: "rejected", label: "Rejected" },
   { key: "draft", label: "Draft" },
   { key: "past", label: "Past" },
 ];
 
+const EVENT_COLUMNS =
+  "id, title, date, end_date, location, category, status, image_url, max_attendees, created_at, created_by, rejection_reason, registration_open_at, registration_close_at, allow_waitlist, registration_override, slug, profiles:created_by(full_name)";
+
+type SortKey = "created" | "date" | "guests";
+
+const isPast = (e: any) => new Date(e.end_date || e.date).getTime() < Date.now();
+
+const matchesTab = (e: any, tab: string) => {
+  const status = e.status || "draft";
+  switch (tab) {
+    case "all":
+      return true;
+    case "featured":
+      return status === "featured";
+    case "live":
+      return LIVE_STATUSES.includes(status) && !isPast(e);
+    case "rejected":
+      return status === "rejected";
+    case "draft":
+      return status === "draft";
+    case "past":
+      return isPast(e);
+    default:
+      return true;
+  }
+};
+
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-transparent",
   pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   approved: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  published: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  featured: "bg-primary/10 text-primary border-primary/20",
   upcoming: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
   ongoing: "bg-primary/10 text-primary border-primary/20",
   rejected: "bg-destructive/10 text-destructive border-destructive/20",
@@ -51,6 +85,9 @@ const AdminAllEvents = () => {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortKey, setSortKey] = useState<SortKey>("created");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
   const [deleteEvent, setDeleteEvent] = useState<any>(null);
   const [rejectEvent, setRejectEvent] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -66,13 +103,14 @@ const AdminAllEvents = () => {
     setError(null);
     try {
       const [eventsRes, guestsRes] = await Promise.all([
-        supabase.from("events").select("*, profiles:created_by(full_name)").order("created_at", { ascending: false }),
+        supabase.from("events").select(EVENT_COLUMNS).order("created_at", { ascending: false }),
         supabase.from("event_guests").select("event_id"),
       ]);
 
       if (eventsRes.error) throw eventsRes.error;
 
-      setEvents(eventsRes.data || []);
+      setEvents((eventsRes.data as any[]) || []);
+      setSelected([]);
 
       const counts: Record<string, number> = {};
       (guestsRes.data || []).forEach((g: any) => {
@@ -91,17 +129,16 @@ const AdminAllEvents = () => {
   }, [events]);
 
   const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: events.length };
-    events.forEach((e: any) => {
-      const s = e.status || "draft";
-      counts[s] = (counts[s] || 0) + 1;
+    const counts: Record<string, number> = {};
+    STATUS_TABS.forEach((tab) => {
+      counts[tab.key] = events.filter((e) => matchesTab(e, tab.key)).length;
     });
     return counts;
   }, [events]);
 
   const filtered = useMemo(() => {
-    return events.filter((e: any) => {
-      if (activeTab !== "all" && e.status !== activeTab) return false;
+    const rows = events.filter((e: any) => {
+      if (!matchesTab(e, activeTab)) return false;
       if (categoryFilter !== "all" && e.category !== categoryFilter) return false;
       if (search) {
         const s = search.toLowerCase();
@@ -113,7 +150,61 @@ const AdminAllEvents = () => {
       }
       return true;
     });
-  }, [events, activeTab, categoryFilter, search]);
+
+    return [...rows].sort((a, b) => {
+      if (sortKey === "guests") return (guestCounts[b.id] || 0) - (guestCounts[a.id] || 0);
+      if (sortKey === "date") return new Date(a.date).getTime() - new Date(b.date).getTime();
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [events, activeTab, categoryFilter, search, sortKey, guestCounts]);
+
+  const totals = useMemo(() => ({
+    total: events.length,
+    featured: events.filter((e) => e.status === "featured").length,
+    live: events.filter((e) => LIVE_STATUSES.includes(e.status) && !isPast(e)).length,
+    past: events.filter(isPast).length,
+    registrations: Object.values(guestCounts).reduce((a, b) => a + b, 0),
+  }), [events, guestCounts]);
+
+  const allVisibleSelected = filtered.length > 0 && filtered.every((e) => selected.includes(e.id));
+
+  const toggleSelectAll = () => {
+    setSelected(allVisibleSelected ? [] : filtered.map((e) => e.id));
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const bulkStatus = async (status: string) => {
+    if (selected.length === 0) return;
+    setBulkProcessing(true);
+    const { error } = await supabase.from("events").update({ status }).in("id", selected);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `${selected.length} event${selected.length === 1 ? "" : "s"} updated` });
+      setEvents((prev) => prev.map((e) => (selected.includes(e.id) ? { ...e, status } : e)));
+      logAdminAction(status === "featured" ? "event.feature" : "event.unfeature", "event", null, { ids: selected, status });
+      setSelected([]);
+    }
+    setBulkProcessing(false);
+  };
+
+  const bulkDelete = async () => {
+    if (selected.length === 0) return;
+    setBulkProcessing(true);
+    const { error } = await supabase.from("events").delete().in("id", selected);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `${selected.length} event${selected.length === 1 ? "" : "s"} deleted` });
+      setEvents((prev) => prev.filter((e) => !selected.includes(e.id)));
+      logAdminAction("event.delete", "event", null, { ids: selected });
+      setSelected([]);
+    }
+    setBulkProcessing(false);
+  };
 
   const handleStatusChange = async (eventId: string, status: string) => {
     if (isProcessing(eventId)) return;
@@ -124,6 +215,12 @@ const AdminAllEvents = () => {
     } else {
       toast({ title: `Event ${status}` });
       setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status } : e));
+      logAdminAction(
+        status === "featured" ? "event.feature" : status === "published" ? "event.unfeature" : "event.status_change",
+        "event",
+        eventId,
+        { status }
+      );
     }
     stopProcessing(eventId);
   };
@@ -140,6 +237,7 @@ const AdminAllEvents = () => {
     } else {
       toast({ title: "Event rejected" });
       setEvents(prev => prev.map(e => e.id === rejectEvent.id ? { ...e, status: "rejected", rejection_reason: rejectionReason || null } : e));
+      logAdminAction("event.reject", "event", rejectEvent.id, { reason: rejectionReason || null });
       setRejectEvent(null);
       setRejectionReason("");
     }
@@ -155,6 +253,7 @@ const AdminAllEvents = () => {
     } else {
       toast({ title: "Event deleted" });
       setEvents(prev => prev.filter(e => e.id !== deleteEvent.id));
+      logAdminAction("event.delete", "event", deleteEvent.id, { title: deleteEvent.title });
       setDeleteEvent(null);
     }
     setDialogProcessing(false);
@@ -219,6 +318,24 @@ const AdminAllEvents = () => {
           </div>
         </div>
 
+        {/* Stat strip */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {[
+            { label: "Total", value: totals.total },
+            { label: "Featured", value: totals.featured },
+            { label: "Live", value: totals.live },
+            { label: "Past", value: totals.past },
+            { label: "Registrations", value: totals.registrations },
+          ].map((s) => (
+            <Card key={s.label} className="border">
+              <CardContent className="p-4">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                <p className="text-xl font-bold mt-1">{s.value}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <div className="flex items-center gap-1 overflow-x-auto pb-1 -mb-1">
           {STATUS_TABS.map((tab) => {
             const count = statusCounts[tab.key] || 0;
@@ -265,12 +382,41 @@ const AdminAllEvents = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+            <SelectTrigger className="w-[180px] h-9">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created">Newest created</SelectItem>
+              <SelectItem value="date">Event date</SelectItem>
+              <SelectItem value="guests">Most registrations</SelectItem>
+            </SelectContent>
+          </Select>
           {(search || categoryFilter !== "all") && (
             <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={() => { setSearch(""); setCategoryFilter("all"); }}>
               Clear filters
             </Button>
           )}
         </div>
+
+        {selected.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-4 py-3">
+            <span className="text-sm font-medium">{selected.length} selected</span>
+            <div className="flex flex-wrap gap-2 ml-auto">
+              <Button size="sm" variant="outline" className="h-8 text-xs" disabled={bulkProcessing} onClick={() => bulkStatus("featured")}>
+                <Star className="h-3.5 w-3.5 mr-1.5" />Feature
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 text-xs" disabled={bulkProcessing} onClick={() => bulkStatus("published")}>
+                <StarOff className="h-3.5 w-3.5 mr-1.5" />Unfeature
+              </Button>
+              <Button size="sm" variant="destructive" className="h-8 text-xs" disabled={bulkProcessing} onClick={bulkDelete}>
+                {bulkProcessing ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 mr-1.5" />}Delete
+              </Button>
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSelected([])}>Clear</Button>
+            </div>
+          </div>
+        )}
 
         <Card className="border">
           <CardContent className="p-0">
@@ -286,6 +432,9 @@ const AdminAllEvents = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-10">
+                      <Checkbox checked={allVisibleSelected} onCheckedChange={toggleSelectAll} aria-label="Select all" />
+                    </TableHead>
                     <TableHead className="font-semibold">Event</TableHead>
                     <TableHead className="font-semibold">Host</TableHead>
                     <TableHead className="font-semibold">Date</TableHead>
@@ -304,7 +453,14 @@ const AdminAllEvents = () => {
                     const hostName = (event.profiles as any)?.full_name || "Unknown";
                     const eventProcessing = isProcessing(event.id);
                     return (
-                      <TableRow key={event.id} className="hover:bg-muted/50">
+                      <TableRow key={event.id} className="hover:bg-muted/50" data-state={selected.includes(event.id) ? "selected" : undefined}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selected.includes(event.id)}
+                            onCheckedChange={() => toggleSelect(event.id)}
+                            aria-label={`Select ${event.title}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-3 min-w-0">
                             {event.image_url ? (
@@ -367,34 +523,31 @@ const AdminAllEvents = () => {
                                   <Eye className="h-4 w-4 mr-2" />View Event
                                 </a>
                               </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to={`/event/${event.id}/builder`}>
+                                  <Settings2 className="h-4 w-4 mr-2" />Open Builder
+                                </Link>
+                              </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              {event.status === "pending" && (
-                                <>
-                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "approved")}>
-                                    <Check className="h-4 w-4 mr-2 text-emerald-500" />Approve
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => { setRejectEvent(event); setRejectionReason(""); }}>
-                                    <X className="h-4 w-4 mr-2 text-destructive" />Reject
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                </>
+                              {event.status === "featured" ? (
+                                <DropdownMenuItem onClick={() => handleStatusChange(event.id, "published")}>
+                                  <StarOff className="h-4 w-4 mr-2" />Remove from Featured
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleStatusChange(event.id, "featured")}>
+                                  <Star className="h-4 w-4 mr-2 text-primary" />Feature on Discover
+                                </DropdownMenuItem>
                               )}
-                              {event.status === "rejected" && (
-                                <>
-                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "approved")}>
-                                    <Check className="h-4 w-4 mr-2 text-emerald-500" />Approve
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                </>
+                              {event.status === "rejected" ? (
+                                <DropdownMenuItem onClick={() => handleStatusChange(event.id, "published")}>
+                                  <RotateCcw className="h-4 w-4 mr-2 text-emerald-500" />Restore to Live
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => { setRejectEvent(event); setRejectionReason(""); }}>
+                                  <X className="h-4 w-4 mr-2 text-destructive" />Reject
+                                </DropdownMenuItem>
                               )}
-                              {event.status === "approved" && (
-                                <>
-                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "pending")}>
-                                    <Clock className="h-4 w-4 mr-2" />Move to Pending
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                </>
-                              )}
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteEvent(event)}>
                                 <Trash2 className="h-4 w-4 mr-2" />Delete Event
                               </DropdownMenuItem>

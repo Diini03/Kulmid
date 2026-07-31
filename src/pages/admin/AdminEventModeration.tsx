@@ -39,6 +39,7 @@ const AdminEventModeration = () => {
         .from("events")
         .select("*, profiles:created_by(full_name)")
         .in("status", ["published", "pending"])
+        .gte("date", new Date().toISOString())
         .order("created_at", { ascending: false });
       if (fetchError) throw fetchError;
       setEvents(data || []);

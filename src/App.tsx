@@ -42,6 +42,8 @@ const CheckIn = lazy(() => import("./pages/CheckIn"));
 const SystemDocumentation = lazy(() => import("./pages/SystemDocumentation"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Help = lazy(() => import("./pages/Help"));
+const Guides = lazy(() => import("./pages/Guides"));
+const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -140,7 +142,9 @@ const App = () => (
                     <Route path="/team" element={<Navigate to="/about" replace />} />
                     <Route path="/contact" element={<SuspenseWrapper><Contact /></SuspenseWrapper>} />
                     <Route path="/help" element={<SuspenseWrapper><Help /></SuspenseWrapper>} />
-                    <Route path="/guide" element={<Navigate to="/about" replace />} />
+                   <Route path="/guides" element={<SuspenseWrapper><Guides /></SuspenseWrapper>} />
+                   <Route path="/guides/:slug" element={<SuspenseWrapper><GuideDetail /></SuspenseWrapper>} />
+                   <Route path="/guide" element={<Navigate to="/guides" replace />} />
                     <Route path="/pricing" element={<SuspenseWrapper><Pricing /></SuspenseWrapper>} />
                     <Route path="/privacy" element={<SuspenseWrapper><Privacy /></SuspenseWrapper>} />
                     <Route path="/terms" element={<SuspenseWrapper><Terms /></SuspenseWrapper>} />

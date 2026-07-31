@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { FAQChips } from "@/components/chat/FAQChips";
@@ -254,6 +255,23 @@ export default function Help() {
 
         {/* Two-column layout */}
         <section className="container max-w-6xl px-4 py-10">
+          <Link
+            to="/guides"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-5 mb-8 hover:border-primary/40 transition-colors group"
+          >
+            <div>
+              <h2 className="font-medium group-hover:text-primary transition-colors">
+                Step-by-step guides
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Walkthroughs for creating events, building forms, check-in, insights and the AI assistant.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+              Browse guides <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </Link>
+
           <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
             {/* Sidebar (desktop) / horizontal pill row (mobile) */}
             <aside>

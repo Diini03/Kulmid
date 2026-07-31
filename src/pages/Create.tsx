@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -362,6 +362,12 @@ const Create = () => {
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Create New Event</h1>
           <p className="text-muted-foreground">
             Publish instantly — share your event link the moment you save.
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            New here?{" "}
+            <Link to="/guides/create-your-first-event" className="text-primary hover:underline">
+              Read the guide to creating an event
+            </Link>
           </p>
         </div>
 
