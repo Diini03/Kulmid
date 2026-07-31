@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -365,9 +365,9 @@ const Create = () => {
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             New here?{" "}
-            <a href="/guides/create-your-first-event" className="text-primary hover:underline">
+            <Link to="/guides/create-your-first-event" className="text-primary hover:underline">
               Read the guide to creating an event
-            </a>
+            </Link>
           </p>
         </div>
 
