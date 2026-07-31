@@ -1,6 +1,6 @@
 # Welcome to Kulmid project
 
-## Project info
+## Project info!
 
 **URL**: https://www.kulmid.com/
 
