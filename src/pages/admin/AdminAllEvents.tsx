@@ -432,6 +432,9 @@ const AdminAllEvents = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-10">
+                      <Checkbox checked={allVisibleSelected} onCheckedChange={toggleSelectAll} aria-label="Select all" />
+                    </TableHead>
                     <TableHead className="font-semibold">Event</TableHead>
                     <TableHead className="font-semibold">Host</TableHead>
                     <TableHead className="font-semibold">Date</TableHead>
@@ -450,7 +453,14 @@ const AdminAllEvents = () => {
                     const hostName = (event.profiles as any)?.full_name || "Unknown";
                     const eventProcessing = isProcessing(event.id);
                     return (
-                      <TableRow key={event.id} className="hover:bg-muted/50">
+                      <TableRow key={event.id} className="hover:bg-muted/50" data-state={selected.includes(event.id) ? "selected" : undefined}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selected.includes(event.id)}
+                            onCheckedChange={() => toggleSelect(event.id)}
+                            aria-label={`Select ${event.title}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-3 min-w-0">
                             {event.image_url ? (
@@ -513,34 +523,31 @@ const AdminAllEvents = () => {
                                   <Eye className="h-4 w-4 mr-2" />View Event
                                 </a>
                               </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to={`/event/${event.id}/builder`}>
+                                  <Settings2 className="h-4 w-4 mr-2" />Open Builder
+                                </Link>
+                              </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              {event.status === "pending" && (
-                                <>
-                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "approved")}>
-                                    <Check className="h-4 w-4 mr-2 text-emerald-500" />Approve
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => { setRejectEvent(event); setRejectionReason(""); }}>
-                                    <X className="h-4 w-4 mr-2 text-destructive" />Reject
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                </>
+                              {event.status === "featured" ? (
+                                <DropdownMenuItem onClick={() => handleStatusChange(event.id, "published")}>
+                                  <StarOff className="h-4 w-4 mr-2" />Remove from Featured
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleStatusChange(event.id, "featured")}>
+                                  <Star className="h-4 w-4 mr-2 text-primary" />Feature on Discover
+                                </DropdownMenuItem>
                               )}
-                              {event.status === "rejected" && (
-                                <>
-                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "approved")}>
-                                    <Check className="h-4 w-4 mr-2 text-emerald-500" />Approve
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                </>
+                              {event.status === "rejected" ? (
+                                <DropdownMenuItem onClick={() => handleStatusChange(event.id, "published")}>
+                                  <RotateCcw className="h-4 w-4 mr-2 text-emerald-500" />Restore to Live
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => { setRejectEvent(event); setRejectionReason(""); }}>
+                                  <X className="h-4 w-4 mr-2 text-destructive" />Reject
+                                </DropdownMenuItem>
                               )}
-                              {event.status === "approved" && (
-                                <>
-                                  <DropdownMenuItem onClick={() => handleStatusChange(event.id, "pending")}>
-                                    <Clock className="h-4 w-4 mr-2" />Move to Pending
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                </>
-                              )}
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteEvent(event)}>
                                 <Trash2 className="h-4 w-4 mr-2" />Delete Event
                               </DropdownMenuItem>
