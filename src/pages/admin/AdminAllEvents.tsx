@@ -22,19 +22,50 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { useProcessingSet } from "@/hooks/useAsyncAction";
 
+const LIVE_STATUSES = ["published", "pending", "approved", "upcoming", "ongoing"];
+
 const STATUS_TABS = [
   { key: "all", label: "All Events" },
-  { key: "pending", label: "Pending" },
-  { key: "approved", label: "Approved" },
+  { key: "featured", label: "Featured" },
+  { key: "live", label: "Live" },
   { key: "rejected", label: "Rejected" },
   { key: "draft", label: "Draft" },
   { key: "past", label: "Past" },
 ];
 
+const EVENT_COLUMNS =
+  "id, title, date, end_date, location, category, status, image_url, max_attendees, created_at, created_by, rejection_reason, registration_open_at, registration_close_at, allow_waitlist, registration_override, slug, profiles:created_by(full_name)";
+
+type SortKey = "created" | "date" | "guests";
+
+const isPast = (e: any) => new Date(e.end_date || e.date).getTime() < Date.now();
+
+const matchesTab = (e: any, tab: string) => {
+  const status = e.status || "draft";
+  switch (tab) {
+    case "all":
+      return true;
+    case "featured":
+      return status === "featured";
+    case "live":
+      return LIVE_STATUSES.includes(status) && !isPast(e);
+    case "rejected":
+      return status === "rejected";
+    case "draft":
+      return status === "draft";
+    case "past":
+      return isPast(e);
+    default:
+      return true;
+  }
+};
+
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-transparent",
   pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   approved: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  published: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  featured: "bg-primary/10 text-primary border-primary/20",
   upcoming: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
   ongoing: "bg-primary/10 text-primary border-primary/20",
   rejected: "bg-destructive/10 text-destructive border-destructive/20",
