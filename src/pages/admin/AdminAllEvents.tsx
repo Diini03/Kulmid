@@ -15,7 +15,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MoreHorizontal, Search, Trash2, Eye, Check, X, Calendar, MapPin, Users, Clock, Filter, Loader2 } from "lucide-react";
+import { MoreHorizontal, Search, Trash2, Eye, X, Calendar, MapPin, Users, Clock, Filter, Loader2, Star, StarOff, Settings2, ArrowUpDown, RotateCcw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
+import { logAdminAction } from "@/lib/auditLog";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -82,6 +85,9 @@ const AdminAllEvents = () => {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortKey, setSortKey] = useState<SortKey>("created");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
   const [deleteEvent, setDeleteEvent] = useState<any>(null);
   const [rejectEvent, setRejectEvent] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -97,13 +103,14 @@ const AdminAllEvents = () => {
     setError(null);
     try {
       const [eventsRes, guestsRes] = await Promise.all([
-        supabase.from("events").select("*, profiles:created_by(full_name)").order("created_at", { ascending: false }),
+        supabase.from("events").select(EVENT_COLUMNS).order("created_at", { ascending: false }),
         supabase.from("event_guests").select("event_id"),
       ]);
 
       if (eventsRes.error) throw eventsRes.error;
 
-      setEvents(eventsRes.data || []);
+      setEvents((eventsRes.data as any[]) || []);
+      setSelected([]);
 
       const counts: Record<string, number> = {};
       (guestsRes.data || []).forEach((g: any) => {
@@ -122,17 +129,16 @@ const AdminAllEvents = () => {
   }, [events]);
 
   const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: events.length };
-    events.forEach((e: any) => {
-      const s = e.status || "draft";
-      counts[s] = (counts[s] || 0) + 1;
+    const counts: Record<string, number> = {};
+    STATUS_TABS.forEach((tab) => {
+      counts[tab.key] = events.filter((e) => matchesTab(e, tab.key)).length;
     });
     return counts;
   }, [events]);
 
   const filtered = useMemo(() => {
-    return events.filter((e: any) => {
-      if (activeTab !== "all" && e.status !== activeTab) return false;
+    const rows = events.filter((e: any) => {
+      if (!matchesTab(e, activeTab)) return false;
       if (categoryFilter !== "all" && e.category !== categoryFilter) return false;
       if (search) {
         const s = search.toLowerCase();
@@ -144,7 +150,61 @@ const AdminAllEvents = () => {
       }
       return true;
     });
-  }, [events, activeTab, categoryFilter, search]);
+
+    return [...rows].sort((a, b) => {
+      if (sortKey === "guests") return (guestCounts[b.id] || 0) - (guestCounts[a.id] || 0);
+      if (sortKey === "date") return new Date(a.date).getTime() - new Date(b.date).getTime();
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [events, activeTab, categoryFilter, search, sortKey, guestCounts]);
+
+  const totals = useMemo(() => ({
+    total: events.length,
+    featured: events.filter((e) => e.status === "featured").length,
+    live: events.filter((e) => LIVE_STATUSES.includes(e.status) && !isPast(e)).length,
+    past: events.filter(isPast).length,
+    registrations: Object.values(guestCounts).reduce((a, b) => a + b, 0),
+  }), [events, guestCounts]);
+
+  const allVisibleSelected = filtered.length > 0 && filtered.every((e) => selected.includes(e.id));
+
+  const toggleSelectAll = () => {
+    setSelected(allVisibleSelected ? [] : filtered.map((e) => e.id));
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const bulkStatus = async (status: string) => {
+    if (selected.length === 0) return;
+    setBulkProcessing(true);
+    const { error } = await supabase.from("events").update({ status }).in("id", selected);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `${selected.length} event${selected.length === 1 ? "" : "s"} updated` });
+      setEvents((prev) => prev.map((e) => (selected.includes(e.id) ? { ...e, status } : e)));
+      logAdminAction(status === "featured" ? "event.feature" : "event.unfeature", "event", null, { ids: selected, status });
+      setSelected([]);
+    }
+    setBulkProcessing(false);
+  };
+
+  const bulkDelete = async () => {
+    if (selected.length === 0) return;
+    setBulkProcessing(true);
+    const { error } = await supabase.from("events").delete().in("id", selected);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `${selected.length} event${selected.length === 1 ? "" : "s"} deleted` });
+      setEvents((prev) => prev.filter((e) => !selected.includes(e.id)));
+      logAdminAction("event.delete", "event", null, { ids: selected });
+      setSelected([]);
+    }
+    setBulkProcessing(false);
+  };
 
   const handleStatusChange = async (eventId: string, status: string) => {
     if (isProcessing(eventId)) return;
@@ -155,6 +215,12 @@ const AdminAllEvents = () => {
     } else {
       toast({ title: `Event ${status}` });
       setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status } : e));
+      logAdminAction(
+        status === "featured" ? "event.feature" : status === "published" ? "event.unfeature" : "event.status_change",
+        "event",
+        eventId,
+        { status }
+      );
     }
     stopProcessing(eventId);
   };
@@ -171,6 +237,7 @@ const AdminAllEvents = () => {
     } else {
       toast({ title: "Event rejected" });
       setEvents(prev => prev.map(e => e.id === rejectEvent.id ? { ...e, status: "rejected", rejection_reason: rejectionReason || null } : e));
+      logAdminAction("event.reject", "event", rejectEvent.id, { reason: rejectionReason || null });
       setRejectEvent(null);
       setRejectionReason("");
     }
@@ -186,6 +253,7 @@ const AdminAllEvents = () => {
     } else {
       toast({ title: "Event deleted" });
       setEvents(prev => prev.filter(e => e.id !== deleteEvent.id));
+      logAdminAction("event.delete", "event", deleteEvent.id, { title: deleteEvent.title });
       setDeleteEvent(null);
     }
     setDialogProcessing(false);
