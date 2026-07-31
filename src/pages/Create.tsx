@@ -363,6 +363,12 @@ const Create = () => {
           <p className="text-muted-foreground">
             Publish instantly — share your event link the moment you save.
           </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            New here?{" "}
+            <a href="/guides/create-your-first-event" className="text-primary hover:underline">
+              Read the guide to creating an event
+            </a>
+          </p>
         </div>
 
         <Form {...form}>
