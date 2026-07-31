@@ -318,6 +318,24 @@ const AdminAllEvents = () => {
           </div>
         </div>
 
+        {/* Stat strip */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {[
+            { label: "Total", value: totals.total },
+            { label: "Featured", value: totals.featured },
+            { label: "Live", value: totals.live },
+            { label: "Past", value: totals.past },
+            { label: "Registrations", value: totals.registrations },
+          ].map((s) => (
+            <Card key={s.label} className="border">
+              <CardContent className="p-4">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                <p className="text-xl font-bold mt-1">{s.value}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <div className="flex items-center gap-1 overflow-x-auto pb-1 -mb-1">
           {STATUS_TABS.map((tab) => {
             const count = statusCounts[tab.key] || 0;
