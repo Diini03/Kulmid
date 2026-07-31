@@ -382,12 +382,41 @@ const AdminAllEvents = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+            <SelectTrigger className="w-[180px] h-9">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created">Newest created</SelectItem>
+              <SelectItem value="date">Event date</SelectItem>
+              <SelectItem value="guests">Most registrations</SelectItem>
+            </SelectContent>
+          </Select>
           {(search || categoryFilter !== "all") && (
             <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={() => { setSearch(""); setCategoryFilter("all"); }}>
               Clear filters
             </Button>
           )}
         </div>
+
+        {selected.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-4 py-3">
+            <span className="text-sm font-medium">{selected.length} selected</span>
+            <div className="flex flex-wrap gap-2 ml-auto">
+              <Button size="sm" variant="outline" className="h-8 text-xs" disabled={bulkProcessing} onClick={() => bulkStatus("featured")}>
+                <Star className="h-3.5 w-3.5 mr-1.5" />Feature
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 text-xs" disabled={bulkProcessing} onClick={() => bulkStatus("published")}>
+                <StarOff className="h-3.5 w-3.5 mr-1.5" />Unfeature
+              </Button>
+              <Button size="sm" variant="destructive" className="h-8 text-xs" disabled={bulkProcessing} onClick={bulkDelete}>
+                {bulkProcessing ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 mr-1.5" />}Delete
+              </Button>
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSelected([])}>Clear</Button>
+            </div>
+          </div>
+        )}
 
         <Card className="border">
           <CardContent className="p-0">
