@@ -174,15 +174,53 @@ const EventView = () => {
 
   const eventTypeDisplay = getEventTypeDisplay();
 
+  const seoDescription =
+    event.description || `${event.category} event at ${event.location} • ${fullDate}`;
+
+  const eventJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: event.title,
+    startDate: event.date,
+    ...(event.end_date ? { endDate: event.end_date } : {}),
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode:
+      event.event_type === "online"
+        ? "https://schema.org/OnlineEventAttendanceMode"
+        : event.event_type === "hybrid"
+        ? "https://schema.org/MixedEventAttendanceMode"
+        : "https://schema.org/OfflineEventAttendanceMode",
+    location:
+      event.event_type === "online"
+        ? { "@type": "VirtualLocation", url: event.meeting_link || eventUrl(event) }
+        : { "@type": "Place", name: event.location, address: event.location },
+    ...(event.image_url ? { image: [event.image_url] } : {}),
+    description: seoDescription.slice(0, 300),
+    url: eventUrl(event),
+    organizer: { "@type": "Organization", name: event.host_name || "Kulmid" },
+    offers: {
+      "@type": "Offer",
+      price: String(event.price ?? 0),
+      priceCurrency: "USD",
+      url: eventUrl(event),
+      availability:
+        getRegistrationStatus(event as any, registrationCount) === "open"
+          ? "https://schema.org/InStock"
+          : "https://schema.org/SoldOut",
+    },
+  };
+
   return (
     <div className="light min-h-screen bg-background text-foreground">
       <Seo 
         title={event.title} 
-        description={event.description || `${event.category} event at ${event.location} • ${fullDate}`} 
-        canonical={`/event/${event.id}`}
+        description={seoDescription} 
+        canonical={eventPath(event)}
         ogImage={event.image_url || undefined}
         ogType="event"
+        jsonLd={eventJsonLd}
       />
+
 
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/95 border-b">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
