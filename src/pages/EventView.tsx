@@ -2,6 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { EVENT_PUBLIC_COLUMNS } from "@/types/event";
+import { eventPath, eventIdOrSlugFilter } from "@/lib/eventUrl";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,24 +40,41 @@ const EventView = () => {
     setLoading(true);
     setError(null);
     try {
-      const [{ data, error: fetchError }, countResult, attendeesResult] = await Promise.all([
-        supabase.from('events').select(user ? '*' : EVENT_PUBLIC_COLUMNS).eq('id', id).maybeSingle(),
-        supabase.rpc('get_event_registration_count', { _event_id: id }),
-        supabase
-          .from('event_guests')
-          .select('name,email')
-          .eq('event_id', id as string)
-          .in('status', ['registered', 'approved'])
-          .limit(8),
-      ]);
+      // Resolve by readable slug first, falling back to the legacy id.
+      const { data, error: fetchError } = await supabase
+        .from('events')
+        .select(user ? '*' : EVENT_PUBLIC_COLUMNS)
+        .or(eventIdOrSlugFilter(id as string))
+        .maybeSingle();
 
       if (fetchError) throw fetchError;
       setEvent(data);
-      if (!countResult.error && typeof countResult.data === 'number') {
-        setRegistrationCount(countResult.data);
-      }
-      if (!attendeesResult.error && Array.isArray(attendeesResult.data)) {
-        setAttendees(attendeesResult.data as any);
+
+      if (data) {
+        const realId = (data as any).id as string;
+
+        // Keep the address bar on the canonical slug URL without a re-render.
+        const canonicalPath = eventPath(data as any);
+        if (window.location.pathname !== canonicalPath) {
+          window.history.replaceState(null, '', canonicalPath);
+        }
+
+        const [countResult, attendeesResult] = await Promise.all([
+          supabase.rpc('get_event_registration_count', { _event_id: realId }),
+          supabase
+            .from('event_guests')
+            .select('name,email')
+            .eq('event_id', realId)
+            .in('status', ['registered', 'approved'])
+            .limit(8),
+        ]);
+
+        if (!countResult.error && typeof countResult.data === 'number') {
+          setRegistrationCount(countResult.data);
+        }
+        if (!attendeesResult.error && Array.isArray(attendeesResult.data)) {
+          setAttendees(attendeesResult.data as any);
+        }
       }
     } catch (err: any) {
       setError(err.message || "Failed to load event");
@@ -67,6 +86,7 @@ const EventView = () => {
   useEffect(() => {
     fetchEvent();
   }, [id]);
+
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -154,15 +174,53 @@ const EventView = () => {
 
   const eventTypeDisplay = getEventTypeDisplay();
 
+  const seoDescription =
+    event.description || `${event.category} event at ${event.location} • ${fullDate}`;
+
+  const eventJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: event.title,
+    startDate: event.date,
+    ...(event.end_date ? { endDate: event.end_date } : {}),
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode:
+      event.event_type === "online"
+        ? "https://schema.org/OnlineEventAttendanceMode"
+        : event.event_type === "hybrid"
+        ? "https://schema.org/MixedEventAttendanceMode"
+        : "https://schema.org/OfflineEventAttendanceMode",
+    location:
+      event.event_type === "online"
+        ? { "@type": "VirtualLocation", url: event.meeting_link || eventUrl(event) }
+        : { "@type": "Place", name: event.location, address: event.location },
+    ...(event.image_url ? { image: [event.image_url] } : {}),
+    description: seoDescription.slice(0, 300),
+    url: eventUrl(event),
+    organizer: { "@type": "Organization", name: event.host_name || "Kulmid" },
+    offers: {
+      "@type": "Offer",
+      price: String(event.price ?? 0),
+      priceCurrency: "USD",
+      url: eventUrl(event),
+      availability:
+        getRegistrationStatus(event as any, registrationCount) === "open"
+          ? "https://schema.org/InStock"
+          : "https://schema.org/SoldOut",
+    },
+  };
+
   return (
     <div className="light min-h-screen bg-background text-foreground">
       <Seo 
         title={event.title} 
-        description={event.description || `${event.category} event at ${event.location} • ${fullDate}`} 
-        canonical={`/event/${event.id}`}
+        description={seoDescription} 
+        canonical={eventPath(event)}
         ogImage={event.image_url || undefined}
         ogType="event"
+        jsonLd={eventJsonLd}
       />
+
 
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/95 border-b">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
