@@ -1,5 +1,6 @@
 export interface EventItem {
   id: string;
+  slug?: string | null;
   title: string;
   date: string;
   location: string;
@@ -12,7 +13,7 @@ export interface EventItem {
 }
 
 /** Columns to select for event list views (not full detail) */
-export const EVENT_LIST_COLUMNS = 'id, title, date, location, category, price, image_url, status, description' as const;
+export const EVENT_LIST_COLUMNS = 'id, slug, title, date, location, category, price, image_url, status, description' as const;
 
 /**
  * Safe columns for fetching a full event row from anonymous (logged-out) context.
@@ -20,7 +21,7 @@ export const EVENT_LIST_COLUMNS = 'id, title, date, location, category, price, i
  * which anon does not have column-level SELECT permission for.
  */
 export const EVENT_PUBLIC_COLUMNS = `
-  id, title, date, end_date, location, category, price, image_url,
+  id, slug, title, date, end_date, location, category, price, image_url,
   description, status, event_type, meeting_link, host_name,
   max_attendees, registration_deadline,
   registration_open_at, registration_close_at, registration_override, allow_waitlist,
@@ -28,3 +29,4 @@ export const EVENT_PUBLIC_COLUMNS = `
   created_at, updated_at, created_by, rejection_reason,
   auto_approve_registrations
 `.replace(/\s+/g, ' ').trim();
+
