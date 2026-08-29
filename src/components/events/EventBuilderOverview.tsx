@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import InviteGuestsDialog from "./InviteGuestsDialog";
 import { GuestExportData, generateGuestPhoneCSV, generateGuestContactsCSV } from "@/lib/csvParser";
+import { eventUrl } from "@/lib/eventUrl";
 import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge";
 import {
   getRegistrationStatus,
@@ -55,7 +56,7 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
   const [loading, setLoading] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  const eventLink = `${window.location.origin}/event/${event.id}`;
+  const eventLink = eventUrl(event);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(eventLink);

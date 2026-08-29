@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { EVENT_PUBLIC_COLUMNS } from "@/types/event";
-import { eventPath, eventIdOrSlugFilter } from "@/lib/eventUrl";
+import { eventPath, eventUrl, eventIdOrSlugFilter } from "@/lib/eventUrl";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
