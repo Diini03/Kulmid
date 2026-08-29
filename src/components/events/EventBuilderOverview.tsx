@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import InviteGuestsDialog from "./InviteGuestsDialog";
 import { GuestExportData, generateGuestPhoneCSV, generateGuestContactsCSV } from "@/lib/csvParser";
+import { eventUrl } from "@/lib/eventUrl";
 import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge";
 import {
   getRegistrationStatus,
