@@ -193,6 +193,51 @@ export type Database = {
         }
         Relationships: []
       }
+      event_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          event_id: string
+          guest_id: string | null
+          id: string
+          rating: number
+          would_recommend: boolean | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          event_id: string
+          guest_id?: string | null
+          id?: string
+          rating: number
+          would_recommend?: boolean | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          event_id?: string
+          guest_id?: string | null
+          id?: string
+          rating?: number
+          would_recommend?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_feedback_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_feedback_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "event_guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_guests: {
         Row: {
           about: string | null
@@ -712,6 +757,7 @@ export type Database = {
           updated_at: string
           user_id: string
           username: string | null
+          verified: boolean
           website: string | null
         }
         Insert: {
@@ -733,6 +779,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           username?: string | null
+          verified?: boolean
           website?: string | null
         }
         Update: {
@@ -754,6 +801,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+          verified?: boolean
           website?: string | null
         }
         Relationships: []
@@ -928,6 +976,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          _bucket: string
+          _identifier: string
+          _max_count: number
+          _window_seconds: number
+        }
+        Returns: boolean
+      }
       generate_event_slug: {
         Args: { _event_id: string; _title: string }
         Returns: string
