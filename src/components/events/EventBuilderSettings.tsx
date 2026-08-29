@@ -5,7 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2, Send, Loader2 } from "lucide-react";
+import { Trash2, Send, Loader2, Copy } from "lucide-react";
+import { duplicateEvent } from "@/lib/duplicateEvent";
 import { useToast } from "@/hooks/use-toast";
 
 interface EventBuilderSettingsProps {
@@ -19,6 +20,7 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
   const { toast } = useToast();
   const [deleting, setDeleting] = useState(false);
   const [resubmitting, setResubmitting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
 
   const handleDelete = async () => {
     if (deleting) return;
@@ -47,6 +49,23 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
       });
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleDuplicate = async () => {
+    if (duplicating || !user) return;
+    setDuplicating(true);
+    try {
+      const newId = await duplicateEvent(event.id, user.id);
+      toast({
+        title: "Event duplicated",
+        description: "A draft copy was created with the same form and questions.",
+      });
+      navigate(`/event/${newId}/builder`);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setDuplicating(false);
     }
   };
 
@@ -132,6 +151,23 @@ const EventBuilderSettings = ({ event }: EventBuilderSettingsProps) => {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Duplicate Event</CardTitle>
+          <CardDescription>Reuse this setup for your next event</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Creates a draft copy with the same details, registration fields and questions.
+            Guests and check-ins are not copied.
+          </p>
+          <Button variant="outline" onClick={handleDuplicate} disabled={duplicating}>
+            {duplicating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Copy className="h-4 w-4 mr-2" />}
+            {duplicating ? "Duplicating..." : "Duplicate Event"}
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card className="border-destructive">
         <CardHeader>
