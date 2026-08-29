@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EventItem, EVENT_LIST_COLUMNS, EVENT_PUBLIC_COLUMNS } from "@/types/event";
+import { eventIdOrSlugFilter } from "@/lib/eventUrl";
 
 interface UseEventsOptions {
   statuses?: string[];
@@ -51,7 +52,7 @@ export function useEventById(id: string | undefined) {
       const { data, error } = await supabase
         .from("events")
         .select(EVENT_PUBLIC_COLUMNS)
-        .eq("id", id!)
+        .or(eventIdOrSlugFilter(id!))
         .maybeSingle();
       if (error) throw error;
       return data;

@@ -1,5 +1,6 @@
 interface CalendarEvent {
   id: string;
+  slug?: string | null;
   title: string;
   date: string;
   end_date?: string | null;
@@ -50,7 +51,7 @@ export function buildIcs(event: CalendarEvent, appUrl = window.location.origin) 
     `SUMMARY:${escapeIcs(event.title)}`,
     `LOCATION:${escapeIcs(location)}`,
     `DESCRIPTION:${escapeIcs((event.description || "").slice(0, 800))}`,
-    `URL:${appUrl}/event/${event.id}`,
+    `URL:${appUrl}/event/${event.slug || event.id}`,
     "BEGIN:VALARM",
     "TRIGGER:-PT1H",
     "ACTION:DISPLAY",

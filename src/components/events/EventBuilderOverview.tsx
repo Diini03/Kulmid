@@ -55,7 +55,7 @@ const EventBuilderOverview = ({ event, onRefresh }: EventBuilderOverviewProps) =
   const [loading, setLoading] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  const eventLink = `${window.location.origin}/event/${event.id}`;
+  const eventLink = eventUrl(event);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(eventLink);
