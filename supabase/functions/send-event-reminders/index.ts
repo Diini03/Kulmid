@@ -92,6 +92,52 @@ serve(async (req) => {
       }
     }
 
+    // ---------- ATTENDEE FEEDBACK REQUESTS ----------
+    const feedbackFrom = new Date(now.getTime() - 26 * 3600e3).toISOString();
+    const feedbackTo = new Date(now.getTime() - 2 * 3600e3).toISOString();
+
+    const { data: endedEvents } = await supabase
+      .from("events")
+      .select("id, title, date, end_date, slug, status")
+      .gte("date", feedbackFrom)
+      .lte("date", feedbackTo)
+      .neq("status", "rejected");
+
+    for (const event of endedEvents || []) {
+      const eventEnd = new Date(event.end_date || event.date);
+      if (eventEnd.getTime() > now.getTime()) { results.skipped++; continue; }
+
+      const { data: guests } = await supabase
+        .from("event_guests")
+        .select("id, name, email, status, cancel_token")
+        .eq("event_id", event.id)
+        .in("status", ["registered", "approved", "confirmed"]);
+
+      for (const guest of guests || []) {
+        if (await alreadySent(event.id, guest.email, "feedback_request")) { results.skipped++; continue; }
+
+        const html = emailShell({
+          heading: `How was ${escapeHtml(event.title)}?`,
+          intro: `Hi ${escapeHtml(guest.name || "there")}, thanks for joining us. Your feedback takes less than a minute and helps the organizer improve the next event.`,
+          bodyHtml:
+            detailRow("Event", escapeHtml(event.title)) +
+            detailRow("When", escapeHtml(formatEventDate(event.date))),
+          ctaLabel: "Share your feedback",
+          ctaUrl: `${APP_URL}/feedback/${guest.cancel_token}`,
+          footerNote: "You received this because you registered for this event on Kulmid.",
+        });
+
+        try {
+          await sendEmail(guest.email, `How was ${event.title}?`, html);
+          await log(event.id, guest.id, guest.email, "feedback_request", "sent");
+          results.feedback_request++;
+        } catch (e) {
+          await log(event.id, guest.id, guest.email, "feedback_request", "failed", e instanceof Error ? e.message : String(e));
+          results.failed++;
+        }
+      }
+    }
+
     // ---------- POST-EVENT ORGANIZER SUMMARY ----------
     const summaryFrom = new Date(now.getTime() - 26 * 3600e3).toISOString();
     const summaryTo = new Date(now.getTime() - 2 * 3600e3).toISOString();
