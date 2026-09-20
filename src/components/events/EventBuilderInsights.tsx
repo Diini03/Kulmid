@@ -79,6 +79,33 @@ const EventBuilderInsights = ({ eventId }: Props) => {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [eventTitle, setEventTitle] = useState("");
   const [viewerGuestId, setViewerGuestId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<
+    { rating: number; comment: string | null; would_recommend: boolean | null; created_at: string }[]
+  >([]);
+
+  useEffect(() => {
+    supabase
+      .from("event_feedback")
+      .select("rating, comment, would_recommend, created_at")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setFeedback((data as any) || []));
+  }, [eventId]);
+
+  const feedbackStats = useMemo(() => {
+    if (feedback.length === 0) return null;
+    const avg = feedback.reduce((s, f) => s + (f.rating || 0), 0) / feedback.length;
+    const recommendVotes = feedback.filter((f) => f.would_recommend !== null);
+    const recommendRate = recommendVotes.length
+      ? Math.round((recommendVotes.filter((f) => f.would_recommend).length / recommendVotes.length) * 100)
+      : null;
+    const comments = feedback.filter((f) => f.comment && f.comment.trim());
+    const distribution = [5, 4, 3, 2, 1].map((star) => ({
+      star,
+      count: feedback.filter((f) => f.rating === star).length,
+    }));
+    return { avg, recommendRate, comments, distribution, total: feedback.length };
+  }, [feedback]);
 
   useEffect(() => {
     const load = async () => {
