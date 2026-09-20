@@ -13,6 +13,7 @@ import {
   Download,
   MessageSquareText,
   Eye,
+  Star,
 } from "lucide-react";
 import RegistrationResponseDialog from "./RegistrationResponseDialog";
 import { exportRegistrationsToCsv } from "@/lib/exportRegistrations";
@@ -313,6 +314,64 @@ const EventBuilderInsights = ({ eventId }: Props) => {
           value={stats.checkedIn}
         />
       </div>
+
+      {/* Post-event feedback */}
+      {feedbackStats && (
+        <Card className="p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Star className="h-4 w-4 text-yellow-500" />
+            <h4 className="text-sm font-semibold">Post-event feedback</h4>
+            <Badge variant="secondary" className="ml-auto">
+              {feedbackStats.total} {feedbackStats.total === 1 ? "response" : "responses"}
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <div className="flex items-end gap-2">
+                <span className="text-3xl font-semibold">{feedbackStats.avg.toFixed(1)}</span>
+                <span className="text-sm text-muted-foreground mb-1">/ 5 average rating</span>
+              </div>
+              {feedbackStats.recommendRate !== null && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {feedbackStats.recommendRate}% would recommend this event
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              {feedbackStats.distribution.map(({ star, count }) => (
+                <div key={star} className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground w-4">{star}</span>
+                  <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full"
+                      style={{ width: `${feedbackStats.total ? (count / feedbackStats.total) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground w-6 text-right">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {feedbackStats.comments.length > 0 && (
+            <div className="mt-5 pt-4 border-t space-y-3">
+              <p className="text-xs font-medium text-muted-foreground">Recent comments</p>
+              {feedbackStats.comments.slice(0, 4).map((c, i) => (
+                <div key={i} className="text-sm bg-muted/50 rounded-lg p-3">
+                  <div className="flex items-center gap-1 mb-1">
+                    {Array.from({ length: c.rating }).map((_, s) => (
+                      <Star key={s} className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground">{c.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Smart highlights */}
       <SmartHighlights highlights={highlights} />
