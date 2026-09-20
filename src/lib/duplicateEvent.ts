@@ -39,7 +39,7 @@ export async function duplicateEvent(eventId: string, userId: string): Promise<s
   copy.created_by = userId;
   copy.status = "draft";
 
-  const { error: insertError } = await supabase.from("events").insert([copy]);
+  const { error: insertError } = await supabase.from("events").insert([copy as any]);
   if (insertError) throw insertError;
 
   // A trigger seeds default registration fields on insert — replace them with
