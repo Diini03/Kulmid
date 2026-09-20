@@ -49,6 +49,7 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const CancelRegistration = lazy(() => import("./pages/CancelRegistration"));
+const EventFeedback = lazy(() => import("./pages/EventFeedback"));
 
 // Admin pages
 const AdminOverview = lazy(() => import("./pages/admin/AdminOverview"));
@@ -175,6 +176,7 @@ const App = () => (
                   <Route path="/e/:id" element={<ShortEventRedirect />} />
                   <Route path="/check-in/:token" element={<SuspenseWrapper><CheckIn /></SuspenseWrapper>} />
                   <Route path="/r/cancel/:token" element={<SuspenseWrapper><CancelRegistration /></SuspenseWrapper>} />
+                  <Route path="/feedback/:token" element={<SuspenseWrapper><EventFeedback /></SuspenseWrapper>} />
                   
                   <Route path="/event/:eventId/scanner" element={<ProtectedRoute><SuspenseWrapper><EventScanner /></SuspenseWrapper></ProtectedRoute>} />
                   <Route path="/my-events" element={<Navigate to="/events" replace />} />
