@@ -1,4 +1,5 @@
 import { UserAvatar } from "@/components/common/UserAvatar";
+import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +60,10 @@ export const ProfileHeader = ({ profile, stats, isOwner }: ProfileHeaderProps) =
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">{profile.full_name}</h1>
+                <div className="flex items-center gap-1.5">
+                  <h1 className="text-2xl font-bold text-foreground">{profile.full_name}</h1>
+                  {profile.verified && <VerifiedBadge className="h-5 w-5" />}
+                </div>
                 {profile.username && (
                   <p className="text-muted-foreground text-sm">@{profile.username}</p>
                 )}
