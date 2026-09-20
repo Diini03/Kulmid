@@ -8,7 +8,7 @@
 
 ## Phase 2 — Organizer retention
 - [ ] Duplicate event (copies details, fields and questions)
-- [ ] Post-event feedback form + summary email
+- [x] Post-event feedback form + summary email
 
 ## Phase 3 — Trust
 - [ ] Organizer verification badge (admin granted)
