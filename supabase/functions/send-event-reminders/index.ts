@@ -9,14 +9,14 @@ const APP_URL = Deno.env.get("APP_BASE_URL") || "https://kulmidsystembydiini.lov
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...corsHeaders } });
 
-type Kind = "reminder_24h" | "reminder_1h" | "post_event_summary";
+type Kind = "reminder_24h" | "reminder_1h" | "post_event_summary" | "feedback_request";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   const now = new Date();
-  const results: Record<string, number> = { reminder_24h: 0, reminder_1h: 0, post_event_summary: 0, skipped: 0, failed: 0 };
+  const results: Record<string, number> = { reminder_24h: 0, reminder_1h: 0, post_event_summary: 0, feedback_request: 0, skipped: 0, failed: 0 };
 
   const alreadySent = async (eventId: string, recipient: string, kind: Kind) => {
     const { data } = await supabase
