@@ -35,6 +35,12 @@ const EventView = () => {
   const [registrationOpen, setRegistrationOpen] = useState(false);
   const [registrationCount, setRegistrationCount] = useState<number>(0);
   const [attendees, setAttendees] = useState<Array<{ name: string | null; email: string }>>([]);
+  const [organizer, setOrganizer] = useState<{
+    full_name: string;
+    username: string | null;
+    avatar_url: string | null;
+    verified: boolean | null;
+  } | null>(null);
 
   const fetchEvent = async () => {
     setLoading(true);
@@ -74,6 +80,16 @@ const EventView = () => {
         }
         if (!attendeesResult.error && Array.isArray(attendeesResult.data)) {
           setAttendees(attendeesResult.data as any);
+        }
+
+        const creatorId = (data as any).created_by as string | undefined;
+        if (creatorId) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, username, avatar_url, verified')
+            .eq('user_id', creatorId)
+            .maybeSingle();
+          setOrganizer((profile as any) || null);
         }
       }
     } catch (err: any) {
@@ -320,15 +336,24 @@ const EventView = () => {
                           Organized By
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-base font-semibold text-primary">
-                              {event.host_name ? event.host_name.charAt(0).toUpperCase() : 'K'}
-                            </span>
-                          </div>
+                          <UserAvatar
+                            src={organizer?.avatar_url}
+                            name={organizerName}
+                            className="h-10 w-10 flex-shrink-0"
+                          />
                           <div className="min-w-0">
-                            <div className="font-medium truncate">{event.host_name || 'Kulmid'}</div>
+                            <div className="font-medium truncate flex items-center gap-1.5">
+                              {organizer?.username ? (
+                                <Link to={`/u/${organizer.username}`} className="hover:underline truncate">
+                                  {organizerName}
+                                </Link>
+                              ) : (
+                                <span className="truncate">{organizerName}</span>
+                              )}
+                              {organizer?.verified && <VerifiedBadge className="h-4 w-4 flex-shrink-0" />}
+                            </div>
                             <div className="text-xs text-muted-foreground">
-                              {event.host_name ? 'Event Organizer' : 'Event Platform'}
+                              {organizer?.verified ? 'Verified organizer' : event.host_name || organizer ? 'Event Organizer' : 'Event Platform'}
                             </div>
                           </div>
                         </div>
@@ -497,15 +522,24 @@ const EventView = () => {
                     </h2>
                     <div className="p-4 bg-muted/50 rounded-xl border space-y-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-lg font-semibold text-primary">
-                            {event.host_name ? event.host_name.charAt(0).toUpperCase() : 'K'}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-medium">{event.host_name || 'Kulmid'}</div>
+                        <UserAvatar
+                          src={organizer?.avatar_url}
+                          name={organizerName}
+                          className="h-12 w-12 flex-shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <div className="font-medium flex items-center gap-1.5">
+                            {organizer?.username ? (
+                              <Link to={`/u/${organizer.username}`} className="hover:underline truncate">
+                                {organizerName}
+                              </Link>
+                            ) : (
+                              <span className="truncate">{organizerName}</span>
+                            )}
+                            {organizer?.verified && <VerifiedBadge className="h-4 w-4 flex-shrink-0" />}
+                          </div>
                           <div className="text-sm text-muted-foreground">
-                            {event.host_name ? 'Event Organizer' : 'Event Platform'}
+                            {organizer?.verified ? 'Verified organizer' : event.host_name || organizer ? 'Event Organizer' : 'Event Platform'}
                           </div>
                         </div>
                       </div>
