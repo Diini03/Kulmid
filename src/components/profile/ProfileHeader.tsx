@@ -16,6 +16,7 @@ interface ProfileHeaderProps {
     twitter?: string | null;
     linkedin?: string | null;
     instagram?: string | null;
+    verified?: boolean | null;
     created_at: string;
   };
   stats: {
