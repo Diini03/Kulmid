@@ -35,6 +35,12 @@ const EventView = () => {
   const [registrationOpen, setRegistrationOpen] = useState(false);
   const [registrationCount, setRegistrationCount] = useState<number>(0);
   const [attendees, setAttendees] = useState<Array<{ name: string | null; email: string }>>([]);
+  const [organizer, setOrganizer] = useState<{
+    full_name: string;
+    username: string | null;
+    avatar_url: string | null;
+    verified: boolean | null;
+  } | null>(null);
 
   const fetchEvent = async () => {
     setLoading(true);
@@ -74,6 +80,16 @@ const EventView = () => {
         }
         if (!attendeesResult.error && Array.isArray(attendeesResult.data)) {
           setAttendees(attendeesResult.data as any);
+        }
+
+        const creatorId = (data as any).created_by as string | undefined;
+        if (creatorId) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, username, avatar_url, verified')
+            .eq('user_id', creatorId)
+            .maybeSingle();
+          setOrganizer((profile as any) || null);
         }
       }
     } catch (err: any) {
