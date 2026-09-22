@@ -750,6 +750,7 @@ export type Database = {
           is_public: boolean | null
           linkedin: string | null
           location: string | null
+          plan_tier: string
           show_attended_events: boolean | null
           show_hosted_events: boolean | null
           social_links: Json | null
@@ -772,6 +773,7 @@ export type Database = {
           is_public?: boolean | null
           linkedin?: string | null
           location?: string | null
+          plan_tier?: string
           show_attended_events?: boolean | null
           show_hosted_events?: boolean | null
           social_links?: Json | null
@@ -794,6 +796,7 @@ export type Database = {
           is_public?: boolean | null
           linkedin?: string | null
           location?: string | null
+          plan_tier?: string
           show_attended_events?: boolean | null
           show_hosted_events?: boolean | null
           social_links?: Json | null
