@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { EVENT_PUBLIC_COLUMNS } from "@/types/event";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, MapPin, DollarSign, Copy, Check, Video, Globe, Users, Mail, Phone, Building2, ExternalLink, ArrowLeft, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { CalendarDays, MapPin, DollarSign, Copy, Check, Video, Globe, Users, Mail, Phone, Building2, ExternalLink, ArrowLeft, Facebook, Twitter, Instagram, Linkedin, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthRequiredModal } from "@/components/auth/AuthGuard";
@@ -16,6 +16,7 @@ import { ErrorCard } from "@/components/common/ErrorCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge";
+import { eventUrl } from "@/lib/eventUrl";
 import {
   getRegistrationStatus,
   formatRegistrationDate,
@@ -97,7 +98,7 @@ const EventDetails = () => {
     }
   };
 
-  const shortUrl = `${window.location.origin}/e/${id}`;
+  const shortUrl = event ? eventUrl(event) : window.location.href;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shortUrl);
@@ -435,6 +436,12 @@ const EventDetails = () => {
             <Button variant="outline" size="sm" onClick={handleCopyLink}>
               {linkCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
               {linkCopied ? 'Copied' : 'Copy Link'}
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <a href={`https://wa.me/?text=${encodeURIComponent(`See ${event.title} on Kulmid: ${shortUrl}`)}`} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="h-4 w-4 mr-2" />
+                WhatsApp
+              </a>
             </Button>
           </div>
         </section>

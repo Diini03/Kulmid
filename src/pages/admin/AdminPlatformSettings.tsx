@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sliders, Shield, Sparkles, Globe, Eye, Users, Save, Loader2, CheckCircle } from "lucide-react";
+import { Sliders, Shield, Sparkles, Globe, Eye, Users, Save, Loader2, CheckCircle, Gauge } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PlatformConfig {
@@ -22,6 +22,18 @@ interface PlatformConfig {
   enable_featured_events: boolean;
   max_events_per_user: number;
 }
+
+interface PlanLimits {
+  enforce: boolean;
+  free_active_events: number;
+  free_registrations_per_event: number;
+}
+
+const DEFAULT_PLAN_LIMITS: PlanLimits = {
+  enforce: false,
+  free_active_events: 3,
+  free_registrations_per_event: 100,
+};
 
 const DEFAULT_CONFIG: PlatformConfig = {
   require_event_approval: true,
@@ -42,6 +54,8 @@ const AdminPlatformSettings = () => {
   const [dataLoading, setDataLoading] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
   const [savedConfig, setSavedConfig] = useState<PlatformConfig>(DEFAULT_CONFIG);
+  const [planLimits, setPlanLimits] = useState<PlanLimits>(DEFAULT_PLAN_LIMITS);
+  const [savedPlanLimits, setSavedPlanLimits] = useState<PlanLimits>(DEFAULT_PLAN_LIMITS);
 
   useEffect(() => {
     if (isAdmin && adminCheckComplete) fetchSettings();
@@ -56,6 +70,12 @@ const AdminPlatformSettings = () => {
     if (data && data.length > 0) {
       const loaded = { ...DEFAULT_CONFIG };
       data.forEach((row: any) => {
+        if (row.key === "plan_limits" && typeof row.value === "object" && row.value !== null) {
+          const limits = { ...DEFAULT_PLAN_LIMITS, ...row.value };
+          setPlanLimits(limits);
+          setSavedPlanLimits(limits);
+          return;
+        }
         if (row.key in loaded) {
           (loaded as any)[row.key] = typeof row.value === "object" && row.value !== null && "v" in row.value
             ? (row.value as any).v
@@ -71,7 +91,13 @@ const AdminPlatformSettings = () => {
   const updateConfig = (key: keyof PlatformConfig, value: any) => {
     const newConfig = { ...config, [key]: value };
     setConfig(newConfig);
-    setHasChanges(JSON.stringify(newConfig) !== JSON.stringify(savedConfig));
+    setHasChanges(JSON.stringify(newConfig) !== JSON.stringify(savedConfig) || JSON.stringify(planLimits) !== JSON.stringify(savedPlanLimits));
+  };
+
+  const updatePlanLimits = (key: keyof PlanLimits, value: boolean | number) => {
+    const next = { ...planLimits, [key]: value };
+    setPlanLimits(next);
+    setHasChanges(JSON.stringify(config) !== JSON.stringify(savedConfig) || JSON.stringify(next) !== JSON.stringify(savedPlanLimits));
   };
 
   const handleSave = async () => {
@@ -95,7 +121,23 @@ const AdminPlatformSettings = () => {
       }
     }
 
+    const { error: planError } = await supabase
+      .from("platform_settings")
+      .upsert({
+        key: "plan_limits",
+        value: planLimits as any,
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id || null,
+      }, { onConflict: "key" });
+
+    if (planError) {
+      toast({ title: "Error saving", description: planError.message, variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
     setSavedConfig({ ...config });
+    setSavedPlanLimits({ ...planLimits });
     setHasChanges(false);
     toast({ title: "Settings saved", description: "Platform configuration updated successfully." });
     setSaving(false);
@@ -189,6 +231,39 @@ const AdminPlatformSettings = () => {
                     checked={config.allow_public_registrations}
                     onCheckedChange={(v) => updateConfig("allow_public_registrations", v)}
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Gauge className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-base">Free plan limits</CardTitle>
+                </div>
+                <CardDescription>Set safeguards for free organizer accounts. Pro and Business accounts are exempt.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Enforce limits</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">Keep this off until pricing and upgrades are ready for organizers.</p>
+                  </div>
+                  <Switch checked={planLimits.enforce} onCheckedChange={(value) => updatePlanLimits("enforce", value)} />
+                </div>
+                <Separator />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="free-active-events">Active events per organizer</Label>
+                    <input id="free-active-events" type="number" min={1} value={planLimits.free_active_events} onChange={(event) => updatePlanLimits("free_active_events", Math.max(1, Number(event.target.value) || 1))} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="free-registrations">Registrations per event</Label>
+                    <input id="free-registrations" type="number" min={1} value={planLimits.free_registrations_per_event} onChange={(event) => updatePlanLimits("free_registrations_per_event", Math.max(1, Number(event.target.value) || 1))} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                  </div>
+                </div>
+                <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  Registration rate limiting stays active independently: repeated addresses and sudden event-wide bursts are blocked automatically.
                 </div>
               </CardContent>
             </Card>

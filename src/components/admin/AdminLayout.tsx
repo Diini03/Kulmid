@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  MailCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ const menuItems: { icon: typeof LayoutDashboard; label: string; path: string; ba
   { icon: Tag, label: "Categories", path: "/admin/categories" },
   { icon: BarChart3, label: "Analytics", path: "/admin/analytics" },
   { icon: Flag, label: "Reports", path: "/admin/reports", badgeKey: "openReports" },
+  { icon: MailCheck, label: "Email Delivery", path: "/admin/email-log" },
   { icon: Sliders, label: "Platform Settings", path: "/admin/settings/platform" },
   { icon: Shield, label: "Admin Settings", path: "/admin/settings/admin" },
 ];

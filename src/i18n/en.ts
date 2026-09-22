@@ -104,6 +104,29 @@ export const en = {
 
   // Auth Modal
   auth_required_message: "Sign in or create an account to start creating events.",
+
+  // Public event page
+  event_back: "Back",
+  event_share: "Share",
+  event_copied: "Copied",
+  event_copy_link: "Copy Link",
+  event_link_copied: "Link copied",
+  event_link_copied_desc: "Event link has been copied to your clipboard.",
+  event_register: "Register for Event",
+  event_full: "Event Full",
+  event_not_open: "Registration Not Open",
+  event_cancelled: "Registration Cancelled",
+  event_closed: "Registration Closed",
+  event_organized_by: "Organized By",
+  event_verified_organizer: "Verified organizer",
+  event_organizer: "Event Organizer",
+  event_platform: "Event Platform",
+  event_add_calendar: "Add to Google Calendar",
+  event_whos_going: "Who's going",
+  event_about: "About",
+  event_share_event: "Share Event",
+  event_share_whatsapp: "Share on WhatsApp",
+  event_whatsapp_message: "See {title} on Kulmid: {url}",
 } as const;
 
 export type TranslationKeys = keyof typeof en;

@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { EVENT_PUBLIC_COLUMNS } from "@/types/event";
@@ -7,7 +7,7 @@ import { eventPath, eventUrl, eventIdOrSlugFilter } from "@/lib/eventUrl";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, MapPin, DollarSign, ExternalLink, Globe, Users, Video, Copy, Check, Building2, ArrowLeft, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { CalendarDays, MapPin, DollarSign, ExternalLink, Globe, Users, Video, Copy, Check, Building2, ArrowLeft, Facebook, Twitter, Instagram, Linkedin, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import { toast } from "@/hooks/use-toast";
@@ -17,6 +17,9 @@ import { ErrorCard } from "@/components/common/ErrorCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge";
+import { UserAvatar } from "@/components/common/UserAvatar";
+import { VerifiedBadge } from "@/components/common/VerifiedBadge";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   getRegistrationStatus,
   formatRegistrationDate,
@@ -28,6 +31,7 @@ const EventView = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { categories } = useCategories();
+  const { language, t } = useLanguage();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,8 +113,8 @@ const EventView = () => {
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
     toast({
-      title: "✅ Link copied!",
-      description: "Event link has been copied to clipboard",
+      title: t("event_link_copied"),
+      description: t("event_link_copied_desc"),
     });
   };
 
@@ -166,14 +170,17 @@ const EventView = () => {
   const eventDate = new Date(event.date);
   const endDate = event.end_date ? new Date(event.end_date) : null;
   const categoryConfig = categories.find(c => c.name === event.category);
+  const organizerName = organizer?.full_name || event.host_name || "Kulmid";
+  const locale = language === "so" ? "so-SO" : "en-US";
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(t("event_whatsapp_message", { title: event.title, url: eventUrl(event) }))}`;
   
-  const monthShort = eventDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const monthShort = eventDate.toLocaleDateString(locale, { month: 'short' }).toUpperCase();
   const day = eventDate.getDate();
-  const weekday = eventDate.toLocaleDateString('en-US', { weekday: 'long' });
-  const time = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  const fullDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  const endTime = endDate ? endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : null;
-  const endDateStr = endDate ? endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : null;
+  const weekday = eventDate.toLocaleDateString(locale, { weekday: 'long' });
+  const time = eventDate.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+  const fullDate = eventDate.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const endTime = endDate ? endDate.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' }) : null;
+  const endDateStr = endDate ? endDate.toLocaleDateString(locale, { month: 'short', day: 'numeric' }).toUpperCase() : null;
 
   const getEventTypeDisplay = () => {
     switch (event.event_type) {
@@ -245,11 +252,11 @@ const EventView = () => {
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {t("event_back")}
           </button>
           <Button variant="primary" size="sm" onClick={handleCopyLink}>
             {linkCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-            {linkCopied ? 'Copied' : 'Share'}
+            {linkCopied ? t("event_copied") : t("event_share")}
           </Button>
         </div>
       </header>
@@ -261,14 +268,14 @@ const EventView = () => {
         const isFull = regStatus === "full";
         const ctaLabel =
           regStatus === "open"
-            ? "Register for Event"
+            ? t("event_register")
             : regStatus === "full"
-              ? "Event Full"
+              ? t("event_full")
               : regStatus === "upcoming"
-                ? "Registration Not Open"
+                ? t("event_not_open")
                 : regStatus === "cancelled"
-                  ? "Registration Cancelled"
-                  : "Registration Closed";
+                  ? t("event_cancelled")
+                  : t("event_closed");
         const opensLabel = formatRegistrationDate(event.registration_open_at);
         const closesLabel = formatRegistrationDate(event.registration_close_at ?? event.registration_deadline);
         const statusNote =
@@ -333,7 +340,7 @@ const EventView = () => {
                       <div className="p-4 rounded-xl border bg-card space-y-3">
                         <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                           <Building2 className="h-3.5 w-3.5" />
-                          Organized By
+                           {t("event_organized_by")}
                         </div>
                         <div className="flex items-center gap-3">
                           <UserAvatar
@@ -353,7 +360,7 @@ const EventView = () => {
                               {organizer?.verified && <VerifiedBadge className="h-4 w-4 flex-shrink-0" />}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {organizer?.verified ? 'Verified organizer' : event.host_name || organizer ? 'Event Organizer' : 'Event Platform'}
+                              {organizer?.verified ? t("event_verified_organizer") : event.host_name || organizer ? t("event_organizer") : t("event_platform")}
                             </div>
                           </div>
                         </div>
@@ -453,7 +460,7 @@ const EventView = () => {
                         rel="noopener noreferrer"
                       >
                         <CalendarDays className="h-4 w-4 mr-2" />
-                        Add to Google Calendar
+                         {t("event_add_calendar")}
                       </a>
                     </Button>
                   </div>
@@ -466,7 +473,7 @@ const EventView = () => {
                   {/* Who's going */}
                   {attendees.length > 0 && (
                     <section className="space-y-3">
-                      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Who's going</h2>
+                      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{t("event_whos_going")}</h2>
                       <div className="flex items-center gap-3 p-3 rounded-xl border bg-card">
                         <div className="flex -space-x-2">
                           {attendees.slice(0, 5).map((a, i) => {
@@ -491,7 +498,7 @@ const EventView = () => {
                   )}
 
                   <section className="space-y-2">
-                    <h2 className="text-lg font-semibold">About</h2>
+                    <h2 className="text-lg font-semibold">{t("event_about")}</h2>
                     <div className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                       {event.description || (
                         <p>Join us for this {event.category.toLowerCase()} event. Connect with others, learn new things, and be part of an engaging experience.</p>
@@ -518,7 +525,7 @@ const EventView = () => {
                   <section className="md:hidden space-y-3">
                     <h2 className="text-lg font-semibold flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
-                      Organized By
+                       {t("event_organized_by")}
                     </h2>
                     <div className="p-4 bg-muted/50 rounded-xl border space-y-3">
                       <div className="flex items-center gap-3">
@@ -539,7 +546,7 @@ const EventView = () => {
                             {organizer?.verified && <VerifiedBadge className="h-4 w-4 flex-shrink-0" />}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {organizer?.verified ? 'Verified organizer' : event.host_name || organizer ? 'Event Organizer' : 'Event Platform'}
+                            {organizer?.verified ? t("event_verified_organizer") : event.host_name || organizer ? t("event_organizer") : t("event_platform")}
                           </div>
                         </div>
                       </div>
@@ -566,11 +573,17 @@ const EventView = () => {
                   )}
 
                   <section className="space-y-3">
-                    <h2 className="text-lg font-semibold">Share Event</h2>
+                    <h2 className="text-lg font-semibold">{t("event_share_event")}</h2>
                     <div className="flex flex-wrap gap-2">
                       <Button variant="outline" size="sm" onClick={handleCopyLink}>
                         {linkCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-                        {linkCopied ? 'Copied' : 'Copy Link'}
+                        {linkCopied ? t("event_copied") : t("event_copy_link")}
+                      </Button>
+                      <Button asChild variant="outline" size="sm">
+                        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          {t("event_share_whatsapp")}
+                        </a>
                       </Button>
                     </div>
                   </section>

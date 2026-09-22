@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { MoreHorizontal, Search, Shield, User, Eye, Loader2 } from "lucide-react";
+import { MoreHorizontal, Search, Shield, User, Eye, Loader2, BadgeCheck, BadgeX } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,7 +29,7 @@ const AdminUsersPage = () => {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userEvents, setUserEvents] = useState<any[]>([]);
   const { isProcessing, startProcessing, stopProcessing } = useProcessingSet();
-  const [confirmAction, setConfirmAction] = useState<{ userId: string; action: 'promote' | 'remove'; userName: string } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ userId: string; action: 'promote' | 'remove' | 'verify' | 'unverify'; userName: string } | null>(null);
 
   useEffect(() => {
     if (isAdmin && adminCheckComplete) fetchUsers();
@@ -68,7 +68,16 @@ const AdminUsersPage = () => {
     const { userId, action } = confirmAction;
     startProcessing(userId);
 
-    if (action === 'promote') {
+    if (action === 'verify' || action === 'unverify') {
+      const verified = action === 'verify';
+      const { error } = await supabase.from("profiles").update({ verified }).eq("user_id", userId);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: verified ? "Organizer verified" : "Verification removed" });
+        setUsers((current) => current.map((profile) => profile.user_id === userId ? { ...profile, verified } : profile));
+      }
+    } else if (action === 'promote') {
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" as any });
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -182,7 +191,7 @@ const AdminUsersPage = () => {
                             <AvatarFallback className="text-xs">{user.full_name?.charAt(0) || "?"}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium text-sm">{user.full_name}</div>
+                            <div className="font-medium text-sm flex items-center gap-1.5">{user.full_name}{user.verified && <BadgeCheck className="h-4 w-4 text-primary" aria-label="Verified organizer" />}</div>
                             {user.username && <div className="text-xs text-muted-foreground">@{user.username}</div>}
                           </div>
                         </div>
@@ -216,6 +225,10 @@ const AdminUsersPage = () => {
                                 <User className="h-4 w-4 mr-2" />Remove Admin
                               </DropdownMenuItem>
                             )}
+                            <DropdownMenuItem onClick={() => setConfirmAction({ userId: user.user_id, action: user.verified ? 'unverify' : 'verify', userName: user.full_name })}>
+                              {user.verified ? <BadgeX className="h-4 w-4 mr-2" /> : <BadgeCheck className="h-4 w-4 mr-2" />}
+                              {user.verified ? 'Remove Verification' : 'Verify Organizer'}
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -233,12 +246,16 @@ const AdminUsersPage = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmAction?.action === 'promote' ? 'Promote to Admin' : 'Remove Admin Role'}
+               {confirmAction?.action === 'promote' ? 'Promote to Admin' : confirmAction?.action === 'remove' ? 'Remove Admin Role' : confirmAction?.action === 'verify' ? 'Verify Organizer' : 'Remove Verification'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmAction?.action === 'promote'
+               {confirmAction?.action === 'promote'
                 ? `Are you sure you want to promote "${confirmAction?.userName}" to admin? They will have full platform access.`
-                : `Are you sure you want to remove admin privileges from "${confirmAction?.userName}"?`
+                 : confirmAction?.action === 'remove'
+                   ? `Are you sure you want to remove admin privileges from "${confirmAction?.userName}"?`
+                   : confirmAction?.action === 'verify'
+                     ? `Confirm that "${confirmAction?.userName}" is a trusted event organizer.`
+                     : `Remove the verified organizer badge from "${confirmAction?.userName}"?`
               }
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -246,9 +263,9 @@ const AdminUsersPage = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmAction}
-              className={confirmAction?.action === 'remove' ? 'bg-destructive text-destructive-foreground' : ''}
+               className={confirmAction?.action === 'remove' || confirmAction?.action === 'unverify' ? 'bg-destructive text-destructive-foreground' : ''}
             >
-              {confirmAction?.action === 'promote' ? 'Promote' : 'Remove Admin'}
+               {confirmAction?.action === 'promote' ? 'Promote' : confirmAction?.action === 'remove' ? 'Remove Admin' : confirmAction?.action === 'verify' ? 'Verify' : 'Remove Badge'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

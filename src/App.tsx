@@ -63,6 +63,7 @@ const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
 const AdminPlatformSettings = lazy(() => import("./pages/admin/AdminPlatformSettings"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 const AdminAuditLog = lazy(() => import("./pages/admin/AdminAuditLog"));
+const AdminEmailLog = lazy(() => import("./pages/admin/AdminEmailLog"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -192,6 +193,7 @@ const App = () => (
                     <Route path="/admin/analytics" element={<SuspenseWrapper><AdminAnalytics /></SuspenseWrapper>} />
                     <Route path="/admin/reports" element={<SuspenseWrapper><AdminReports /></SuspenseWrapper>} />
                     <Route path="/admin/audit" element={<SuspenseWrapper><AdminAuditLog /></SuspenseWrapper>} />
+                    <Route path="/admin/email-log" element={<SuspenseWrapper><AdminEmailLog /></SuspenseWrapper>} />
                     <Route path="/admin/settings/platform" element={<SuspenseWrapper><AdminPlatformSettings /></SuspenseWrapper>} />
                     <Route path="/admin/settings/admin" element={<SuspenseWrapper><AdminSettingsPage /></SuspenseWrapper>} />
                     <Route path="/admin/settings" element={<Navigate to="/admin/settings/platform" replace />} />
