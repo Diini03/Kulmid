@@ -90,7 +90,7 @@ const AdminEmailLog = () => {
                   <TableRow key={entry.id}>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{format(new Date(entry.created_at), "MMM d, h:mm a")}</TableCell>
                     <TableCell className="text-sm">{entry.recipient}</TableCell>
-                    <TableCell className="text-xs capitalize">{entry.kind.replaceAll("_", " ")}</TableCell>
+                    <TableCell className="text-xs capitalize">{entry.kind.replace(/_/g, " ")}</TableCell>
                     <TableCell><Badge variant={entry.status === "failed" ? "destructive" : entry.status === "sent" ? "default" : "outline"} className="capitalize">{entry.status}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground max-w-72 truncate" title={entry.error || entry.event_id || undefined}>{entry.error || entry.event_id || "—"}</TableCell>
                   </TableRow>
