@@ -106,4 +106,27 @@ export const so: Record<TranslationKeys, string> = {
 
   // Auth Modal
   auth_required_message: "Soo gal ama samayso akoon si aad u bilowdo abuurista dhacddooyinka.",
+
+  // Bogga dhacdada dadweynaha
+  event_back: "Dib u noqo",
+  event_share: "La wadaag",
+  event_copied: "Waa la koobiyeeyay",
+  event_copy_link: "Koobiyee xiriirka",
+  event_link_copied: "Xiriirka waa la koobiyeeyay",
+  event_link_copied_desc: "Xiriirka dhacdada waxaa lagu koobiyeeyay kaydkaaga.",
+  event_register: "Iska diiwaangeli dhacdada",
+  event_full: "Boosasku way buuxaan",
+  event_not_open: "Diiwaangelintu weli ma furmin",
+  event_cancelled: "Diiwaangelinta waa la joojiyay",
+  event_closed: "Diiwaangelintu way xidhantay",
+  event_organized_by: "Waxaa qabanaya",
+  event_verified_organizer: "Qabanqaabiye la xaqiijiyay",
+  event_organizer: "Qabanqaabiyaha dhacdada",
+  event_platform: "Madasha dhacdooyinka",
+  event_add_calendar: "Ku dar Google Calendar",
+  event_whos_going: "Yaa imanaya",
+  event_about: "Faahfaahin",
+  event_share_event: "La wadaag dhacdada",
+  event_share_whatsapp: "Ku wadaag WhatsApp",
+  event_whatsapp_message: "Ka eeg {title} Kulmid: {url}",
 };
