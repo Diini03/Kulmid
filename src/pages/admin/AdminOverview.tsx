@@ -1,4 +1,5 @@
 import { Seo } from "@/components/Seo";
+import { PlatformPulse } from "@/components/admin/PlatformPulse";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -209,6 +210,9 @@ const AdminOverview = () => {
             </Card>
           ))}
         </div>
+
+        <PlatformPulse />
+
 
         {pendingEvents.length > 0 && (
           <Card>
