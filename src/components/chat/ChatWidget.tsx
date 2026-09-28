@@ -6,6 +6,8 @@ import { ChatMessage } from "./ChatMessage";
 import { FAQChips } from "./FAQChips";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const MAX_CHARS = 500;
 const STORAGE_KEY = "kulmid-chat-history";
@@ -51,6 +53,8 @@ export const ChatWidget = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const location = useLocation();
+  const { language } = useLanguage();
 
   // Persist messages
   useEffect(() => {
@@ -122,7 +126,7 @@ export const ChatWidget = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: allMessages.map(m => ({ role: m.role, content: m.content })) }),
+          body: JSON.stringify({ messages: allMessages.map(m => ({ role: m.role, content: m.content })), page: location.pathname, language }),
         }
       );
 
@@ -334,7 +338,7 @@ export const ChatWidget = () => {
                   How can I help you? / Sideen kuu caawin karaa?
                 </p>
               </div>
-              <FAQChips onSelectQuestion={handleQuestionSelect} />
+              <FAQChips onSelectQuestion={handleQuestionSelect} page={location.pathname} language={language} />
             </div>
           )}
 

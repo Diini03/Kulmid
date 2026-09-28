@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Bot, User, Copy, Check, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 interface ChatMessageProps {
@@ -63,7 +64,16 @@ export const ChatMessage = ({ role, content, isTyping, timestamp, failed, onRetr
             </div>
           ) : (
             <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:my-2">
-              <ReactMarkdown>{content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  a: ({ href, children }) =>
+                    href && href.startsWith("/") ? (
+                      <Link to={href} className="text-primary underline">{children}</Link>
+                    ) : (
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">{children}</a>
+                    ),
+                }}
+              >{content}</ReactMarkdown>
             </div>
           )}
         </div>
