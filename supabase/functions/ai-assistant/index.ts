@@ -60,7 +60,7 @@ async function loadUpcomingEvents(): Promise<string> {
       .limit(15);
     return (data || [])
       .map((e: any) =>
-        `- ${e.title} | ${new Date(e.date).toUTCString()} | ${e.location} | ${e.category} | ${Number(e.price) > 0 ? "paid" : "free"} | link: /e/${e.slug || e.id}`)
+        `- ${e.title} | ${new Date(e.date).toUTCString()} | ${e.location} | ${e.category} | ${Number(e.price) > 0 ? "paid" : "free"} | link: /event/${e.slug || e.id}`)
       .join("\n");
   } catch {
     return "";
