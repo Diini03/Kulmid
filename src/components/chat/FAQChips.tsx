@@ -44,7 +44,7 @@ export const FAQChips = ({ onSelectQuestion, page = "/", language = "en" }: FAQC
           variant="outline"
           size="sm"
           onClick={() => onSelectQuestion(question)}
-          className="text-xs h-auto py-2.5 px-3 rounded-xl border-border/50 bg-muted/50 hover:bg-muted hover:border-primary/30 transition-colors text-left justify-start whitespace-normal"
+          className="text-xs h-auto py-2 px-3.5 rounded-full border-border/60 bg-muted/50 hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors text-left justify-start whitespace-normal"
         >
           {question}
         </Button>

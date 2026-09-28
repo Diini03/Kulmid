@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bot, User, Copy, Check, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
+import { User, Copy, Check, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { Link } from "react-router-dom";
@@ -30,25 +30,25 @@ export const ChatMessage = ({ role, content, isTyping, timestamp, failed, onRetr
   };
 
   return (
-    <div className={cn("flex gap-3 mb-4 group", isUser && "flex-row-reverse")}>
-      <div
-        className={cn(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-          isUser 
-            ? "bg-foreground text-background" 
-            : "bg-muted text-muted-foreground"
-        )}
-      >
-        {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-      </div>
-      
-      <div className={cn("flex-1 max-w-[80%]", isUser && "ml-auto")}>
+    <div className={cn("flex gap-2.5 mb-4 group", isUser && "flex-row-reverse")}>
+      {/* Avatar */}
+      {isUser ? (
+        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center">
+          <User className="w-3.5 h-3.5" />
+        </div>
+      ) : (
+        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+          K
+        </div>
+      )}
+
+      <div className={cn("flex-1 max-w-[82%] min-w-0", isUser && "ml-auto")}>
         <div
           className={cn(
-            "px-4 py-3 rounded-2xl",
-            isUser 
-              ? "bg-white text-black dark:bg-white dark:text-black" 
-              : "bg-muted text-foreground",
+            "px-4 py-2.5 rounded-2xl",
+            isUser
+              ? "bg-primary text-primary-foreground rounded-tr-sm shadow-sm shadow-primary/20"
+              : "bg-muted/70 text-foreground rounded-tl-sm",
             failed && "opacity-70 border border-destructive/50"
           )}
         >
@@ -59,7 +59,7 @@ export const ChatMessage = ({ role, content, isTyping, timestamp, failed, onRetr
               <span className="w-2 h-2 bg-current rounded-full animate-bounce opacity-60" style={{ animationDelay: "300ms" }} />
             </div>
           ) : isUser ? (
-            <div className="text-sm leading-relaxed" style={{ color: '#000000' }}>
+            <div className="text-sm leading-relaxed">
               {content}
             </div>
           ) : (

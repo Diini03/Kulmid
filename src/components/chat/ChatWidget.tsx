@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Sparkles, Trash2, ArrowDown } from "lucide-react";
+import { MessageCircle, X, Send, Trash2, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ChatMessage } from "./ChatMessage";
@@ -245,7 +245,7 @@ export const ChatWidget = () => {
 
   return (
     <>
-      {/* Floating Button with Animation */}
+      {/* Floating Button */}
       <div className={cn(
         "fixed bottom-6 right-6 z-50 transition-all duration-300",
         isOpen && "scale-0 opacity-0 pointer-events-none"
@@ -261,29 +261,24 @@ export const ChatWidget = () => {
           </div>
         </div>
 
-        {/* Pulse Ring */}
-        <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
-        
-        {/* Gradient Ring */}
-        <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-primary via-primary/50 to-primary opacity-75 blur-sm animate-pulse" />
-        
-        {/* Button */}
-        <Button
-          ref={buttonRef}
-          onClick={() => { setIsOpen(true); setShowTooltip(false); }}
-          className="relative w-14 h-14 rounded-full shadow-xl bg-foreground text-background hover:bg-foreground/90 transition-transform hover:scale-110"
-          size="icon"
-        >
-          <Sparkles className="w-5 h-5 absolute top-2 right-2 text-primary animate-pulse" />
-          <MessageCircle className="w-6 h-6" />
-        </Button>
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full bg-primary/25 animate-ping" />
+          <Button
+            ref={buttonRef}
+            onClick={() => { setIsOpen(true); setShowTooltip(false); }}
+            className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40 hover:bg-primary/90 hover:scale-105 active:scale-95 transition-transform"
+            size="icon"
+          >
+            <MessageCircle className="w-6 h-6" />
+          </Button>
+        </div>
       </div>
 
       {/* Chat Panel */}
       <div
         ref={panelRef}
         className={cn(
-          "fixed z-50 flex flex-col transition-all duration-300 transform overflow-hidden bg-background/95 backdrop-blur-xl border border-border/50 shadow-2xl",
+          "fixed z-50 flex flex-col transition-all duration-300 transform overflow-hidden bg-background border border-border/60 shadow-[0_8px_30px_rgb(0,0,0,0.12)]",
           // Floating panel anchored to bottom-right
           "bottom-4 right-4 w-[min(380px,calc(100vw-3rem))] h-[min(500px,calc(100vh-6rem))] rounded-2xl",
           isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
@@ -291,14 +286,17 @@ export const ChatWidget = () => {
       >
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-primary-foreground" />
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/60">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-semibold shadow-sm shadow-primary/30">
+              K
             </div>
             <div>
-              <h3 className="font-semibold text-sm">Kulmid AI</h3>
-              <p className="text-xs text-muted-foreground">Always here to help</p>
+              <h3 className="font-semibold text-sm leading-tight">Kulmid AI</h3>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                {language === "so" ? "Kaaliye • Online" : "Assistant • Online"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -327,15 +325,14 @@ export const ChatWidget = () => {
         {/* Messages */}
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 relative">
           {messages.length === 0 && (
-            <div className="text-center py-6">
+            <div className="text-center pt-6">
               <div className="mb-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 mb-3">
-                  <MessageCircle className="w-8 h-8 text-primary" />
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-3">
+                  <MessageCircle className="w-7 h-7 text-primary" />
                 </div>
-                <h4 className="font-semibold text-lg mb-1">Hi! 👋 Salaan!</h4>
-                <p className="text-sm text-muted-foreground mb-1">I'm Kulmid AI / Waxaan ahay Kulmid AI</p>
+                <h4 className="font-semibold text-base mb-1">How can I help you? / Sideen kuu caawin karaa?</h4>
                 <p className="text-sm text-muted-foreground mb-4">
-                  How can I help you? / Sideen kuu caawin karaa?
+                  Ask in English or Somali — I'm here 24/7.
                 </p>
               </div>
               <FAQChips onSelectQuestion={handleQuestionSelect} page={location.pathname} language={language} />
@@ -374,39 +371,39 @@ export const ChatWidget = () => {
         )}
 
         {/* Input */}
-        <form onSubmit={handleSubmit} className="p-3 border-t border-border/50 bg-muted/30">
-          <div className="flex gap-2 items-end">
-            <div className="flex-1 relative">
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type in English or Somali... / Ku qor..."
-                disabled={isLoading}
-                rows={1}
-                className={cn(
-                  "min-h-[40px] max-h-[96px] resize-none bg-background border-border/50 focus-visible:ring-primary/50 py-2.5 text-sm",
-                  overLimit && "border-destructive focus-visible:ring-destructive/50"
-                )}
-              />
+        <form onSubmit={handleSubmit} className="p-3 border-t border-border/60 bg-background">
+          <div className="flex items-center gap-2 rounded-xl bg-muted/40 border border-border/50 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all pr-1.5">
+            <Textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type in English or Somali... / Ku qor..."
+              disabled={isLoading}
+              rows={1}
+              className={cn(
+                "min-h-[40px] max-h-[96px] resize-none bg-transparent border-0 shadow-none focus-visible:ring-0 focus-visible:shadow-none py-2.5 text-sm flex-1",
+                overLimit && "text-destructive"
+              )}
+            />
+            <div className="flex items-center gap-1.5">
               {charCount > 0 && (
                 <span className={cn(
-                  "absolute bottom-1.5 right-2 text-[10px]",
+                  "text-[10px]",
                   overLimit ? "text-destructive" : "text-muted-foreground"
                 )}>
                   {charCount}/{MAX_CHARS}
                 </span>
               )}
+              <Button
+                type="submit"
+                size="icon"
+                disabled={isLoading || !input.trim() || overLimit}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 h-8 w-8 rounded-lg"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
             </div>
-            <Button 
-              type="submit" 
-              size="icon" 
-              disabled={isLoading || !input.trim() || overLimit}
-              className="bg-foreground text-background hover:bg-foreground/90 shrink-0 h-10 w-10"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
           </div>
         </form>
       </div>
