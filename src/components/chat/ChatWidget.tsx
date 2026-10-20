@@ -40,7 +40,7 @@ const saveMessages = (msgs: ChatMsg[]) => {
   } catch {}
 };
 
-export const ChatWidget = () => {
+export const ChatWidget = ({ raised = false }: { raised?: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMsg[]>(loadMessages);
   const [input, setInput] = useState("");
@@ -247,7 +247,7 @@ export const ChatWidget = () => {
     <>
       {/* Floating Button */}
       <div className={cn(
-        "fixed bottom-6 right-6 z-50 transition-all duration-300",
+        "fixed right-6 z-50 transition-all duration-300", raised ? "bottom-24 md:bottom-6" : "bottom-6",
         isOpen && "scale-0 opacity-0 pointer-events-none"
       )}>
         {/* Tooltip */}

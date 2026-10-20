@@ -31,7 +31,7 @@ KULMID FACTS (source of truth — never invent features beyond these):
 - Guides: /guides/create-your-first-event, /guides/build-your-registration-form, /guides/approve-guests-and-check-in, /guides/read-your-insights, /guides/use-the-ai-assistant.
 - If unsure or the user has an account problem, suggest the Contact page (/contact). Never make up emails, phone numbers or prices.`;
 
-const buildSystemPrompt = (page: string, lang: string, events: string) => `You are Kulmid AI, the friendly help assistant for the Kulmid event platform.
+const buildSystemPrompt = (page: string, lang: string, events: string, current = "") => `You are Kulmid AI, the friendly help assistant for the Kulmid event platform.
 
 LANGUAGE: Reply in the language of the user's latest message (English or natural Somali, not word-for-word translation). If unclear, use the site language: ${lang === "so" ? "Somali" : "English"}.
 
@@ -43,7 +43,46 @@ The user is currently on page: ${page || "/"}. Tailor the answer to that page wh
 ${KNOWLEDGE}
 
 UPCOMING PUBLIC EVENTS (live data; recommend only from this list and link them; if empty say there are no upcoming events and suggest /discover later):
-${events || "(none)"}`;
+${events || "(none)"}
+${current ? `\nTHE USER IS VIEWING THIS EVENT (answer questions about "this event" from these facts only; if a detail is missing, say so and suggest contacting the host):\n${current}` : ""}`;
+
+async function loadCurrentEvent(page: string): Promise<string> {
+  const m = page.match(/^\/event\/([^/?#]+)\/?$/);
+  if (!m) return "";
+  try {
+    const url = Deno.env.get("SUPABASE_URL");
+    const key = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!url || !key) return "";
+    const sb = createClient(url, key);
+    const ref = decodeURIComponent(m[1]).slice(0, 120);
+    const cols = "id, slug, title, date, end_date, location, event_type, category, price, description, host_name, max_attendees, registration_open_at, registration_close_at, allow_waitlist";
+    let { data } = await sb.from("events").select(cols).eq("slug", ref).maybeSingle();
+    if (!data) {
+      const tail = ref.split("-").slice(-5).join("-");
+      ({ data } = await sb.from("events").select(cols).in("id", [ref, tail]).maybeSingle());
+    }
+    if (!data) return "";
+    const e: any = data;
+    let count: number | null = null;
+    let status = "";
+    try { const r = await sb.rpc("get_event_registration_count", { _event_id: e.id }); count = r.data ?? null; } catch {}
+    try { const r = await sb.rpc("get_event_registration_status", { _event_id: e.id }); status = r.data ?? ""; } catch {}
+    return [
+      `Title: ${e.title}`,
+      `Starts: ${new Date(e.date).toUTCString()}${e.end_date ? ` | Ends: ${new Date(e.end_date).toUTCString()}` : ""}`,
+      `Where: ${e.location}${e.event_type ? ` (${e.event_type})` : ""}`,
+      `Category: ${e.category} | Price: ${Number(e.price) > 0 ? e.price : "free"}`,
+      e.host_name ? `Host: ${e.host_name}` : "",
+      `Capacity: ${e.max_attendees ? `${e.max_attendees} spots, ${count ?? "?"} registered` : "unlimited"}${e.allow_waitlist ? ", waitlist on" : ""}`,
+      status ? `Registration status: ${status}` : "",
+      e.registration_close_at ? `Registration closes: ${new Date(e.registration_close_at).toUTCString()}` : "",
+      e.description ? `Description: ${String(e.description).replace(/<[^>]+>/g, " ").slice(0, 1200)}` : "",
+      "To register: use the Register button on this page.",
+    ].filter(Boolean).join("\n");
+  } catch {
+    return "";
+  }
+}
 
 async function loadUpcomingEvents(): Promise<string> {
   try {
@@ -86,7 +125,7 @@ Deno.serve(async (req) => {
 
     const page = typeof body.page === "string" ? body.page.slice(0, 120) : "/";
     const lang = body.language === "so" ? "so" : "en";
-    const events = await loadUpcomingEvents();
+    const [events, current] = await Promise.all([loadUpcomingEvents(), loadCurrentEvent(page)]);
 
     const upstream = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
@@ -98,7 +137,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "openai/gpt-6-astra",
-        instructions: buildSystemPrompt(page, lang, events),
+        instructions: buildSystemPrompt(page, lang, events, current),
         input: messages.map((m: any) => ({ role: m.role, content: m.content })),
         reasoning: { effort: "low" },
         store: false,

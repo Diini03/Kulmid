@@ -23,9 +23,9 @@ const byPage = (page: string): Q[] => {
     ];
   if (page.startsWith("/event/"))
     return [
+      { en: "When and where is this event?", so: "Goorma oo xaggee ayay dhacdadani tahay?" },
+      { en: "Are there spots left?", so: "Meelo bannaan ma jiraan?" },
       { en: "How do I register for this event?", so: "Sideen isu diiwaangeliyaa dhacdadan?" },
-      { en: "How do I cancel my registration?", so: "Sideen u joojiyaa diiwaangelintayda?" },
-      { en: "What happens if the event is full?", so: "Maxaa dhaca haddii dhacdadu buuxdo?" },
     ];
   return [
     { en: "What events are coming up?", so: "Dhacdooyinkee ayaa soo socda?" },
