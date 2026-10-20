@@ -20,6 +20,7 @@ import RegistrationStatusBadge from "@/components/events/RegistrationStatusBadge
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import {
   getRegistrationStatus,
   formatRegistrationDate,
@@ -622,6 +623,7 @@ const EventView = () => {
         price={event.price}
         autoApprove={event.auto_approve_registrations || false}
       />
+      <ChatWidget raised />
     </div>
   );
 };
