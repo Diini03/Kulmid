@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const MAX_CHARS = 500;
 const STORAGE_KEY = "kulmid-chat-history";
@@ -55,11 +57,29 @@ export const ChatWidget = ({ raised = false }: { raised?: boolean }) => {
   const { toast } = useToast();
   const location = useLocation();
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const requestRef = useRef<AbortController | null>(null);
+  const accountRef = useRef<string | null>(user?.id ?? null);
 
-  // Persist messages
+  // Only public conversations persist on this device. Account changes discard private replies.
   useEffect(() => {
-    saveMessages(messages);
-  }, [messages]);
+    if (!user) saveMessages(messages);
+  }, [messages, user]);
+
+  useEffect(() => {
+    const account = user?.id ?? null;
+    if (accountRef.current !== account) {
+      requestRef.current?.abort();
+      requestRef.current = null;
+      accountRef.current = account;
+      setMessages([]);
+      setInput("");
+      setIsLoading(false);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [user?.id]);
+
+  useEffect(() => () => requestRef.current?.abort(), []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -118,15 +138,23 @@ export const ChatWidget = ({ raised = false }: { raised?: boolean }) => {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    const controller = new AbortController();
+    requestRef.current = controller;
 
     try {
       const allMessages = [...messages, userMessage];
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (controller.signal.aborted) return;
+      if (user && (sessionError || !session || session.user.id !== user.id)) {
+        throw new Error("Please sign in again");
+      }
       const response = await fetch(
         `https://txjglujklpxsfhedwwkl.supabase.co/functions/v1/ai-assistant`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: allMessages.map(m => ({ role: m.role, content: m.content })), page: location.pathname, language }),
+          headers: { "Content-Type": "application/json", ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+          signal: controller.signal,
+          body: JSON.stringify({ messages: allMessages.filter(m => m.content.trim()).slice(-20).map(m => ({ role: m.role, content: m.content })), page: location.pathname, language }),
         }
       );
 
@@ -194,6 +222,7 @@ export const ChatWidget = ({ raised = false }: { raised?: boolean }) => {
 
       setIsLoading(false);
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error("Error:", error);
       // Mark user message as failed instead of removing it
       setMessages((prev) => {
@@ -217,6 +246,8 @@ export const ChatWidget = ({ raised = false }: { raised?: boolean }) => {
   };
 
   const handleClearChat = () => {
+    requestRef.current?.abort();
+    setIsLoading(false);
     setMessages([]);
     localStorage.removeItem(STORAGE_KEY);
   };
@@ -268,6 +299,7 @@ export const ChatWidget = ({ raised = false }: { raised?: boolean }) => {
             onClick={() => { setIsOpen(true); setShowTooltip(false); }}
             className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40 hover:bg-primary/90 hover:scale-105 active:scale-95 transition-transform"
             size="icon"
+            aria-label="Open assistant"
           >
             <MessageCircle className="w-6 h-6" />
           </Button>
@@ -315,6 +347,7 @@ export const ChatWidget = ({ raised = false }: { raised?: boolean }) => {
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(false)}
+              aria-label="Close assistant"
               className="h-8 w-8 rounded-full hover:bg-muted"
             >
               <X className="w-4 h-4" />
@@ -335,7 +368,7 @@ export const ChatWidget = ({ raised = false }: { raised?: boolean }) => {
                   Ask in English or Somali — I'm here 24/7.
                 </p>
               </div>
-              <FAQChips onSelectQuestion={handleQuestionSelect} page={location.pathname} language={language} />
+              <FAQChips onSelectQuestion={handleQuestionSelect} page={location.pathname} language={language} organizer={Boolean(user)} />
             </div>
           )}
 
@@ -397,6 +430,7 @@ export const ChatWidget = ({ raised = false }: { raised?: boolean }) => {
               )}
               <Button
                 type="submit"
+                aria-label="Send message"
                 size="icon"
                 disabled={isLoading || !input.trim() || overLimit}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 h-8 w-8 rounded-lg"

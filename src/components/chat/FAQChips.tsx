@@ -4,6 +4,7 @@ interface FAQChipsProps {
   onSelectQuestion: (question: string) => void;
   page?: string;
   language?: "en" | "so";
+  organizer?: boolean;
 }
 
 type Q = { en: string; so: string };
@@ -34,8 +35,13 @@ const byPage = (page: string): Q[] => {
   ];
 };
 
-export const FAQChips = ({ onSelectQuestion, page = "/", language = "en" }: FAQChipsProps) => {
-  const questions = byPage(page).map((q) => q[language]);
+export const FAQChips = ({ onSelectQuestion, page = "/", language = "en", organizer = false }: FAQChipsProps) => {
+  const organizerPage = page === "/events" || page.includes("/manage") || page.includes("/builder");
+  const questions = (organizer && organizerPage ? [
+    { en: "How many registrations do my events have?", so: "Immisa qof ayaa dhacdooyinkayga iska diiwaangeliyey?" },
+    { en: "How many guests have checked in?", so: "Immisa marti ayaa la hubiyey inay yimaadeen?" },
+    { en: "Which registrations are awaiting approval?", so: "Diiwaangelintee ayaa sugaysa ansixin?" },
+  ] : byPage(page)).map((q) => q[language]);
   return (
     <div className="flex flex-col gap-2">
       {questions.map((question) => (

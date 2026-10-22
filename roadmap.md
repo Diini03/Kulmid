@@ -22,3 +22,8 @@
 - [x] Admin email delivery log view
 - [x] Rate limiting on public registration
 - [x] Plan limits enforcement
+
+## Organizer assistant
+- [x] Add signed-in, owner-scoped event registration and attendance answers
+- [x] Keep private chat isolated between accounts and check access safeguards
+- [ ] Verify organizer answers through a real signed-in session (blocked: external Supabase session unavailable to testing tools)
