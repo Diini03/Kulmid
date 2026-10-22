@@ -22,3 +22,7 @@
 - [x] Admin email delivery log view
 - [x] Rate limiting on public registration
 - [x] Plan limits enforcement
+
+## Organizer assistant
+- [ ] Add signed-in, owner-scoped event registration and attendance answers
+- [ ] Keep private chat isolated between accounts and check access safeguards
