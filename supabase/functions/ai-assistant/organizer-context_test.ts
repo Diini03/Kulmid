@@ -15,7 +15,7 @@ Deno.test("public and unrelated routes do not claim organizer event scope", () =
 Deno.test("private context filters by authenticated owner and counts beyond 1000 without attendee fields", async () => {
   const urls: URL[] = [];
   const client = createClient("https://example.supabase.co", "test-anon-key", {
-    auth: { persistSession: false },
+    auth: { persistSession: false, autoRefreshToken: false },
     global: { fetch: async (input, init) => {
       const url = new URL(input instanceof Request ? input.url : String(input));
       urls.push(url);
