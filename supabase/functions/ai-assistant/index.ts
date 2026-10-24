@@ -4,6 +4,7 @@ import { GatewayError, streamResponse } from "npm:@lovable.dev/ai-gateway@0.1.9"
 import type {} from "./ai-gateway.types.ts";
 import { z } from "npm:zod@3";
 import { loadOrganizerContext } from "./organizer-context.ts";
+import { allowRequest, clientIp } from "../_shared/rateLimit.ts";
 
 const MAX_HISTORY = 20;
 const MAX_MSG_CHARS = 2000;
@@ -120,6 +121,9 @@ Deno.serve(async (req) => {
     }).safeParse(await req.json().catch(() => null));
     if (!parsed.success) return json({ error: "Please send a valid question." }, 400);
     const body = parsed.data;
+    if (!(await allowRequest("ai-assistant", clientIp(req), 20, 600))) {
+      return json({ error: "Please try again in a moment." }, 429);
+    }
     let organizer = "";
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
