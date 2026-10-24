@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { corsHeaders } from "../_shared/email.ts";
+import { allowRequest, clientIp, linkState } from "../_shared/rateLimit.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -22,6 +23,9 @@ serve(async (req) => {
     if (!token || token.length < 8 || token.length > 128) {
       return json({ error: "Invalid cancellation link" }, 400);
     }
+    if (!(await allowRequest("cancel-link", clientIp(req), 30, 600))) {
+      return json({ error: "Too many attempts. Please try again in a few minutes." }, 429);
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -31,12 +35,12 @@ serve(async (req) => {
       .eq("cancel_token", token)
       .maybeSingle();
 
-    if (error) return json({ error: error.message }, 500);
+    if (error) return json({ error: "Could not load this link." }, 500);
     if (!guest) return json({ error: "This cancellation link is no longer valid." }, 404);
 
     const { data: event } = await supabase
       .from("events")
-      .select("id, title, date, location, slug")
+      .select("id, title, date, end_date, location, slug")
       .eq("id", guest.event_id)
       .maybeSingle();
 
@@ -56,13 +60,16 @@ serve(async (req) => {
     if (guest.status === "cancelled") {
       return json({ ...payload, alreadyCancelled: true });
     }
+    if (!event || !linkState(event.date, event.end_date).canCancel) {
+      return json({ error: "This event has already started, so the registration can no longer be cancelled." }, 400);
+    }
 
     const { error: updateError } = await supabase
       .from("event_guests")
       .update({ status: "cancelled", cancelled_at: new Date().toISOString(), waitlist_position: null })
       .eq("id", guest.id);
 
-    if (updateError) return json({ error: updateError.message }, 500);
+    if (updateError) return json({ error: "Could not cancel right now. Please try again." }, 500);
 
     // Free the spot -> the DB trigger auto-promotes the next person on the waitlist.
     return json({
@@ -72,6 +79,6 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("cancel-registration error:", e);
-    return json({ error: e instanceof Error ? e.message : "Unexpected error" }, 500);
+    return json({ error: "Unexpected error" }, 500);
   }
 });

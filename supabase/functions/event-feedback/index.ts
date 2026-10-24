@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { corsHeaders } from "../_shared/email.ts";
+import { allowRequest, clientIp, linkState } from "../_shared/rateLimit.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -26,6 +27,9 @@ serve(async (req) => {
 
     if (!token || token.length < 8 || token.length > 128) {
       return json({ error: "Invalid feedback link" }, 400);
+    }
+    if (!(await allowRequest("feedback-link", clientIp(req), 30, 600))) {
+      return json({ error: "Too many attempts. Please try again in a few minutes." }, 429);
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -61,11 +65,17 @@ serve(async (req) => {
     if (action === "lookup") return json(payload);
 
     // ---- submit ----
+    if (existing) return json({ ...payload, alreadySubmitted: true });
     const eventEnd = new Date(event.end_date || event.date);
     if (eventEnd.getTime() > Date.now()) {
       return json({ error: "Feedback opens after the event has finished." }, 400);
     }
-    if (existing) return json({ ...payload, alreadySubmitted: true });
+    if (!linkState(event.date, event.end_date).feedbackOpen) {
+      return json({ error: "Feedback for this event has closed." }, 400);
+    }
+    if (guest.status === "cancelled") {
+      return json({ error: "Cancelled registrations can't leave feedback." }, 400);
+    }
 
     const rating = Number(body?.rating);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
@@ -83,11 +93,11 @@ serve(async (req) => {
       would_recommend: wouldRecommend,
     });
 
-    if (insertError) return json({ error: insertError.message }, 500);
+    if (insertError) return json({ error: "Could not save feedback. Please try again." }, 500);
 
     return json({ ...payload, submitted: true });
   } catch (e) {
     console.error("event-feedback error:", e);
-    return json({ error: e instanceof Error ? e.message : "Unexpected error" }, 500);
+    return json({ error: "Unexpected error" }, 500);
   }
 });
